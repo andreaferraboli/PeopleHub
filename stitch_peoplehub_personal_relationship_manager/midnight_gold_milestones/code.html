@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aurelian - Milestones</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#303030",
+                        "on-primary": "#3c2f00",
+                        "on-secondary-container": "#6d5000",
+                        "inverse-primary": "#735c00",
+                        "surface-container-highest": "#353534",
+                        "on-background": "#e5e2e1",
+                        "outline": "#99907c",
+                        "on-primary-fixed": "#241a00",
+                        "tertiary": "#d0cdcd",
+                        "error": "#ffb4ab",
+                        "secondary": "#ffe2ab",
+                        "on-surface": "#e5e2e1",
+                        "outline-variant": "#4d4635",
+                        "primary-fixed": "#ffe088",
+                        "primary-container": "#d4af37",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "surface-container": "#201f1f",
+                        "on-tertiary-container": "#454545",
+                        "on-surface-variant": "#d0c5af",
+                        "tertiary-container": "#b4b2b2",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "secondary-fixed-dim": "#fbbc00",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#261a00",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-bright": "#3a3939",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-dim": "#131313",
+                        "on-error": "#690005",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary-container": "#ffbf00",
+                        "on-primary-fixed-variant": "#574500",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#554300",
+                        "secondary-fixed": "#ffdfa0",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "surface-tint": "#e9c349",
+                        "tertiary-fixed": "#e4e2e1",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "primary": "#f2ca50",
+                        "on-secondary": "#402d00",
+                        "inverse-on-surface": "#313030",
+                        "surface-variant": "#353534",
+                        "primary-fixed-dim": "#e9c349",
+                        "inverse-surface": "#e5e2e1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "xl": "8rem",
+                        "md": "2rem",
+                        "xs": "0.5rem",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "lg": "4rem",
+                        "sm": "1rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Bodoni Moda"],
+                        "headline-md": ["Bodoni Moda"],
+                        "display-lg-mobile": ["Bodoni Moda"],
+                        "headline-sm": ["Bodoni Moda"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(14, 14, 14, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(153, 144, 124, 0.1);
+        }
+        .ghost-border {
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+        
+        /* Premium Divider */
+        .premium-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.3) 50%, transparent 100%);
+            margin: 2rem 0;
+        }
+        
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-background/80 dark:bg-background/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_4px_30px_rgba(212,175,55,0.05)] z-50 pt-safe">
+<div class="flex justify-between items-center px-gutter h-20 w-full max-w-7xl mx-auto">
+<button aria-label="Menu" class="text-primary dark:text-primary hover:text-primary-fixed-dim transition-colors duration-300 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg font-headline-sm tracking-widest text-primary dark:text-primary text-glow">AURELIAN</h1>
+<button aria-label="Account" class="text-on-surface-variant hover:text-primary-fixed-dim transition-colors duration-300 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[100px] pb-[100px] px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto w-full">
+<!-- Section Header -->
+<div class="mb-md md:mb-xl mt-md text-center">
+<h2 class="font-headline-md text-headline-md text-primary tracking-wide mb-xs">Milestones</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Curating the moments that define your journey.</p>
+</div>
+<div class="premium-divider"></div>
+<!-- Layout Wrapper: Bento/Asymmetric on Desktop -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter md:gap-lg">
+<!-- Calendar Section (Left Column on Desktop) -->
+<section class="md:col-span-5 lg:col-span-4">
+<div class="glass-panel rounded-xl p-md ghost-border relative overflow-hidden group">
+<!-- Subtle gradient bg effect -->
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-high/50 to-transparent opacity-50 z-0 pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-sm text-headline-sm text-primary">October</h3>
+<div class="flex gap-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<!-- Days Header -->
+<div class="calendar-grid mb-2">
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">S</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">M</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">T</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">W</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">T</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">F</div>
+<div class="text-center font-label-caps text-label-caps text-on-surface-variant/50">S</div>
+</div>
+<!-- Calendar Grid (Static representation for layout) -->
+<div class="calendar-grid gap-y-4">
+<!-- Empty days -->
+<div class="aspect-square flex items-center justify-center text-on-surface-variant/20 font-body-md text-body-md"></div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant/20 font-body-md text-body-md"></div>
+<!-- Days -->
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">1</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">2</div>
+<div class="aspect-square flex flex-col items-center justify-center text-primary font-body-md text-body-md bg-surface-container-high rounded-full border border-primary/30 relative">
+                                3
+                                <span class="absolute bottom-1 w-1 h-1 bg-primary rounded-full"></span>
+</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">4</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">5</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">6</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">7</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">8</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">9</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">10</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">11</div>
+<div class="aspect-square flex flex-col items-center justify-center text-primary font-body-md text-body-md relative">
+                                12
+                                <span class="absolute bottom-1 w-1 h-1 bg-primary rounded-full"></span>
+</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">13</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">14</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">15</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">16</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">17</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">18</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">19</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">20</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">21</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">22</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">23</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">24</div>
+<div class="aspect-square flex flex-col items-center justify-center text-primary font-body-md text-body-md relative">
+                                25
+                                <span class="absolute bottom-1 w-1 h-1 bg-primary rounded-full"></span>
+</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">26</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">27</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">28</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">29</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">30</div>
+<div class="aspect-square flex items-center justify-center text-on-surface-variant font-body-md text-body-md hover:text-primary cursor-pointer transition-colors relative">31</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Milestones List (Right Column on Desktop) -->
+<section class="md:col-span-7 lg:col-span-8 flex flex-col gap-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs hidden md:block">Upcoming</h3>
+<!-- Milestone Card 1 (Imminent) -->
+<article class="glass-panel rounded-xl p-md ghost-border flex items-center gap-md hover:bg-surface-container-high/30 transition-colors duration-300 cursor-pointer group">
+<div class="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-primary/50 shrink-0">
+<img alt="Profile photo of Eleanor" class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" data-alt="A sophisticated black and white editorial portrait of a woman in her late 30s. The lighting is dramatic, high-contrast studio lighting typical of luxury fashion photography. The background is pure charcoal black. She has elegant features and a subtle, knowing smile. The overall mood is timeless, prestigious, and quiet." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjb7TrC4JGRK6Toz7qt8qLeCdNAC1MbYK6hx5VnvGArMekt2SQ1eom-dEzqOlBF0a16prbEvsJbfxRnUgadUD91SE8mHtGQzIwofweEd2hrqvVU9Gt5TM-s5hm0GPkNRdoEC5r4vSduA-QhW01Y5WNAxLgD4M3jDDJejzjIUUGhboCyxDsNvHWBsaC_G1R_PyjgiglKTifYtZxOp0WCe78RyBdvnKbmc4KKlY6Z9I4amwo5QTCfeHHt59N0iv98UFoHGZKf1XgNEc"/>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-label-caps text-[10px]">Birthday</span>
+<span class="text-on-surface-variant font-label-caps text-[10px]">Oct 3</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Eleanor Vance</h4>
+<p class="font-body-md text-body-md text-on-surface-variant/70 text-sm">Turns 42</p>
+</div>
+<div class="text-right shrink-0">
+<div class="font-display-lg text-headline-md md:text-display-lg-mobile text-primary text-glow leading-none">2</div>
+<div class="font-label-caps text-[10px] text-primary/70 tracking-widest uppercase mt-1">Days</div>
+</div>
+</article>
+<!-- Milestone Card 2 -->
+<article class="glass-panel rounded-xl p-md border border-outline-variant/10 flex items-center gap-md hover:bg-surface-container-high/30 transition-colors duration-300 cursor-pointer group">
+<div class="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-outline-variant/50 shrink-0">
+<img alt="Profile photo of Julian" class="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" data-alt="A moody, cinematic portrait of a distinguished gentleman in his 50s. The lighting features a soft amber glow from one side against a deep, immersive dark background. He is wearing a dark, tailored suit. The aesthetic leans heavily into Neo-Luxury, emphasizing texture and stillness. The composition is balanced and elegant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdybrg2PjQLvjvdmLHRXfzqGlRj7oRJSRtqHC04c-2mjKClSiqzX6RbK_L9RWQvyZefWR4w2EsIpVxvUD32Gg0TUrmkZxF1K-Cfu9oiCZrKB1O09L84_MhIht97eRBAm_P9Q5iM0zX96ja2uisbsPW9d6GNJASSWq4vv2nP56-nlu_pVCn5lroOpnjVD5O8-sHq6I0tejYIg1_3eNChFnH1dByN024nJ0MOM7cGlmfqtI6WpMzGUmZPTgoYUrpCPBX7c9MkgmRh6M"/>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-container-high border border-outline-variant/30 text-on-surface-variant font-label-caps text-[10px]">Anniversary</span>
+<span class="text-on-surface-variant font-label-caps text-[10px]">Oct 12</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Julian &amp; Claire</h4>
+<p class="font-body-md text-body-md text-on-surface-variant/70 text-sm">15th Year</p>
+</div>
+<div class="text-right shrink-0 opacity-70">
+<div class="font-headline-md text-headline-sm md:text-headline-md text-on-surface leading-none">11</div>
+<div class="font-label-caps text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Days</div>
+</div>
+</article>
+<!-- Milestone Card 3 -->
+<article class="glass-panel rounded-xl p-md border border-outline-variant/10 flex items-center gap-md hover:bg-surface-container-high/30 transition-colors duration-300 cursor-pointer group">
+<div class="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-outline-variant/50 shrink-0">
+<div class="w-full h-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-headline-sm">S</div>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-container-high border border-outline-variant/30 text-on-surface-variant font-label-caps text-[10px]">Birthday</span>
+<span class="text-on-surface-variant font-label-caps text-[10px]">Oct 25</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Sebastian Cross</h4>
+<p class="font-body-md text-body-md text-on-surface-variant/70 text-sm">Turns 35</p>
+</div>
+<div class="text-right shrink-0 opacity-70">
+<div class="font-headline-md text-headline-sm md:text-headline-md text-on-surface leading-none">24</div>
+<div class="font-label-caps text-[10px] text-on-surface-variant tracking-widest uppercase mt-1">Days</div>
+</div>
+</article>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-outline-variant/20 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+<button aria-label="Reflect" class="flex flex-col items-center justify-center text-on-surface-variant/60 py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">auto_awesome</span>
+<span class="font-label-caps text-label-caps">Reflect</span>
+</button>
+<button aria-label="Circle" class="flex flex-col items-center justify-center text-on-surface-variant/60 py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="font-label-caps text-label-caps">Circle</span>
+</button>
+<!-- Active Tab: Events (Mapped to Milestones) -->
+<button aria-label="Events" class="flex flex-col items-center justify-center text-primary font-bold bg-primary-container/10 rounded-full py-2 px-4 active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1 text-primary" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<span class="font-label-caps text-label-caps text-primary">Events</span>
+</button>
+<button aria-label="Vault" class="flex flex-col items-center justify-center text-on-surface-variant/60 py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">lock</span>
+<span class="font-label-caps text-label-caps">Vault</span>
+</button>
+</nav>
+</body></html>

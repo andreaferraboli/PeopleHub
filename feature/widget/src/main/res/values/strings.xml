@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget labels (shown in the launcher's widget picker) -->
+    <string name="widget_birthdays_label">PeopleHub · Birthdays</string>
+    <string name="widget_checkins_label">PeopleHub · Check-ins</string>
+    <string name="widget_event_label">PeopleHub · Pinned event</string>
+
+    <!-- Widget content -->
+    <string name="widget_birthdays_title">Upcoming birthdays</string>
+    <string name="widget_birthdays_empty">No birthdays soon</string>
+    <string name="widget_checkins_title">Check-in urgent</string>
+    <string name="widget_checkins_empty">All caught up ✨</string>
+    <string name="widget_event_title">Pinned event</string>
+    <string name="widget_event_empty">Pin an event to see it here</string>
+
+    <string name="widget_today">Today</string>
+    <string name="widget_tomorrow">Tomorrow</string>
+    <string name="widget_in_days">in %1$d days</string>
+    <string name="widget_days_ago">%1$d days ago</string>
+    <string name="widget_never_seen">Never seen</string>
+</resources>

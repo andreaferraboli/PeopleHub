@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_save">Save</string>
+
+    <!-- Events list -->
+    <string name="events_title">Timeline</string>
+    <string name="events_subtitle">The architecture of your moments.</string>
+    <string name="events_add">Add event</string>
+    <string name="events_section_upcoming">Upcoming</string>
+    <string name="events_section_archive">Archive</string>
+    <string name="events_empty_title">No moments yet</string>
+    <string name="events_empty_desc">Add the first event to your timeline.</string>
+
+    <!-- Time filter -->
+    <string name="filter_all">All</string>
+    <string name="filter_upcoming">Upcoming</string>
+    <string name="filter_past">Past</string>
+
+    <!-- Day count -->
+    <string name="event_in">In</string>
+    <string name="event_days">Days</string>
+    <string name="event_days_ago">Days ago</string>
+
+    <!-- Pin -->
+    <string name="event_pin">Pin to widget</string>
+    <string name="event_unpin">Unpin from widget</string>
+
+    <!-- Event detail -->
+    <string name="event_detail_edit">Edit</string>
+    <string name="event_detail_delete">Delete</string>
+    <string name="event_detail_delete_title">Delete event?</string>
+    <string name="event_detail_delete_message">This permanently removes this event from your timeline.</string>
+    <string name="event_detail_description">Description</string>
+    <string name="event_detail_linked_person">With %1$s</string>
+
+    <!-- Add / edit event -->
+    <string name="edit_event_title_new">New event</string>
+    <string name="edit_event_title_edit">Edit event</string>
+    <string name="event_field_title">Title</string>
+    <string name="event_field_date">Date</string>
+    <string name="event_field_time">Time</string>
+    <string name="event_field_category">Category</string>
+    <string name="event_field_description">Description</string>
+    <string name="event_field_person">Linked person</string>
+    <string name="event_field_pin">Pin to widget</string>
+    <string name="event_person_none">None</string>
+</resources>

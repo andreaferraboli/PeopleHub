@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The launch/window theme. Visuals come from Compose (PeopleHubTheme); this XML theme only sets
+      the splash screen and the window background so there is no white flash before Compose draws.
+    -->
+    <style name="Theme.PeopleHub" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/onyx</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.PeopleHub.Main</item>
+    </style>
+
+    <style name="Theme.PeopleHub.Main" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/onyx</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

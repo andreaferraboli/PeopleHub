@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aurelian - Person Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#303030",
+                    "on-primary": "#3c2f00",
+                    "on-secondary-container": "#6d5000",
+                    "inverse-primary": "#735c00",
+                    "surface-container-highest": "#353534",
+                    "on-background": "#e5e2e1",
+                    "outline": "#99907c",
+                    "on-primary-fixed": "#241a00",
+                    "tertiary": "#d0cdcd",
+                    "error": "#ffb4ab",
+                    "secondary": "#ffe2ab",
+                    "on-surface": "#e5e2e1",
+                    "outline-variant": "#4d4635",
+                    "primary-fixed": "#ffe088",
+                    "primary-container": "#d4af37",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "surface-container": "#201f1f",
+                    "on-tertiary-container": "#454545",
+                    "on-surface-variant": "#d0c5af",
+                    "tertiary-container": "#b4b2b2",
+                    "on-secondary-fixed-variant": "#5c4300",
+                    "secondary-fixed-dim": "#fbbc00",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-fixed": "#261a00",
+                    "surface-container-lowest": "#0e0e0e",
+                    "surface-bright": "#3a3939",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "surface-container-high": "#2a2a2a",
+                    "surface-dim": "#131313",
+                    "on-error": "#690005",
+                    "surface-container-low": "#1c1b1b",
+                    "secondary-container": "#ffbf00",
+                    "on-primary-fixed-variant": "#574500",
+                    "error-container": "#93000a",
+                    "on-primary-container": "#554300",
+                    "secondary-fixed": "#ffdfa0",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "surface-tint": "#e9c349",
+                    "tertiary-fixed": "#e4e2e1",
+                    "background": "#131313",
+                    "surface": "#131313",
+                    "primary": "#f2ca50",
+                    "on-secondary": "#402d00",
+                    "inverse-on-surface": "#313030",
+                    "surface-variant": "#353534",
+                    "primary-fixed-dim": "#e9c349",
+                    "inverse-surface": "#e5e2e1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "64px",
+                    "xl": "8rem",
+                    "md": "2rem",
+                    "xs": "0.5rem",
+                    "base": "8px",
+                    "margin-mobile": "20px",
+                    "lg": "4rem",
+                    "sm": "1rem"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Manrope"
+                    ],
+                    "label-caps": [
+                            "Manrope"
+                    ],
+                    "body-lg": [
+                            "Manrope"
+                    ],
+                    "display-lg": [
+                            "Bodoni Moda"
+                    ],
+                    "headline-md": [
+                            "Bodoni Moda"
+                    ],
+                    "display-lg-mobile": [
+                            "Bodoni Moda"
+                    ],
+                    "headline-sm": [
+                            "Bodoni Moda"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.0",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg": [
+                            "64px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "40px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "fontWeight": "500"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(32, 31, 31, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Ambient shadow utility */
+        .ambient-shadow {
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.05);
+        }
+        
+        /* Thin gold divider */
+        .gold-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+            border: none;
+            margin: 2rem 0;
+        }
+        
+        /* Hide scrollbar for tabs */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-background/80 dark:bg-background/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_4px_30px_rgba(212,175,55,0.05)] fixed top-0 w-full flex justify-between items-center px-gutter h-20 z-50 transition-colors duration-300">
+<button aria-label="Go back" class="text-primary dark:text-primary hover:text-primary-fixed-dim transition-colors duration-300 active:scale-95 transition-transform p-2 -ml-2">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-display-lg text-headline-sm tracking-widest text-primary dark:text-primary">AURELIAN</h1>
+<button aria-label="Edit Profile" class="text-primary dark:text-primary hover:text-primary-fixed-dim transition-colors duration-300 active:scale-95 transition-transform p-2 -mr-2">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-20 pb-safe md:pb-0 px-gutter md:px-margin-desktop max-w-[1440px] mx-auto w-full">
+<!-- Hero Section: Portrait & Identity -->
+<section class="mt-md md:mt-lg flex flex-col md:flex-row gap-lg items-center md:items-start">
+<!-- Portrait Container -->
+<div class="relative w-full max-w-[320px] md:max-w-[400px] aspect-[3/4] shrink-0 rounded-xl overflow-hidden ambient-shadow border border-outline-variant/20">
+<!-- Using generic image URL to avoid data URI bloat, but adding the required detailed alt text -->
+<img alt="Portrait of Eleanor Vance" class="w-full h-full object-cover" data-alt="A striking, high-fashion editorial portrait of an elegant woman named Eleanor Vance against a deep, immersive charcoal background. The lighting is sophisticated, employing a soft, dramatic key light that casts a gentle golden-hour warmth on her features, enhancing the 'Midnight Gold' neo-luxury aesthetic. She is wearing minimalist, tailored dark clothing that fades subtly into the background shadows. The overall mood is still, prestigious, and curated, reflecting a high-end lifestyle or exclusive concierge service visual style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZyGi7uN4OYu_p6qQpntP3UvU4TK0V57Y-W6aGH119xjqrgw3heXkCLx37IPO_m4LSDhvY7mRDzVtPeSRkPsBKVPdC9T6AYnvmaukMWpMBTzDCwtdtZcjfcrZvvkPRdUXYiB1Qojmbnr1Ik1qRDtNE2j3L_TT5fcCd2lA6QvVtz3blRhnPVRLBrxOBpUJ41v6sVOm05Okm3Gzo_bPR9jU2aefEfHXTeh_IL3Vz_LtCW1kgrXxcodBs8uD28BMRHavn2UdaMJGnkA0"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80 pointer-events-none"></div>
+</div>
+<!-- Identity & Actions -->
+<div class="flex flex-col flex-grow w-full md:pt-md">
+<div class="text-center md:text-left mb-md">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-xs">Eleanor Vance</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant italic max-w-2xl mx-auto md:mx-0">
+                        "Philanthropist, art collector, and visionary. A central figure in the contemporary European art scene."
+                    </p>
+</div>
+<!-- Chips/Tags -->
+<div class="flex flex-wrap gap-sm justify-center md:justify-start mb-lg">
+<span class="px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 font-label-caps text-label-caps text-primary tracking-wider">VIP CLIENT</span>
+<span class="px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 font-label-caps text-label-caps text-primary tracking-wider">LONDON</span>
+<span class="px-4 py-1.5 rounded-full border border-primary/40 bg-primary/10 font-label-caps text-label-caps text-primary tracking-wider">ART &amp; DESIGN</span>
+</div>
+<!-- Primary Action -->
+<button class="w-full md:w-auto self-center md:self-start bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-caps text-label-caps py-4 px-8 rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-xs active:scale-95">
+<span class="material-symbols-outlined" data-icon="add_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                    LOG INTERACTION
+                </button>
+</div>
+</section>
+<hr class="gold-divider"/>
+<!-- Tabs Navigation -->
+<nav aria-label="Profile Tabs" class="flex overflow-x-auto no-scrollbar gap-lg pb-sm mb-md border-b border-outline-variant/20 relative">
+<!-- Active Tab -->
+<button class="font-label-caps text-label-caps text-primary pb-sm relative whitespace-nowrap tracking-widest transition-colors hover:text-primary-fixed-dim">
+                INTELLIGENCE
+                <span class="absolute bottom-[-1px] left-0 w-full h-[2px] bg-primary rounded-t-full"></span>
+</button>
+<!-- Inactive Tabs -->
+<button class="font-label-caps text-label-caps text-on-surface-variant/60 pb-sm whitespace-nowrap tracking-widest transition-colors hover:text-on-surface-variant">
+                TIMELINE
+            </button>
+<button class="font-label-caps text-label-caps text-on-surface-variant/60 pb-sm whitespace-nowrap tracking-widest transition-colors hover:text-on-surface-variant">
+                NETWORK
+            </button>
+</nav>
+<!-- Tab Content: Intelligence -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter pb-xl" id="tab-intelligence">
+<!-- Left Column: Key Data Points (Bento Grid Style) -->
+<div class="col-span-1 md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-sm">
+<!-- Data Card 1 -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-sm hover:border-primary/30 transition-colors">
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="cake">cake</span>
+<h3 class="font-label-caps text-label-caps tracking-widest opacity-80">BIRTHDAY</h3>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface">October 12</p>
+<p class="font-body-md text-body-md text-on-surface-variant/60 mt-auto">Libra</p>
+</div>
+<!-- Data Card 2 -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-sm hover:border-primary/30 transition-colors">
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="location_on">location_on</span>
+<h3 class="font-label-caps text-label-caps tracking-widest opacity-80">PRIMARY RESIDENCE</h3>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface">Mayfair, London</p>
+<p class="font-body-md text-body-md text-on-surface-variant/60 mt-auto">Secondary: Lake Como</p>
+</div>
+<!-- Data Card 3 (Full Width in sm) -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-sm sm:col-span-2 hover:border-primary/30 transition-colors">
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="sync">sync</span>
+<h3 class="font-label-caps text-label-caps tracking-widest opacity-80">INTERACTION FREQUENCY</h3>
+</div>
+<div class="flex items-end justify-between mt-xs">
+<p class="font-headline-sm text-headline-sm text-on-surface">Quarterly</p>
+<div class="flex gap-1 mb-1">
+<span class="w-2 h-6 bg-primary rounded-full"></span>
+<span class="w-2 h-8 bg-primary rounded-full"></span>
+<span class="w-2 h-4 bg-outline-variant/50 rounded-full"></span>
+<span class="w-2 h-5 bg-outline-variant/50 rounded-full"></span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant/60 mt-xs pt-xs border-t border-outline-variant/20">Last contacted: 14 days ago</p>
+</div>
+</div>
+<!-- Right Column: Preferences & Notes -->
+<div class="col-span-1 md:col-span-5 flex flex-col gap-md">
+<div class="glass-panel rounded-xl p-md">
+<h3 class="font-label-caps text-label-caps text-primary tracking-widest mb-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]" data-icon="diamond">diamond</span>
+                        PREFERENCES
+                    </h3>
+<ul class="space-y-sm">
+<li class="flex items-start gap-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></span>
+<p class="font-body-md text-body-md text-on-surface-variant">Prefers afternoon meetings over morning tea.</p>
+</li>
+<li class="flex items-start gap-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></span>
+<p class="font-body-md text-body-md text-on-surface-variant">Allergic to lilies; specify roses for floral arrangements.</p>
+</li>
+<li class="flex items-start gap-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></span>
+<p class="font-body-md text-body-md text-on-surface-variant">Requires strict confidentiality regarding upcoming gallery acquisitions.</p>
+</li>
+</ul>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar is suppressed here as this is a 'Task-Focused/Details' screen with a Back button in the TopAppBar, implying a temporary departure from the main navigation flow. -->
+<script>
+        // Simple tab switching logic for visual demonstration
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('nav button');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Reset all tabs
+                    tabs.forEach(t => {
+                        t.className = 'font-label-caps text-label-caps text-on-surface-variant/60 pb-sm whitespace-nowrap tracking-widest transition-colors hover:text-on-surface-variant relative';
+                        const indicator = t.querySelector('span');
+                        if (indicator) indicator.remove();
+                    });
+
+                    // Set active tab
+                    tab.className = 'font-label-caps text-label-caps text-primary pb-sm relative whitespace-nowrap tracking-widest transition-colors hover:text-primary-fixed-dim';
+                    const indicator = document.createElement('span');
+                    indicator.className = 'absolute bottom-[-1px] left-0 w-full h-[2px] bg-primary rounded-t-full';
+                    tab.appendChild(indicator);
+                });
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,25 @@
+# Gradle / build output (ALL modules — leading-slash-free so it matches at every level)
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# IDE
+*.iml
+.idea/
+.DS_Store
+
+# Local config
+local.properties
+
+# Signing — keep credentials and keystores out of version control
+keystore.properties
+*.jks
+*.keystore
+app/release.keystore
+
+# Built / staged release artifacts
+*.apk
+*.aab

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aurelian - People Directory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "inverse-on-surface": "#313030",
+                        "outline": "#99907c",
+                        "on-surface-variant": "#d0c5af",
+                        "outline-variant": "#4d4635",
+                        "on-primary-container": "#554300",
+                        "secondary": "#ffe2ab",
+                        "background": "#131313",
+                        "primary-fixed": "#ffe088",
+                        "surface-container-low": "#1c1b1b",
+                        "primary-container": "#d4af37",
+                        "secondary-fixed": "#ffdfa0",
+                        "on-primary-fixed-variant": "#574500",
+                        "on-secondary": "#402d00",
+                        "on-secondary-fixed": "#261a00",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-tint": "#e9c349",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "inverse-primary": "#735c00",
+                        "secondary-container": "#ffbf00",
+                        "on-background": "#e5e2e1",
+                        "on-error": "#690005",
+                        "primary": "#f2ca50",
+                        "surface-variant": "#353534",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "surface-container-highest": "#353534",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#2a2a2a",
+                        "primary-fixed-dim": "#e9c349",
+                        "on-primary": "#3c2f00",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#b4b2b2",
+                        "on-secondary-container": "#6d5000",
+                        "on-tertiary-container": "#454545",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "tertiary-fixed": "#e4e2e1",
+                        "tertiary": "#d0cdcd",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#fbbc00",
+                        "on-primary-fixed": "#241a00",
+                        "surface-dim": "#131313",
+                        "on-tertiary": "#303030",
+                        "surface-bright": "#3a3939",
+                        "error-container": "#93000a",
+                        "surface-container": "#201f1f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "1rem",
+                        "margin-desktop": "64px",
+                        "xl": "8rem",
+                        "lg": "4rem",
+                        "xs": "0.5rem",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "md": "2rem",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["Bodoni Moda"],
+                        "headline-sm": ["Bodoni Moda"],
+                        "display-lg-mobile": ["Bodoni Moda"],
+                        "label-caps": ["Manrope"],
+                        "display-lg": ["Bodoni Moda"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "headline-sm": ["24px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "display-lg-mobile": ["40px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0A; /* Overriding slightly for deeper luxury feel as per guidance */
+            color: theme('colors.on-background');
+        }
+        .glass-card {
+            background: rgba(53, 53, 52, 0.4); /* surface-variantish */
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .ambient-shadow {
+            box-shadow: 0 4px 30px rgba(212, 175, 55, 0.05);
+        }
+        .ghost-border {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .gold-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(242, 202, 80, 0.5), transparent);
+        }
+        .input-underline {
+            border-bottom: 1px solid rgba(153, 144, 124, 0.5); /* outline */
+            transition: border-color 0.3s ease;
+        }
+        .input-underline:focus-within {
+            border-bottom-color: theme('colors.primary');
+        }
+        /* Hide scrollbar for clean horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col pt-16 pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-background/80 dark:bg-background/80 backdrop-blur-xl border-b border-outline-variant/20 shadow-[0_4px_30px_rgba(212,175,55,0.05)] flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 z-50">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-300 scale-95 active:opacity-80 transition-all flex items-center justify-center w-10 h-10 md:hidden">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<!-- Desktop Nav -->
+<nav class="hidden md:flex gap-8 items-center h-full">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Reflect</a>
+<a class="font-label-caps text-label-caps text-primary hover:text-primary transition-colors duration-300 flex flex-col justify-center h-full border-b-2 border-primary" href="#">Circle</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Events</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Vault</a>
+</nav>
+<h1 class="font-headline-md text-headline-md tracking-widest text-primary absolute left-1/2 -translate-x-1/2">AURELIAN</h1>
+<button class="w-10 h-10 rounded-full overflow-hidden ghost-border scale-95 active:opacity-80 transition-all flex-shrink-0">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A close up, high fashion portrait of a sophisticated man with a subtle beard, set against a dark, moody background. Soft, dramatic lighting highlights his features. The overall aesthetic is luxurious, modern, and editorial. Colors are deep charcoal and subtle warm skin tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXxpXCJW-meJRexulEhw8B1vOOJ_guv4F93W_Nkabz1J8O3NgbZ1BcK3Hn4Rv0ST2Dzddxy3AaF_707c8j1RhId8i_heJeiIx3C97BoIJVVu3VGdwMtL8wzRThqHeoXYOMwSzAeyiii6u_bVZ1TVG5di5NJjKkt_fdwr-4zH0ibvS09hGzpO5DQE9brcOWpAV2A2KwzoBP1oWVPRkdC8iLJrPWIl9FdwqJNL-XwiNwSWy7snMyUMNkQDnzb5nvTBVswtN8IZ0QtBs"/>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col md:px-margin-desktop px-margin-mobile pt-12">
+<!-- Search & Header Section -->
+<section class="max-w-5xl mx-auto w-full mb-12 md:mb-16">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-xs">The Circle</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-2xl">A curated directory of elite members, executives, and visionaries within the Aurelian network.</p>
+<div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+<!-- Search Input -->
+<div class="relative w-full md:max-w-md input-underline pb-2 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none outline-none text-on-surface font-body-md text-body-md w-full placeholder:text-outline focus:ring-0 p-0" placeholder="Search the registry..." type="text"/>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 overflow-x-auto w-full md:w-auto pb-2 no-scrollbar">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-primary/20 text-primary border border-primary font-label-caps text-label-caps transition-all">All Profiles</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-transparent text-on-surface-variant border border-outline-variant hover:border-primary/50 hover:text-primary font-label-caps text-label-caps transition-all">Executives</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-transparent text-on-surface-variant border border-outline-variant hover:border-primary/50 hover:text-primary font-label-caps text-label-caps transition-all">Creatives</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-transparent text-on-surface-variant border border-outline-variant hover:border-primary/50 hover:text-primary font-label-caps text-label-caps transition-all">Founders</button>
+</div>
+</div>
+</section>
+<!-- Divider -->
+<div class="gold-divider w-full max-w-7xl mx-auto mb-12"></div>
+<!-- People Grid (Bento/Asymmetric Style) -->
+<section class="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-gutter mb-xl">
+<!-- Card 1: Featured/Large -->
+<article class="md:col-span-8 glass-card rounded-xl p-8 flex flex-col md:flex-row gap-8 items-center md:items-start group hover:border-primary/30 transition-colors duration-500">
+<div class="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden ghost-border flex-shrink-0">
+<img alt="Eleanor Vance" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A stunning, editorial high-fashion portrait of a woman looking directly at the camera. The background is a stark, deep dark charcoal. She wears an elegant minimalist black blazer. The lighting is soft and cinematic, emphasizing an aura of modern luxury and stillness. The color palette is constrained to blacks, grays, and warm gold skin tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9g3rgxn0tWI_Wm0FZVW-umWxXjlAdTe3hI2UfGNUbz-BmE0x7ioqx1VmLubdbvQQCjNVzb_Xzsftn4ipAt2vnIi7DyFfuwOn7zPbOLQBWCKEVWUNAmiwIAIIRPeahSbvMNRW0nPrnUTp0uWQ4uiVgcvO0udhjmfqusAqnLxP-ZoZYbShyIgo_JiCcuhxcb7ud1mLswZHq7szlghFOO4nOdjzWKK2MDNZmMQsdk1dSwPQUPcsCX_5F4BqO8o5Rl6tYxkCpurkkCSQ"/>
+</div>
+<div class="flex flex-col h-full justify-center text-center md:text-left">
+<span class="font-label-caps text-label-caps text-primary mb-2">Executive Board</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Eleanor Vance</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 max-w-md">Chief Design Officer orchestrating the aesthetic vision across all global touchpoints. Specializes in minimalist architecture and spatial design.</p>
+<div class="mt-auto flex items-center gap-4 justify-center md:justify-start">
+<span class="font-headline-sm text-sm italic text-outline">Last seen in Paris, 2h ago</span>
+<div class="w-1.5 h-1.5 rounded-full bg-primary/50"></div>
+<button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">mail</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 2: Standard -->
+<article class="md:col-span-4 glass-card rounded-xl p-6 flex flex-col items-center text-center group hover:border-primary/30 transition-colors duration-500">
+<div class="w-32 h-32 rounded-full overflow-hidden ghost-border mb-6">
+<img alt="Marcus Thorne" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A sharp, professional portrait of a distinguished man with silver hair, dressed in a bespoke dark suit. Set against a pitch-black background, lit with dramatic rim lighting to create a sense of power and exclusivity. The mood is serious, premium, and sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL_8ifDhgKXfaG70lpkdhZ6Qy63ZIZPeiJcn5L_fofnP6T-Z0CN0uHN4sejVuNO57cS4BEFz6w369r0dYAZR7jrd6r6bil9E5OgBpYHkQrQH7IxXPkTGHvPbumyg9E-w9Qf_NHJ7uUGIrwrnpxi1BdpV58Sy2JDlSIDCo02ub8ELR7y3KIClV0lCjoK8Gg45akfEHchqTdsF6vqeP_ZDFSd1skwSRlhg3nZl0VqrmO1YiDuUoCC1Vo22qqquUbUJT9trGoClB4qlI"/>
+</div>
+<span class="font-label-caps text-label-caps text-primary mb-1">Founder</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">Marcus Thorne</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 text-sm">Visionary architect behind the initial Aurelian concept.</p>
+<div class="mt-auto">
+<span class="font-headline-sm text-xs italic text-outline">Active now</span>
+</div>
+</article>
+<!-- Card 3: Standard -->
+<article class="md:col-span-4 glass-card rounded-xl p-6 flex flex-col items-center text-center group hover:border-primary/30 transition-colors duration-500">
+<div class="w-32 h-32 rounded-full overflow-hidden ghost-border mb-6">
+<img alt="Sophia Lin" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A serene portrait of a young professional woman with a calm expression. She is illuminated by soft, golden-hour light against a dark, minimalist interior setting. She wears simple, elegant dark clothing. The aesthetic conveys modern stillness and creative focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJbQzo5eovaGmuAJuhKMM-jzpWKR1qUp_DkkzI-ZApcY6yZJisr7RPASlU9M18Tzyu4uafs0G9b1PJNgwOYlcLY5lAN6ydnLt5beMdL3gPL0mN2idM9vC3hBFMWJL3AwAz3zW39ro-pnDbtd8d60RBSp08bHEoIRFZfFtGP7RK6t4ySQjSsaUZCWKHmJcdEX8rMaPnkTG3FtdSkQ16tXaNrk_rdPz-y8D6cC8hiVP4U9qOsuoK8lt-cF_4vtL8jo3-IcMtbgBibMs"/>
+</div>
+<span class="font-label-caps text-label-caps text-primary mb-1">Creative</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">Sophia Lin</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 text-sm">Lead Curator for digital installations and private gallery events.</p>
+<div class="mt-auto">
+<span class="font-headline-sm text-xs italic text-outline">Last seen 1d ago</span>
+</div>
+</article>
+<!-- Card 4: Horizontal List Style for variation -->
+<article class="md:col-span-8 glass-card rounded-xl p-6 flex items-center justify-between group hover:border-primary/30 transition-colors duration-500">
+<div class="flex items-center gap-6">
+<div class="w-20 h-20 rounded-full overflow-hidden ghost-border flex-shrink-0">
+<img alt="Julian Vane" class="w-full h-full object-cover" data-alt="A moody, side-profile portrait of a man in a high-end dark turtleneck. The lighting is low-key, featuring strong shadows and subtle golden highlights. The background is completely dark, creating an atmosphere of mystery and luxury executive presence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALugE8j8rI8waVb5hmGbag-EsKrt2nhBEmLyB_WdQgU3K5Cg_0PMBrMxq49RcoV6SHNYKqInt5JRvRPYyivH6ifWshW7l4RRMk550s9gx_VxRL8myW-_4CElUTnncMnbOBrOlrvfB3ZM8lboSY6tzB59Xi0Md4KCh0hr2Gu6D3JHrcGNxPKjXxr_58b5hcJPXN_YFsMWs7rsH2RHV9RT_gcn-6CiKr6NLVtpYi-hSKvW_ONaLpG058-RXwZEnrlIghRlYkNZop7BI"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Julian Vane</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mb-1">Director of Concierge Services</p>
+<span class="font-label-caps text-label-caps text-primary/70">Executive</span>
+</div>
+</div>
+<div class="text-right hidden md:block">
+<span class="font-headline-sm text-sm italic text-outline block mb-2">In Transit - LHR</span>
+<button class="px-4 py-2 border border-outline-variant rounded-lg text-on-surface hover:text-primary hover:border-primary font-label-caps text-label-caps transition-all">View Dossier</button>
+</div>
+</article>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-6 pt-3 bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-outline-variant/10 shadow-[0_-4px_24px_rgba(0,0,0,0.8)] rounded-t-[1.5rem]">
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-caps text-label-caps text-[10px]">Reflect</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary font-bold bg-primary/10 rounded-full px-4 py-1 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-label-caps text-label-caps text-[10px]">Circle</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">event_note</span>
+<span class="font-label-caps text-label-caps text-[10px]">Events</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">lock</span>
+<span class="font-label-caps text-label-caps text-[10px]">Vault</span>
+</button>
+</nav>
+</body></html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AURELIAN - Home Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Glassmorphism & Tonal Layering */
+        .glass-panel {
+            background: rgba(32, 31, 31, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(153, 144, 124, 0.1);
+        }
+        
+        /* Subtle glowing shadow */
+        .ambient-glow {
+            box-shadow: 0 4px 30px rgba(212, 175, 55, 0.05);
+        }
+
+        /* Specialized Divider */
+        .gold-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.5) 50%, transparent 100%);
+            width: 100%;
+        }
+
+        /* Custom Scrollbar for elegant feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(153, 144, 124, 0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(212, 175, 55, 0.4);
+        }
+
+        /* Hide elements on specific breakpoints for layout transitions */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<!-- Tailwind Configuration (Neo-Luxury Style) -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error": "#ffb4ab",
+                        "inverse-on-surface": "#313030",
+                        "outline": "#99907c",
+                        "on-surface-variant": "#d0c5af",
+                        "outline-variant": "#4d4635",
+                        "on-primary-container": "#554300",
+                        "secondary": "#ffe2ab",
+                        "background": "#131313",
+                        "primary-fixed": "#ffe088",
+                        "surface-container-low": "#1c1b1b",
+                        "primary-container": "#d4af37",
+                        "secondary-fixed": "#ffdfa0",
+                        "on-primary-fixed-variant": "#574500",
+                        "on-secondary": "#402d00",
+                        "on-secondary-fixed": "#261a00",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-tint": "#e9c349",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "inverse-primary": "#735c00",
+                        "secondary-container": "#ffbf00",
+                        "on-background": "#e5e2e1",
+                        "on-error": "#690005",
+                        "primary": "#f2ca50",
+                        "surface-variant": "#353534",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "surface-container-highest": "#353534",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#2a2a2a",
+                        "primary-fixed-dim": "#e9c349",
+                        "on-primary": "#3c2f00",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-container": "#b4b2b2",
+                        "on-secondary-container": "#6d5000",
+                        "on-tertiary-container": "#454545",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "tertiary-fixed": "#e4e2e1",
+                        "tertiary": "#d0cdcd",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#fbbc00",
+                        "on-primary-fixed": "#241a00",
+                        "surface-dim": "#131313",
+                        "on-tertiary": "#303030",
+                        "surface-bright": "#3a3939",
+                        "error-container": "#93000a",
+                        "surface-container": "#201f1f"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "sm": "1rem",
+                        "margin-desktop": "64px",
+                        "xl": "8rem",
+                        "lg": "4rem",
+                        "xs": "0.5rem",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "md": "2rem",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["Bodoni Moda"],
+                        "headline-sm": ["Bodoni Moda"],
+                        "display-lg-mobile": ["Bodoni Moda"],
+                        "label-caps": ["Manrope"],
+                        "display-lg": ["Bodoni Moda"]
+                    },
+                    fontSize: {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col md:flex-row font-body-md selection:bg-primary/20 selection:text-primary">
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden bg-background/80 dark:bg-background/80 backdrop-blur-xl border-b border-outline-variant/20 shadow-[0_4px_30px_rgba(212,175,55,0.05)] fixed top-0 w-full flex justify-between items-center px-margin-mobile h-16 z-50">
+<button class="scale-95 active:opacity-80 transition-all text-primary dark:text-primary hover:text-primary duration-300">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="font-headline-md text-headline-md tracking-widest text-primary">AURELIAN</div>
+<button class="scale-95 active:opacity-80 transition-all text-on-surface-variant hover:text-primary duration-300">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</header>
+<!-- NavigationDrawer (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen fixed w-80 rounded-r-xl border-r border-outline-variant/20 shadow-2xl bg-surface-container-low dark:bg-surface-container-low z-40 p-sm">
+<!-- Header -->
+<div class="flex flex-col items-start px-4 py-6 mb-8">
+<div class="font-headline-md text-headline-md tracking-widest text-primary mb-8">AURELIAN</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30">
+<img alt="Julian Vane" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkB-iGgWvw6NkvFdhEcIqZ_EQekTGIhdQnFLFpXQ2HYxF4k5owZ8gE6evEOlKzuO6jIWxLSfLN5BboHomMe_AT24fnKcE_l3Y6uUZyaTcrRYJ4wsulyGEz9gHvHuDaSruvOA51LfCJ220WUq2hjHnS4AI4PCLbCnOZrAMRG0SdIi6qmTOJloa6MQndn2vInsS-s4Nb-hjo_rmwFos22EdvFtUHLzJlle7oiIuMfNJZgdMrJB7nTg9HO2JvzPmrbHJnTALuEVoGUYE"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Julian Vane</h3>
+<p class="font-label-caps text-label-caps text-primary mt-1">Elite Member</p>
+</div>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span>Concierge</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-primary bg-surface-variant/30 px-4 py-3 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined icon-fill">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Archives</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Preferences</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 rounded-lg hover:bg-primary/5 hover:text-primary transition-all duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">fingerprint</span>
+<span>Security</span>
+</a>
+</li>
+</ul>
+<!-- Logout -->
+<div class="mt-auto">
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 rounded-lg hover:bg-error/10 hover:text-error transition-all duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-80 pt-20 pb-32 md:pt-12 md:pb-12 px-margin-mobile md:px-margin-desktop overflow-x-hidden">
+<!-- Header -->
+<div class="mb-12">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-2">Welcome Back, Julian.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">A curated overview of your exclusive network and upcoming engagements.</p>
+</div>
+<!-- Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Vitality & Check-ins -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Section 1: Network Vitality Gauge -->
+<section class="glass-panel rounded-xl p-8 ambient-glow relative overflow-hidden group">
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-700"></div>
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Network Vitality</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Real-time engagement health</p>
+</div>
+<span class="material-symbols-outlined text-primary text-3xl opacity-80">vital_signs</span>
+</div>
+<div class="flex items-center gap-8">
+<!-- Simulated Gauge -->
+<div class="relative w-40 h-40 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle class="text-surface-variant" cx="50" cy="50" fill="none" r="45" stroke="currentColor" stroke-width="2"></circle>
+<circle class="text-primary transition-all duration-1000 ease-out" cx="50" cy="50" fill="none" r="45" stroke="currentColor" stroke-dasharray="283" stroke-dashoffset="42" stroke-width="4" style="filter: drop-shadow(0 0 4px rgba(242, 202, 80, 0.4));"></circle>
+</svg>
+<div class="absolute text-center">
+<span class="font-headline-md text-headline-md text-primary block">85%</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mt-1">Optimal</span>
+</div>
+</div>
+<div class="flex-1 space-y-4">
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Active Connections</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">142</span>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Recent Interactions</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">28</span>
+</div>
+<div class="flex justify-between items-end">
+<span class="font-body-md text-body-md text-on-surface-variant">Pending Responses</span>
+<span class="font-headline-sm text-headline-sm text-primary">3</span>
+</div>
+</div>
+</div>
+</section>
+<div class="gold-divider my-8"></div>
+<!-- Section 2: Urgent Check-ins -->
+<section>
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md text-on-surface">Urgent Check-ins</h2>
+<a class="font-label-caps text-label-caps text-primary hover:text-secondary-fixed transition-colors flex items-center gap-1" href="#">
+                            VIEW ALL <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Card 1 -->
+<div class="glass-panel rounded-xl p-6 hover:bg-surface-variant/20 transition-colors duration-300 cursor-pointer group">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant shrink-0">
+<img alt="Eleanor Vance profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7rOCaA6I6lWyE0ZAyuEEumP3pGCNJfH6KSdUq_Ue6PwRo9SDEX_euxo1hk9EK1VrvVag1bnVbHKlOKc_QMwora61DLXydFQ9be6jMDT1dKFA-2MqBTZs4ERWJf86PzgRtgru_oT3dDlepchBBAOqTwGV2XG2MbfVQYYgW8QUFTbLXVqCdakiVc8oTzQdyoJG8eCFQoxd8Kr4_SAPKX4s84n5tYxrne4dPPb-xEQLvOYl7szilgyga95Il152bFWdiFUWd4qGZ2Q4"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Eleanor Vance</h3>
+<span class="w-2 h-2 rounded-full bg-error mt-2 shadow-[0_0_8px_rgba(255,180,171,0.6)]"></span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1 mb-3">Venture Partner</p>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Requested input on the Q3 silent auction beneficiary list prior to board meeting.</p>
+<div class="mt-4 flex gap-3">
+<button class="bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded font-label-caps text-label-caps hover:bg-primary hover:text-on-primary transition-colors">RESPOND</button>
+<button class="text-on-surface-variant hover:text-on-surface px-2 py-2 transition-colors"><span class="material-symbols-outlined">schedule</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel rounded-xl p-6 hover:bg-surface-variant/20 transition-colors duration-300 cursor-pointer group">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant shrink-0 flex items-center justify-center bg-surface-variant text-on-surface-variant font-headline-sm">
+                                    MR
+                                </div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Marcus Reed</h3>
+<span class="w-2 h-2 rounded-full bg-secondary-container mt-2 shadow-[0_0_8px_rgba(255,191,0,0.4)]"></span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1 mb-3">Client - Art Advisory</p>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Awaiting confirmation for the private viewing at the Guggenheim this Thursday.</p>
+<div class="mt-4 flex gap-3">
+<button class="bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded font-label-caps text-label-caps hover:bg-primary hover:text-on-primary transition-colors">RESPOND</button>
+<button class="text-on-surface-variant hover:text-on-surface px-2 py-2 transition-colors"><span class="material-symbols-outlined">schedule</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Milestones & Pinned Event -->
+<div class="lg:col-span-4 space-y-gutter">
+<!-- Section 3: Upcoming Milestones -->
+<section class="glass-panel rounded-xl p-6">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">cake</span>
+                        Milestones
+                    </h2>
+<ul class="space-y-4">
+<li class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-variant/30 transition-colors">
+<div class="flex flex-col items-center justify-center w-12 h-12 rounded bg-surface-container-high border border-outline-variant/30 shrink-0">
+<span class="font-label-caps text-label-caps text-primary">OCT</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">12</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface">Isabella Thorne</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Birthday • Gift curated</p>
+</div>
+</li>
+<li class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-variant/30 transition-colors">
+<div class="flex flex-col items-center justify-center w-12 h-12 rounded bg-surface-container-high border border-outline-variant/30 shrink-0">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OCT</span>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">18</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface">Victor &amp; Clara</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Anniversary • Pending card</p>
+</div>
+</li>
+<li class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-variant/30 transition-colors opacity-70">
+<div class="flex flex-col items-center justify-center w-12 h-12 rounded bg-surface-container-high border border-outline-variant/30 shrink-0">
+<span class="font-label-caps text-label-caps text-on-surface-variant">NOV</span>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">02</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface">James Althorp</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Birthday • Action needed</p>
+</div>
+</li>
+</ul>
+<button class="w-full mt-6 py-3 border border-outline-variant text-on-surface-variant font-label-caps text-label-caps rounded hover:bg-surface-variant/30 hover:text-on-surface transition-colors tracking-widest">
+                        GIFTING CONCIERGE
+                    </button>
+</section>
+<!-- Section 4: Pinned Event Card -->
+<section class="glass-panel rounded-xl overflow-hidden group">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent z-10"></div>
+<img alt="Luxury dining setting with crystal glasses, warm candlelight, fine china, and gold accents. Dark cinematic atmosphere." class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A cinematic, high-end photography shot of a luxury gala dining table setting. The scene features crystal wine glasses reflecting warm, low-key candlelight against a deep charcoal background. Fine china with subtle gold rim detailing sits on dark textured linens. The lighting is dramatic and moody, emphasizing a Neo-Luxury aesthetic with deep blacks and rich gold accents. The overall atmosphere is exclusive, still, and highly prestigious." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNCzC0Fygg3jljex731KV36J5OUQbjcCZj68z7qPqujGKEolm2lynxmxFoR_CBYqmN_ABid2BsWbz2fGvzjrryDf7a2DQJLMvSUZFmVIHi4lCYyzjd7rmOxCNlsPFfYMGVThfemfonQ1GopDxR-gXQ3lxtUhdBlaqKnj8PV-rt_vui4tSJ1wqjVvNe2ojuOpsmTDZs__yTa_Q2do0_cNXD7X23LqbgbnH3c1t-e2Y3CYBU2AiL_Y90RIqzpHZ8KsMiq-n0ABd6fwY"/>
+<div class="absolute top-4 right-4 z-20 bg-background/60 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">push_pin</span>
+<span class="font-label-caps text-label-caps text-primary">PINNED</span>
+</div>
+</div>
+<div class="p-6 relative z-20 -mt-8">
+<span class="font-label-caps text-label-caps text-primary block mb-2">NOV 15 • 19:00 EST</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">The Annual Foundation Gala</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2">An exclusive gathering of benefactors supporting global arts initiatives at The Plaza.</p>
+<div class="flex items-center gap-3">
+<button class="flex-1 bg-primary text-on-primary font-label-caps text-label-caps py-3 rounded hover:bg-primary-fixed transition-colors tracking-widest shadow-[0_0_15px_rgba(242,202,80,0.2)]">
+                                VIEW DETAILS
+                            </button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-6 pt-3 bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl shadow-[0_-4px_24px_rgba(0,0,0,0.8)] border-t-0 rounded-t-xl">
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">select</span>
+<span class="font-label-caps text-label-caps text-[10px]">Reflect</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary font-bold bg-primary/10 rounded-full px-4 py-1 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 duration-300">
+<span class="material-symbols-outlined icon-fill mb-1">dashboard</span>
+<span class="font-label-caps text-label-caps text-[10px]">Circle</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">event_note</span>
+<span class="font-label-caps text-label-caps text-[10px]">Events</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-all tap-highlight-transparent active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1">lock</span>
+<span class="font-label-caps text-label-caps text-[10px]">Vault</span>
+</button>
+</nav>
+<script>
+        // Subtle entrance animation for elements
+        document.addEventListener("DOMContentLoaded", () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = "1";
+                        entry.target.style.transform = "translateY(0)";
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const animatedElements = document.querySelectorAll('section');
+            animatedElements.forEach((el, index) => {
+                el.style.opacity = "0";
+                el.style.transform = "translateY(20px)";
+                el.style.transition = `opacity 0.6s ease-out ${index * 0.1}s, transform 0.6s ease-out ${index * 0.1}s`;
+                observer.observe(el);
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Birthdays / Milestones -->
+    <string name="birthdays_title">Milestones</string>
+    <string name="birthdays_subtitle">The moments that define your journey.</string>
+
+    <!-- View modes -->
+    <string name="view_year">Year</string>
+    <string name="view_month">Month</string>
+    <string name="view_list">List</string>
+    <string name="view_mode">View mode</string>
+
+    <!-- Birthday rows -->
+    <string name="birthday_turns">Turns %1$d</string>
+    <string name="birthday_today">Today</string>
+    <string name="birthday_in_days">In</string>
+    <string name="birthday_days_unit">Days</string>
+    <string name="birthday_label">Birthday</string>
+
+    <!-- Calendar -->
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="weekday_sunday">S</string>
+    <string name="weekday_monday">M</string>
+    <string name="weekday_tuesday">T</string>
+    <string name="weekday_wednesday">W</string>
+    <string name="weekday_thursday">T</string>
+    <string name="weekday_friday">F</string>
+    <string name="weekday_saturday">S</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_more">More options</string>
+
+    <!-- Import / export -->
+    <string name="import_csv">Import CSV</string>
+    <string name="import_json">Import profile (JSON)</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="export_json">Export backup (JSON)</string>
+    <string name="import_result">%1$d imported, %2$d errors</string>
+    <string name="import_failed">Import failed</string>
+    <string name="import_one_profile">Imported %1$s</string>
+    <string name="share_birthdays">Share birthdays</string>
+
+    <!-- Empty / loading -->
+    <string name="birthdays_empty_title">No birthdays yet</string>
+    <string name="birthdays_empty_desc">Add a birthday to someone in your circle to see them here.</string>
+</resources>

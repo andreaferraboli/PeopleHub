@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aurelian - Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#303030",
+                        "on-primary": "#3c2f00",
+                        "on-secondary-container": "#6d5000",
+                        "inverse-primary": "#735c00",
+                        "surface-container-highest": "#353534",
+                        "on-background": "#e5e2e1",
+                        "outline": "#99907c",
+                        "on-primary-fixed": "#241a00",
+                        "tertiary": "#d0cdcd",
+                        "error": "#ffb4ab",
+                        "secondary": "#ffe2ab",
+                        "on-surface": "#e5e2e1",
+                        "outline-variant": "#4d4635",
+                        "primary-fixed": "#ffe088",
+                        "primary-container": "#d4af37",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "surface-container": "#201f1f",
+                        "on-tertiary-container": "#454545",
+                        "on-surface-variant": "#d0c5af",
+                        "tertiary-container": "#b4b2b2",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "secondary-fixed-dim": "#fbbc00",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#261a00",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-bright": "#3a3939",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-dim": "#131313",
+                        "on-error": "#690005",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary-container": "#ffbf00",
+                        "on-primary-fixed-variant": "#574500",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#554300",
+                        "secondary-fixed": "#ffdfa0",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "surface-tint": "#e9c349",
+                        "tertiary-fixed": "#e4e2e1",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "primary": "#f2ca50",
+                        "on-secondary": "#402d00",
+                        "inverse-on-surface": "#313030",
+                        "surface-variant": "#353534",
+                        "primary-fixed-dim": "#e9c349",
+                        "inverse-surface": "#e5e2e1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "xl": "8rem",
+                        "md": "2rem",
+                        "xs": "0.5rem",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "lg": "4rem",
+                        "sm": "1rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display-lg": ["Bodoni Moda"],
+                        "headline-md": ["Bodoni Moda"],
+                        "display-lg-mobile": ["Bodoni Moda"],
+                        "headline-sm": ["Bodoni Moda"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(42, 42, 42, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glow-shadow {
+            box-shadow: 0 4px 30px rgba(212, 175, 55, 0.05);
+        }
+        .divider-gold {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+        }
+        
+        /* Custom Toggle Styles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #d4af37;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #d4af37;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased selection:bg-primary selection:text-on-primary overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-background/80 dark:bg-background/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_4px_30px_rgba(212,175,55,0.05)] z-50">
+<div class="flex justify-between items-center px-gutter h-20 w-full">
+<button class="text-on-surface-variant hover:text-primary-fixed-dim transition-colors duration-300 active:scale-95">
+<span class="material-symbols-outlined" style="font-size: 28px;">menu</span>
+</button>
+<h1 class="font-display-lg text-headline-sm tracking-widest text-primary dark:text-primary">AURELIAN</h1>
+<button class="text-on-surface-variant hover:text-primary-fixed-dim transition-colors duration-300 active:scale-95">
+<span class="material-symbols-outlined" style="font-size: 28px;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-[104px] pb-[100px] px-gutter md:px-margin-desktop max-w-7xl mx-auto min-h-screen flex flex-col gap-xl">
+<!-- Page Header -->
+<section class="text-center md:text-left mt-md">
+<h2 class="font-display-lg-mobile md:font-display-lg text-on-surface mb-xs">The Vault</h2>
+<p class="font-body-lg text-on-surface-variant max-w-2xl">Manage your sanctum. Configure security parameters, adjust network thresholds, and secure your digital archives.</p>
+</section>
+<!-- Bento Grid Layout for Settings -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Security & Notifications (Large Card) -->
+<section class="md:col-span-8 glass-panel glow-shadow rounded-xl p-md md:p-margin-desktop flex flex-col gap-md relative overflow-hidden group">
+<!-- Decorative background image -->
+<div class="absolute inset-0 opacity-20 transition-transform duration-700 group-hover:scale-105 pointer-events-none" data-alt="A macro shot of intricate, interlocking golden metallic gears and locking mechanisms against a deep, velvety black background. The lighting is cinematic, highlighting the precision engineering and luxurious materials, conveying a sense of impenetrable security and high-end craftsmanship typical of a luxury safe." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCtCrRfSLvNqv31mzkP81n94yU78aBezz7VOvVTk0LqMpYdr3vfrLIjATjXsLPx3BOeo_OSmmDfO_cVBbgoCGZDl-lwwEucPlZPspL0gthmaAO5KywuAv3pO8Kq6rPmnVH8jQdzFF2RyL6CK0PrUK5ZqmttUh9WINOhWhFFp3BPrqB7V4gGdanwq_OMfLsIbkinrN2rmMpYI9-2_xW_KVkXr4TSuTCZi8h4eYkRVdhMUnlONRMaP4b1p_9oJ3oB1SNHdGR3_xIeLoU'); background-size: cover; background-position: center;"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-surface-container-high pointer-events-none"></div>
+<div class="relative z-10 flex items-center gap-sm mb-sm">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">shield_lock</span>
+<h3 class="font-headline-md text-on-surface">Security &amp; Notifications</h3>
+</div>
+<div class="relative z-10 flex flex-col gap-sm">
+<!-- Setting Item -->
+<div class="flex justify-between items-center py-sm border-b border-outline-variant/30">
+<div>
+<h4 class="font-body-lg text-on-surface">Biometric Authentication</h4>
+<p class="font-body-md text-on-surface-variant">Require FaceID or Fingerprint to unlock the Vault.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out z-10" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-primary-container cursor-pointer" for="toggle1"></label>
+</div>
+</div>
+<!-- Setting Item -->
+<div class="flex justify-between items-center py-sm border-b border-outline-variant/30">
+<div>
+<h4 class="font-body-lg text-on-surface">Quiet Hours</h4>
+<p class="font-body-md text-on-surface-variant">Mute all non-critical notifications from 10 PM to 7 AM.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out z-10" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-primary-container cursor-pointer" for="toggle2"></label>
+</div>
+</div>
+<!-- Setting Item -->
+<div class="flex justify-between items-center py-sm">
+<div>
+<h4 class="font-body-lg text-on-surface">Alert Strictness</h4>
+<p class="font-body-md text-on-surface-variant">Currently set to <span class="text-primary">Elevated</span>.</p>
+</div>
+<button class="font-label-caps text-primary border border-primary/50 rounded-full px-4 py-2 hover:bg-primary/10 transition-colors">Configure</button>
+</div>
+</div>
+</section>
+<!-- Network Thresholds (Tall Card) -->
+<section class="md:col-span-4 glass-panel glow-shadow rounded-xl p-md flex flex-col gap-md">
+<div class="flex items-center gap-sm mb-xs">
+<span class="material-symbols-outlined text-primary" style="font-size: 28px;">tune</span>
+<h3 class="font-headline-sm text-on-surface">Network Thresholds</h3>
+</div>
+<p class="font-body-md text-on-surface-variant mb-auto">Fine-tune the parameters of your trusted circle and interaction limits.</p>
+<div class="flex flex-col gap-md mt-sm">
+<div>
+<div class="flex justify-between mb-2">
+<label class="font-label-caps text-on-surface-variant">Connection Proximity</label>
+<span class="font-label-caps text-primary">Global</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1">
+<div class="bg-primary h-1 rounded-full w-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between mb-2">
+<label class="font-label-caps text-on-surface-variant">Discovery Radius</label>
+<span class="font-label-caps text-primary">50 km</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1">
+<div class="bg-primary h-1 rounded-full w-1/3"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- The Archives (Full Width Card) -->
+<section class="md:col-span-12 glass-panel glow-shadow rounded-xl p-md md:p-margin-desktop flex flex-col md:flex-row gap-lg items-center justify-between">
+<div class="flex-1">
+<div class="flex items-center gap-sm mb-sm">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">inventory_2</span>
+<h3 class="font-headline-md text-on-surface">The Archives</h3>
+</div>
+<p class="font-body-lg text-on-surface-variant max-w-xl">Safeguard your journey. Export your reflections, event history, and network data to a secure, encrypted archive.</p>
+<div class="mt-sm flex gap-4 text-sm font-label-caps text-on-surface-variant/70">
+<span>Last Backup: Today, 03:00 AM</span>
+<span>•</span>
+<span>Size: 2.4 GB</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row gap-sm w-full md:w-auto">
+<button class="bg-primary text-on-primary font-label-caps px-8 py-4 rounded-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all duration-300 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">download</span>
+                        Export Archive
+                    </button>
+<button class="border border-outline-variant text-on-surface font-label-caps px-8 py-4 rounded-lg hover:border-primary hover:text-primary transition-colors duration-300 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">cloud_upload</span>
+                        Restore
+                    </button>
+</div>
+</section>
+</div>
+<!-- Divider -->
+<div class="divider-gold w-3/4 mx-auto my-lg"></div>
+<!-- Danger Zone (Subtle) -->
+<section class="text-center pb-xl">
+<button class="text-on-surface-variant/50 hover:text-error transition-colors font-label-caps underline decoration-on-surface-variant/30 underline-offset-4">Terminate Account Permanently</button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-outline-variant/20 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-50 md:hidden pb-safe">
+<div class="flex justify-around items-center px-4 py-3">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1">auto_awesome</span>
+<span class="font-label-caps text-label-caps">Reflect</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1">group</span>
+<span class="font-label-caps text-label-caps">Circle</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1">calendar_month</span>
+<span class="font-label-caps text-label-caps">Events</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary font-bold bg-primary-container/10 rounded-full py-2 px-4 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label-caps text-label-caps">Vault</span>
+</a>
+</div>
+</nav>
+</body></html>

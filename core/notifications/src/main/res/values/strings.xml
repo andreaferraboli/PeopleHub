@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channels -->
+    <string name="channel_checkin_name">Check-in reminders</string>
+    <string name="channel_checkin_desc">Nudges when it has been a while since you saw someone.</string>
+    <string name="channel_birthday_name">Birthday reminders</string>
+    <string name="channel_birthday_desc">Reminders for upcoming and current birthdays.</string>
+
+    <!-- Check-in reminder -->
+    <string name="notif_checkin_title">You haven\'t seen %1$s in %2$d days</string>
+    <string name="notif_checkin_body">Last seen %1$s</string>
+
+    <!-- Birthday reminders -->
+    <string name="notif_birthday_today_title">Today is %1$s\'s birthday! 🎂</string>
+    <string name="notif_birthday_upcoming_title">%1$s\'s birthday is in %2$d days</string>
+
+    <!-- Actions -->
+    <string name="notif_action_mark_seen">Mark as seen</string>
+</resources>

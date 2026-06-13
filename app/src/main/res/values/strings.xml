@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PeopleHub</string>
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_reflect">Reflect</string>
+    <string name="tab_circle">Circle</string>
+    <string name="tab_events">Events</string>
+    <string name="tab_vault">Vault</string>
+
+    <!-- Shared -->
+    <string name="action_check_in">I saw them</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Dashboard / Reflect -->
+    <string name="dashboard_welcome">Welcome back</string>
+    <string name="dashboard_subtitle">A curated overview of your network and upcoming moments.</string>
+    <string name="dashboard_vitality">Network vitality</string>
+    <string name="dashboard_active">Active connections</string>
+    <string name="dashboard_birthdays">Upcoming birthdays</string>
+    <string name="dashboard_attention">Need attention</string>
+    <string name="dashboard_urgent_title">Urgent check-ins</string>
+    <string name="dashboard_milestones">Milestones</string>
+    <string name="dashboard_pinned">Pinned event</string>
+    <string name="dashboard_view_all">View all</string>
+    <string name="dashboard_birthday_today">Today 🎂</string>
+    <string name="dashboard_birthday_in_days">in %1$d days</string>
+    <string name="dashboard_empty_title">Your hub is empty</string>
+    <string name="dashboard_empty_desc">Add the first person to start tracking your relationships.</string>
+    <string name="dashboard_empty_cta">Add your first person</string>
+
+    <!-- Settings / Vault -->
+    <string name="vault_title">The Vault</string>
+    <string name="vault_backup_title">Backup &amp; restore</string>
+    <string name="vault_backup_desc">Export your reflections to a file, or restore them on a new device.</string>
+    <string name="vault_export_all">Export everything (JSON)</string>
+    <string name="vault_import_all">Import backup</string>
+    <string name="vault_export_birthdays">Export birthdays (CSV)</string>
+    <string name="vault_share_birthdays">Share birthdays</string>
+    <string name="vault_threshold_title">Check-in thresholds</string>
+    <string name="vault_threshold_desc">Default number of days before someone needs attention.</string>
+    <string name="vault_threshold_warning">Warning after (days)</string>
+    <string name="vault_threshold_critical">Critical after (days)</string>
+    <string name="vault_reminders_title">Birthday reminders</string>
+    <string name="vault_reminder_1d">1 day before</string>
+    <string name="vault_reminder_3d">3 days before</string>
+    <string name="vault_reminder_7d">7 days before</string>
+    <string name="vault_reminder_30d">30 days before</string>
+    <string name="vault_alarms_title">Reminder timing</string>
+    <string name="vault_exact_alarms">Use exact alarms</string>
+    <string name="vault_reminder_hour">Daily reminder hour</string>
+    <string name="vault_import_title">Import backup</string>
+    <string name="vault_import_message">Replace all current data, or merge in only new records?</string>
+    <string name="vault_import_merge">Merge</string>
+    <string name="vault_import_replace">Replace all</string>
+
+    <!-- Vault: updates -->
+    <string name="vault_updates_title">Updates</string>
+    <string name="vault_current_version">Current version: %1$s</string>
+    <string name="vault_check_updates">Check for updates</string>
+    <string name="vault_update_to">Update to v%1$s</string>
+
+    <!-- Update flow -->
+    <string name="update_available_title">Update available</string>
+    <string name="update_available_message">Version %1$s is ready to install.</string>
+    <string name="update_install">Download &amp; install</string>
+    <string name="update_later">Later</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="update_downloading_hint">Please wait — the installer opens automatically.</string>
+    <string name="update_up_to_date">You\'re on the latest version.</string>
+    <string name="update_checking">Checking…</string>
+
+    <!-- Vault: danger zone -->
+    <string name="vault_danger_title">Danger zone</string>
+    <string name="vault_delete_all">Delete all people</string>
+    <string name="vault_delete_all_desc">Remove every person and their check-ins. Events are kept but become unlinked. This cannot be undone.</string>
+    <string name="vault_delete_all_confirm_title">Delete all people?</string>
+    <string name="vault_delete_all_confirm_message">This permanently removes everyone you\'ve added, along with their check-ins. This cannot be undone.</string>
+
+    <!-- Vault: import guide entry -->
+    <string name="vault_guide_title">How to import</string>
+    <string name="vault_guide_desc">Formats, fields and examples — and import right from the guide.</string>
+    <string name="vault_open_guide">Open import guide</string>
+
+    <!-- Import guide screen -->
+    <string name="import_guide_title">Import guide</string>
+    <string name="ig_intro">PeopleHub reads three file formats. Choose a file in any section below to import it, then open Circle or Milestones to see the results.\n\nTip: export from the Vault first — the file it creates is exactly this format, already filled with your own data.</string>
+    <string name="ig_fields">Fields</string>
+    <string name="ig_example">Example</string>
+    <string name="ig_required">required</string>
+    <string name="ig_optional">optional</string>
+    <string name="ig_result_dismiss">Got it</string>
+
+    <string name="ig_csv_title">Birthdays · CSV</string>
+    <string name="ig_csv_desc">One person per line: first name, last name, birth date. A header row is optional and auto-detected. A bad row is skipped (not the whole file); wrap a field in quotes to include a comma.</string>
+    <string name="ig_csv_import">Choose CSV file</string>
+
+    <string name="ig_person_title">One person · JSON</string>
+    <string name="ig_person_desc">A single JSON object describing one person. Only the first and last name are required; everything else is optional.</string>
+    <string name="ig_person_import">Choose JSON profile</string>
+
+    <string name="ig_backup_title">Full backup · JSON</string>
+    <string name="ig_backup_desc">The complete snapshot — people, check-ins and events. After choosing the file, pick Merge to add only new records or Replace to overwrite everything.</string>
+    <string name="ig_backup_import">Choose backup file</string>
+</resources>

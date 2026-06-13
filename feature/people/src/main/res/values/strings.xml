@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_save">Save</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_import">Import</string>
+
+    <!-- People list -->
+    <string name="people_title">The Circle</string>
+    <string name="people_subtitle">A curated directory of the people in your life.</string>
+    <string name="people_search_hint">Search the registry…</string>
+    <string name="people_add">Add person</string>
+    <string name="people_sort">Sort</string>
+    <string name="people_import">Import profile</string>
+    <string name="people_empty_title">No one here yet</string>
+    <string name="people_empty_desc">Add the first person to your circle.</string>
+
+    <!-- Sort options -->
+    <string name="sort_name">Name A–Z</string>
+    <string name="sort_last_checkin">Last check-in</string>
+    <string name="sort_birthday">Upcoming birthday</string>
+
+    <!-- Single-profile import -->
+    <string name="import_confirm_title">Import profile?</string>
+    <string name="import_confirm_message">Add %1$s to your circle?</string>
+
+    <!-- Person detail -->
+    <string name="detail_edit">Edit</string>
+    <string name="detail_delete">Delete</string>
+    <string name="detail_delete_title">Delete person?</string>
+    <string name="detail_delete_message">This permanently removes them and all of their check-ins.</string>
+    <string name="detail_seen_today_button">I saw %1$s today</string>
+    <string name="tab_info">Info</string>
+    <string name="tab_checkin">Check-in</string>
+    <string name="tab_related">Related</string>
+    <string name="detail_birthday">Birthday</string>
+    <string name="detail_turns">Turns %1$d</string>
+    <string name="detail_interests">Interests &amp; tastes</string>
+    <string name="detail_notes">Notes</string>
+    <string name="detail_history_empty_title">No check-ins yet</string>
+    <string name="detail_history_empty_desc">Tap the button above the first time you see them.</string>
+    <string name="detail_related_empty_title">Nothing linked yet</string>
+    <string name="detail_related_empty_desc">Events linked to this person will appear here.</string>
+
+    <!-- Check-in dialog -->
+    <string name="checkin_dialog_title">Log time with %1$s</string>
+    <string name="checkin_note_hint">Add a note (optional)</string>
+    <string name="checkin_confirm">Log it</string>
+
+    <!-- Add / edit person -->
+    <string name="edit_title_new">New person</string>
+    <string name="edit_title_edit">Edit person</string>
+    <string name="edit_first_name">Name</string>
+    <string name="edit_last_name">Last name (optional)</string>
+    <string name="edit_birthday">Birthday</string>
+    <string name="edit_birthday_add">Add a birthday</string>
+    <string name="edit_tags">Tags</string>
+    <string name="edit_tag_add">Add tag</string>
+    <string name="edit_interests">Interests &amp; tastes</string>
+    <string name="edit_interest_key">Label</string>
+    <string name="edit_interest_value">Value</string>
+    <string name="edit_interest_add">Add interest</string>
+    <string name="edit_notes">Notes</string>
+
+    <!-- Per-person check-in cadence override -->
+    <string name="edit_threshold_title">Check-in cadence</string>
+    <string name="edit_threshold_hint">Use a custom cadence for this person</string>
+    <string name="edit_threshold_warning">Warning after (days)</string>
+    <string name="edit_threshold_critical">Critical after (days)</string>
+
+    <!-- Detail: effective cadence -->
+    <string name="detail_cadence">Check-in cadence</string>
+    <string name="detail_cadence_value">Warns after %1$d days · critical after %2$d</string>
+    <string name="detail_cadence_custom">Custom</string>
+    <string name="detail_cadence_default">Default</string>
+</resources>
