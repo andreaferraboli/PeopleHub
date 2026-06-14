@@ -1,0 +1,132 @@
+================================================================================
+PeopleHub — Logo prompts for AI image generators
+================================================================================
+
+Brand context (give the generator this if it helps):
+  - App: "PeopleHub", a private, offline personal relationship manager. Themes:
+    people, connection, the people "circle", birthdays, staying in touch.
+  - Identity: "Midnight Gold" — neo-luxury, dark-first, editorial.
+  - Colors: onyx background #131313, champagne-gold accent #f2ca50.
+  - Type feel: editorial serif (Bodoni Moda) for any lettering.
+  - Want: a clean, scalable app icon / brand mark that reads well at 48px.
+
+How to use:
+  - Works with Midjourney, DALL·E 3, Stable Diffusion, Ideogram, etc.
+  - For Midjourney, append parameters like: --v 6 --ar 1:1 --style raw
+  - Ideogram / DALL·E handle text/lettering best if you need a real "P" or "PH".
+  - Most prompts assume a square (1:1) icon. Ask for "on a transparent
+    background" or "flat color background #131313" depending on your need.
+  - General negative prompt (SD): photorealistic, 3d render, drop shadow, gradient
+    mesh, cluttered, busy, text artifacts, watermark, stock-photo people, clip art.
+
+--------------------------------------------------------------------------------
+PROMPT 1 — Serif monogram emblem
+--------------------------------------------------------------------------------
+A minimalist luxury app icon: a single champagne-gold (#f2ca50) capital letter "P"
+in an elegant high-contrast editorial serif (Bodoni / Didone style), centered on a
+deep onyx (#131313) rounded-square background. Subtle gold hairline ring framing
+the letter. Flat vector, perfectly symmetrical, premium, refined, scalable. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 2 — The Circle / orbit of people
+--------------------------------------------------------------------------------
+Flat vector app icon symbolizing a circle of people: several small gold dots evenly
+spaced around a thin gold ring, like figures gathered around or planets in orbit,
+one slightly larger dot in the center. Champagne gold (#f2ca50) on onyx (#131313),
+geometric, balanced, minimal, modern, premium. Negative space, no text. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 3 — Connected network forming a heart (negative space)
+--------------------------------------------------------------------------------
+A minimalist logo mark: thin gold lines connecting a handful of nodes (a small
+relationship network/graph) whose overall silhouette subtly suggests a heart in
+negative space. Champagne-gold line art (#f2ca50) on onyx (#131313). Elegant,
+geometric, restrained, meaningful, flat vector icon. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 4 — Constellation of relationships
+--------------------------------------------------------------------------------
+An app icon depicting a small constellation: gold stars/points connected by faint
+gold lines, arranged in a gentle circular cluster, evoking a map of the people in
+one's life. Champagne gold (#f2ca50) on deep onyx (#131313), starry, calm,
+sophisticated, flat, minimal, vector. No text. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 5 — Two profiles forming a circle
+--------------------------------------------------------------------------------
+A clever minimal logo: two simplified human face profiles facing each other, their
+outlines completing a perfect circle, the gap between them forming a subtle shape in
+negative space. Single-weight champagne-gold line art (#f2ca50) on onyx (#131313).
+Iconic, memorable, flat, geometric, premium. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 6 — Engraved gold signet / seal
+--------------------------------------------------------------------------------
+A luxury signet-seal style emblem: a circular gold medallion with a fine engraved
+border, containing a stylized monogram ligature of "P" and "H" at the center. Matte
+champagne gold (#f2ca50) on onyx (#131313), heraldic but minimal, editorial,
+timeless, flat illustration with crisp edges. 1:1 app icon.
+
+--------------------------------------------------------------------------------
+PROMPT 7 — Line-art group in a ring
+--------------------------------------------------------------------------------
+Minimal continuous-line illustration of three or four abstract people standing close
+together, enclosed by a thin circular gold ring. Single elegant gold stroke
+(#f2ca50) on onyx (#131313), no fills, lots of breathing room, warm and human yet
+refined. Flat vector icon, no text. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 8 — "PH" ligature icon tile
+--------------------------------------------------------------------------------
+A modern app icon tile: the letters "P" and "H" merged into a clean custom
+monogram ligature, champagne gold (#f2ca50) on an onyx (#131313) rounded square,
+a faint glassmorphic gold sheen across the tile. High-contrast serif influence,
+balanced negative space, premium fintech/luxury feel, flat, scalable. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 9 — Hub-and-spokes / radiating connection
+--------------------------------------------------------------------------------
+A geometric mark of a central gold node with thin gold spokes radiating outward to
+smaller dots — a "hub" of connections. Champagne gold (#f2ca50) on onyx (#131313),
+symmetrical, like a stylized compass rose of relationships, minimal, modern, flat
+vector. No text. 1:1 app icon.
+
+--------------------------------------------------------------------------------
+PROMPT 10 — Art-deco luxury badge
+--------------------------------------------------------------------------------
+An art-deco inspired badge logo: symmetrical gold geometric framing (fans, thin
+parallel lines) around a central circle that holds a single serif "P". Champagne
+gold (#f2ca50) on onyx (#131313), 1920s editorial elegance, precise, refined,
+flat illustration, high contrast. Square 1:1 lockup.
+
+--------------------------------------------------------------------------------
+PROMPT 11 — Gold thread / woven connection
+--------------------------------------------------------------------------------
+A single delicate gold thread looping and weaving to connect several small dots into
+a closed circle, suggesting bonds between people kept intact. Champagne-gold hairline
+(#f2ca50) on onyx (#131313), graceful, organic-meets-geometric, minimal, flat vector
+icon. Lots of negative space. 1:1.
+
+--------------------------------------------------------------------------------
+PROMPT 12 — Calendar + gift spark (birthdays/check-ins)
+--------------------------------------------------------------------------------
+A minimal icon fusing a relationship cue: a simple circular calendar/clock ring with
+a tiny gold gift-bow or spark mark at one point on the ring, hinting at remembered
+dates and birthdays. Champagne gold (#f2ca50) on onyx (#131313), clean geometric
+flat vector, premium, uncluttered, no text. 1:1 app icon.
+
+--------------------------------------------------------------------------------
+BONUS — Wordmark (horizontal lockup, not an icon)
+--------------------------------------------------------------------------------
+An elegant horizontal wordmark reading "PeopleHub" in a high-contrast editorial
+serif (Bodoni Moda style), champagne gold (#f2ca50) on onyx (#131313), generous
+letter-spacing, a thin gold "fade" divider line beneath it. Luxury, editorial,
+minimal, vector, transparent background. Wide aspect ratio (e.g. --ar 16:5).
+
+================================================================================
+Tips:
+  - Generate several variations of your favourite 2-3 concepts, then refine.
+  - For the real launcher icon you'll want a clean SVG/vector; use the AI output as
+    a direction, then redraw it as a vector for crisp rendering at all sizes.
+  - Keep it legible at 48x48 px — avoid thin details that disappear when small.
+================================================================================
