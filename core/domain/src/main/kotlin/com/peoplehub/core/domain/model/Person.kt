@@ -41,10 +41,11 @@ data class Person(
 
     /** Up to two uppercase initials used by the avatar fallback when no [photoPath] is set. */
     val initials: String
-        get() = buildString {
-            firstName.trim().firstOrNull()?.let(::append)
-            lastName.trim().firstOrNull()?.let(::append)
-        }.uppercase().ifEmpty { "?" }
+        get() =
+            buildString {
+                firstName.trim().firstOrNull()?.let(::append)
+                lastName.trim().firstOrNull()?.let(::append)
+            }.uppercase().ifEmpty { "?" }
 }
 
 /**

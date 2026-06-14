@@ -22,11 +22,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): PeopleHubDatabase =
-        Room.databaseBuilder(context, PeopleHubDatabase::class.java, PeopleHubDatabase.NAME)
+    fun provideDatabase(
+        @ApplicationContext context: Context,
+    ): PeopleHubDatabase =
+        Room
+            .databaseBuilder(context, PeopleHubDatabase::class.java, PeopleHubDatabase.NAME)
             .addMigrations(*ALL_MIGRATIONS)
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
@@ -42,7 +44,9 @@ internal object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideSettingsDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+    fun provideSettingsDataStore(
+        @ApplicationContext context: Context,
+    ): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(
             produceFile = { context.preferencesDataStoreFile(SETTINGS_STORE_NAME) },
         )

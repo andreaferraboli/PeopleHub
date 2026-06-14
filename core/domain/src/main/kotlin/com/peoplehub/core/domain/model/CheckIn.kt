@@ -55,12 +55,13 @@ enum class CheckInStatus {
          * Resolves the status from the number of [daysSince] the last check-in (or `null` if there
          * has never been one) against the supplied [threshold].
          */
-        fun of(daysSince: Long?, threshold: CheckInThreshold): CheckInStatus = when {
-            daysSince == null -> NEVER
-            daysSince < threshold.warningDays -> FRESH
-            daysSince < threshold.criticalDays -> DUE
-            else -> OVERDUE
-        }
+        fun of(daysSince: Long?, threshold: CheckInThreshold): CheckInStatus =
+            when {
+                daysSince == null -> NEVER
+                daysSince < threshold.warningDays -> FRESH
+                daysSince < threshold.criticalDays -> DUE
+                else -> OVERDUE
+            }
     }
 }
 

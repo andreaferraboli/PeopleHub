@@ -31,17 +31,19 @@ fun TagChip(
         modifier = modifier,
         shape = RoundedCornerShape(50),
         label = { Text(label, style = MaterialTheme.typography.labelLarge) },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-            selectedLabelColor = MaterialTheme.colorScheme.primary,
-            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = MaterialTheme.colorScheme.outlineVariant,
-            selectedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-        ),
+        colors =
+            FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+        border =
+            FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = selected,
+                borderColor = MaterialTheme.colorScheme.outlineVariant,
+                selectedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            ),
     )
 }
 
@@ -68,13 +70,15 @@ fun CategoryChip(
                 modifier = Modifier.padding(vertical = 2.dp),
             )
         },
-        colors = SuggestionChipDefaults.suggestionChipColors(
-            containerColor = tint.copy(alpha = 0.12f),
-            labelColor = tint,
-        ),
-        border = SuggestionChipDefaults.suggestionChipBorder(
-            enabled = true,
-            borderColor = tint.copy(alpha = 0.3f),
-        ),
+        colors =
+            SuggestionChipDefaults.suggestionChipColors(
+                containerColor = tint.copy(alpha = 0.12f),
+                labelColor = tint,
+            ),
+        border =
+            SuggestionChipDefaults.suggestionChipBorder(
+                enabled = true,
+                borderColor = tint.copy(alpha = 0.3f),
+            ),
     )
 }

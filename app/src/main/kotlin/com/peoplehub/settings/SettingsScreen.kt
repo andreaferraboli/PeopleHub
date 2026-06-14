@@ -82,47 +82,55 @@ fun SettingsScreen(
         }
     }
 
-    val exportJsonLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                val content = viewModel.buildBackupJson()
-                context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+    val exportJsonLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/json"),
+        ) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val content = viewModel.buildBackupJson()
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+                }
             }
         }
-    }
 
-    val exportCsvLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("text/csv"),
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                val content = viewModel.buildBirthdaysCsv()
-                context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+    val exportCsvLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("text/csv"),
+        ) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val content = viewModel.buildBirthdaysCsv()
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+                }
             }
         }
-    }
 
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            val json = runCatching {
-                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            }.getOrNull()
-            if (json != null) pendingImportJson = json
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                val json =
+                    runCatching {
+                        context.contentResolver
+                            .openInputStream(uri)
+                            ?.bufferedReader()
+                            ?.use { it.readText() }
+                    }.getOrNull()
+                if (json != null) pendingImportJson = json
+            }
         }
-    }
 
     Scaffold(
         topBar = { PeopleHubTopBar(title = stringResource(R.string.vault_title), centered = true) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             if (state.isBusy) {
@@ -153,10 +161,11 @@ fun SettingsScreen(
                 onShareBirthdays = {
                     scope.launch {
                         val csv = viewModel.buildBirthdaysCsv()
-                        val send = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/csv"
-                            putExtra(Intent.EXTRA_TEXT, csv)
-                        }
+                        val send =
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "text/csv"
+                                putExtra(Intent.EXTRA_TEXT, csv)
+                            }
                         context.startActivity(Intent.createChooser(send, null))
                     }
                 },
@@ -247,11 +256,19 @@ private fun UpdatesSection(
                 )
             }
             UpdateUiState.UpToDate ->
-                Text(stringResource(R.string.update_up_to_date), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.update_up_to_date),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             is UpdateUiState.Error ->
                 Text(current.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             UpdateUiState.Checking, UpdateUiState.Downloading ->
-                Text(stringResource(R.string.update_checking), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.update_checking),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             UpdateUiState.Idle -> Unit
         }
         GhostButton(text = stringResource(R.string.vault_check_updates), onClick = onCheck, modifier = Modifier.fillMaxWidth())
@@ -269,10 +286,11 @@ private fun DangerSection(onDeleteAll: () -> Unit) {
         Button(
             onClick = onDeleteAll,
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            ),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ),
         ) {
             Text(stringResource(R.string.vault_delete_all))
         }
@@ -390,7 +408,11 @@ private fun AlarmSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.vault_exact_alarms), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                stringResource(R.string.vault_exact_alarms),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             Switch(checked = useExactAlarms, onCheckedChange = onToggleExact)
         }
         Stepper(
@@ -440,9 +462,10 @@ private fun ImportStrategyDialog(onReplace: () -> Unit, onMerge: () -> Unit, onD
 }
 
 @Composable
-private fun reminderLabel(offset: ReminderOffset): String = when (offset) {
-    ReminderOffset.ONE_DAY -> stringResource(R.string.vault_reminder_1d)
-    ReminderOffset.THREE_DAYS -> stringResource(R.string.vault_reminder_3d)
-    ReminderOffset.ONE_WEEK -> stringResource(R.string.vault_reminder_7d)
-    ReminderOffset.ONE_MONTH -> stringResource(R.string.vault_reminder_30d)
-}
+private fun reminderLabel(offset: ReminderOffset): String =
+    when (offset) {
+        ReminderOffset.ONE_DAY -> stringResource(R.string.vault_reminder_1d)
+        ReminderOffset.THREE_DAYS -> stringResource(R.string.vault_reminder_3d)
+        ReminderOffset.ONE_WEEK -> stringResource(R.string.vault_reminder_7d)
+        ReminderOffset.ONE_MONTH -> stringResource(R.string.vault_reminder_30d)
+    }

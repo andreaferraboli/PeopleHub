@@ -33,12 +33,13 @@ fun UpdatePrompt(viewModel: UpdateViewModel = hiltViewModel()) {
     LaunchedEffect(Unit) { viewModel.check(silent = true) }
 
     when (val current = state) {
-        is UpdateUiState.Available -> UpdateAvailableDialog(
-            versionName = current.update.versionName,
-            notes = current.update.notes,
-            onConfirm = { viewModel.downloadAndInstall(current.update) },
-            onDismiss = viewModel::dismiss,
-        )
+        is UpdateUiState.Available ->
+            UpdateAvailableDialog(
+                versionName = current.update.versionName,
+                notes = current.update.notes,
+                onConfirm = { viewModel.downloadAndInstall(current.update) },
+                onDismiss = viewModel::dismiss,
+            )
         UpdateUiState.Downloading -> DownloadingDialog()
         else -> Unit
     }

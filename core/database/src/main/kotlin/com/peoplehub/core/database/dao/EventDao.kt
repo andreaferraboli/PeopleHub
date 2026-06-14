@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 /** Data-access object for personal events. */
 @Dao
 interface EventDao {
-
     @Insert
     suspend fun insert(event: EventEntity): Long
 

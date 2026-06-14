@@ -8,7 +8,6 @@ import com.peoplehub.core.domain.model.MergeReport
  * a separate concern handled by the data-io layer; this interface deals only in domain aggregates.
  */
 interface BackupRepository {
-
     /** Builds an in-memory snapshot of all people, check-ins and events. */
     suspend fun exportAll(): BackupData
 

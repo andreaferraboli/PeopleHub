@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
  * Read/write access to check-in records (the frequentation tracker history).
  */
 interface CheckInRepository {
-
     /** Records a new check-in and returns its id. */
     suspend fun recordCheckIn(checkIn: CheckIn): Long
 

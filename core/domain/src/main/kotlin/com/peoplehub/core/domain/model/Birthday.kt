@@ -37,6 +37,6 @@ enum class ReminderOffset(val daysBefore: Int) {
 
     companion object {
         /** Reminder offsets that should use exact alarms because they fire within 24 hours. */
-        val ExactWindowDays: Int = 1
+        const val ExactWindowDays: Int = 1
     }
 }

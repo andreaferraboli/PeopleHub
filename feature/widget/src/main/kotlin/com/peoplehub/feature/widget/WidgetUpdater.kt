@@ -8,7 +8,6 @@ import androidx.glance.appwidget.updateAll
  * data change (check-in, event edit) so the home screen stays current.
  */
 object WidgetUpdater {
-
     suspend fun updateAll(context: Context) {
         BirthdayWidget().updateAll(context)
         CheckInWidget().updateAll(context)

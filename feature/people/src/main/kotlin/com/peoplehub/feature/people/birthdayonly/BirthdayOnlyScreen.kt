@@ -82,12 +82,13 @@ private fun BirthdayOnlyContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 32.dp,
-            start = 20.dp,
-            end = 20.dp,
-        ),
+        contentPadding =
+            PaddingValues(
+                top = contentPadding.calculateTopPadding() + 8.dp,
+                bottom = contentPadding.calculateBottomPadding() + 32.dp,
+                start = 20.dp,
+                end = 20.dp,
+            ),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "header") {
@@ -100,16 +101,18 @@ private fun BirthdayOnlyContent(
 
         when (state) {
             UiState.Loading -> item(key = "loading") { LoadingView() }
-            UiState.Empty -> item(key = "empty") {
-                EmptyView(
-                    title = stringResource(R.string.birthday_only_empty_title),
-                    description = stringResource(R.string.birthday_only_empty_desc),
-                )
-            }
+            UiState.Empty ->
+                item(key = "empty") {
+                    EmptyView(
+                        title = stringResource(R.string.birthday_only_empty_title),
+                        description = stringResource(R.string.birthday_only_empty_desc),
+                    )
+                }
             is UiState.Error -> item(key = "error") { ErrorView(message = state.message) }
-            is UiState.Success -> items(state.data, key = { it.id }) { person ->
-                BirthdayOnlyRow(person = person, onToggle = onToggle)
-            }
+            is UiState.Success ->
+                items(state.data, key = { it.id }) { person ->
+                    BirthdayOnlyRow(person = person, onToggle = onToggle)
+                }
         }
     }
 }

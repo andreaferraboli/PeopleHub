@@ -17,7 +17,10 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface ReceiverEntryPoint {
     fun workScheduler(): PeopleHubWorkScheduler
+
     fun birthdayAlarmScheduler(): BirthdayAlarmScheduler
+
     fun notifier(): PeopleHubNotifier
+
     fun checkInPerson(): CheckInPersonUseCase
 }

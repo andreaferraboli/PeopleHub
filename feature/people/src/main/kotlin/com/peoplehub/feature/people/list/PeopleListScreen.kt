@@ -57,7 +57,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.time.format.DateTimeFormatter
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.core.domain.model.CheckInStatus
@@ -75,6 +74,7 @@ import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.core.ui.util.RelativeTime
 import com.peoplehub.feature.people.R
+import java.time.format.DateTimeFormatter
 
 private val BirthdayCardFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM d")
 
@@ -90,14 +90,19 @@ fun PeopleListScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            val json = runCatching {
-                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            }.getOrNull()
-            if (json != null) viewModel.onImportFileLoaded(json)
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                val json =
+                    runCatching {
+                        context.contentResolver
+                            .openInputStream(uri)
+                            ?.bufferedReader()
+                            ?.use { it.readText() }
+                    }.getOrNull()
+                if (json != null) viewModel.onImportFileLoaded(json)
+            }
         }
-    }
 
     LaunchedEffect(state.importMessage) {
         val message = state.importMessage
@@ -171,12 +176,13 @@ private fun PeopleListContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 96.dp,
-            start = 20.dp,
-            end = 20.dp,
-        ),
+        contentPadding =
+            PaddingValues(
+                top = contentPadding.calculateTopPadding() + 8.dp,
+                bottom = contentPadding.calculateBottomPadding() + 96.dp,
+                start = 20.dp,
+                end = 20.dp,
+            ),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "header") {
@@ -229,18 +235,20 @@ private fun LazyListScope.peopleListBody(
 ) {
     when (listState) {
         UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
-        UiState.Empty -> item(key = "empty") {
-            StateBox {
-                EmptyView(
-                    title = stringResource(R.string.people_empty_title),
-                    description = stringResource(R.string.people_empty_desc),
-                )
+        UiState.Empty ->
+            item(key = "empty") {
+                StateBox {
+                    EmptyView(
+                        title = stringResource(R.string.people_empty_title),
+                        description = stringResource(R.string.people_empty_desc),
+                    )
+                }
             }
-        }
         is UiState.Error -> item(key = "error") { StateBox { ErrorView(message = listState.message) } }
-        is UiState.Success -> items(listState.data, key = { it.id }) { person ->
-            PersonCard(person = person, showBirthday = showBirthday, onClick = { onPersonClick(person.id) })
-        }
+        is UiState.Success ->
+            items(listState.data, key = { it.id }) { person ->
+                PersonCard(person = person, showBirthday = showBirthday, onClick = { onPersonClick(person.id) })
+            }
     }
 }
 
@@ -279,11 +287,12 @@ private fun PersonCard(person: PersonListItem, showBirthday: Boolean, onClick: (
 /** A compact "🎁 October 12 · in 5 days" line shown on directory cards under the upcoming-birthday sort. */
 @Composable
 private fun BirthdayLine(date: java.time.LocalDate, daysUntil: Int?) {
-    val suffix = when {
-        daysUntil == null -> ""
-        daysUntil == 0 -> " · ${stringResource(R.string.circle_birthday_today)}"
-        else -> " · ${stringResource(R.string.circle_birthday_in_days, daysUntil)}"
-    }
+    val suffix =
+        when {
+            daysUntil == null -> ""
+            daysUntil == 0 -> " · ${stringResource(R.string.circle_birthday_today)}"
+            else -> " · ${stringResource(R.string.circle_birthday_in_days, daysUntil)}"
+        }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = Icons.Outlined.CardGiftcard,
@@ -315,21 +324,23 @@ private fun SortMenu(current: PeopleSort, onSortChange: (PeopleSort) -> Unit) {
                     onSortChange(sort)
                     expanded = false
                 },
-                trailingIcon = if (sort == current) {
-                    { Icon(Icons.Outlined.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
-                } else {
-                    null
-                },
+                trailingIcon =
+                    if (sort == current) {
+                        { Icon(Icons.Outlined.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                    } else {
+                        null
+                    },
             )
         }
     }
 }
 
-private fun sortOptions(): List<Pair<PeopleSort, Int>> = listOf(
-    PeopleSort.NAME_ASC to R.string.sort_name,
-    PeopleSort.LAST_CHECK_IN to R.string.sort_last_checkin,
-    PeopleSort.UPCOMING_BIRTHDAY to R.string.sort_birthday,
-)
+private fun sortOptions(): List<Pair<PeopleSort, Int>> =
+    listOf(
+        PeopleSort.NAME_ASC to R.string.sort_name,
+        PeopleSort.LAST_CHECK_IN to R.string.sort_last_checkin,
+        PeopleSort.UPCOMING_BIRTHDAY to R.string.sort_birthday,
+    )
 
 @Preview(name = "Phone", device = "spec:width=411dp,height=891dp")
 @Preview(name = "Tablet", device = "spec:width=800dp,height=1280dp")
@@ -337,21 +348,23 @@ private fun sortOptions(): List<Pair<PeopleSort, Int>> = listOf(
 private fun PeopleListPreview() {
     PeopleHubTheme {
         PeopleListContent(
-            state = PeopleListScreenState(
-                listState = UiState.Success(
-                    listOf(
-                        PersonListItem(1, "Eleanor Vance", "EV", null, "Family", CheckInStatus.OVERDUE, 40),
-                        PersonListItem(2, "Marcus Thorne", "MT", null, "Work", CheckInStatus.FRESH, 2),
-                        PersonListItem(3, "Sophia Lin", "SL", null, "Friend", CheckInStatus.DUE, 16),
-                    ),
+            state =
+                PeopleListScreenState(
+                    listState =
+                        UiState.Success(
+                            listOf(
+                                PersonListItem(1, "Eleanor Vance", "EV", null, "Family", CheckInStatus.OVERDUE, 40),
+                                PersonListItem(2, "Marcus Thorne", "MT", null, "Work", CheckInStatus.FRESH, 2),
+                                PersonListItem(3, "Sophia Lin", "SL", null, "Friend", CheckInStatus.DUE, 16),
+                            ),
+                        ),
+                    allTags = listOf("Family", "Work", "Friend"),
+                    query = "",
+                    selectedTags = setOf("Family"),
+                    sort = PeopleSort.NAME_ASC,
+                    importPreview = null,
+                    importMessage = null,
                 ),
-                allTags = listOf("Family", "Work", "Friend"),
-                query = "",
-                selectedTags = setOf("Family"),
-                sort = PeopleSort.NAME_ASC,
-                importPreview = null,
-                importMessage = null,
-            ),
             contentPadding = PaddingValues(0.dp),
             onQueryChange = {},
             onToggleTag = {},

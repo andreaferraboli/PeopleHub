@@ -23,5 +23,6 @@ internal object NotificationIds {
     private const val ID_MODULO = 90_000
 
     fun checkIn(personId: Long): Int = CHECK_IN_BASE + (personId % ID_MODULO).toInt()
+
     fun birthday(personId: Long): Int = BIRTHDAY_BASE + (personId % ID_MODULO).toInt()
 }

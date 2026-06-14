@@ -19,32 +19,34 @@ import java.time.format.DateTimeFormatter
  * threshold. Scheduled by [PeopleHubWorkScheduler] to run around 09:00.
  */
 @HiltWorker
-class CheckInReminderWorker @AssistedInject constructor(
-    @Assisted appContext: Context,
-    @Assisted params: WorkerParameters,
-    private val getUrgentCheckIns: GetUrgentCheckInsUseCase,
-    private val notifier: PeopleHubNotifier,
-) : CoroutineWorker(appContext, params) {
+class CheckInReminderWorker
+    @AssistedInject
+    constructor(
+        @Assisted appContext: Context,
+        @Assisted params: WorkerParameters,
+        private val getUrgentCheckIns: GetUrgentCheckInsUseCase,
+        private val notifier: PeopleHubNotifier,
+    ) : CoroutineWorker(appContext, params) {
+        override suspend fun doWork(): Result {
+            getUrgentCheckIns()
+                .first()
+                .filter { it.person.notificationsEnabled }
+                .filter { it.status == CheckInStatus.OVERDUE || it.status == CheckInStatus.NEVER }
+                .forEach { urgency ->
+                    notifier.showCheckInReminder(
+                        personId = urgency.person.id,
+                        name = urgency.person.firstName,
+                        days = urgency.daysSince?.toInt() ?: 0,
+                        lastSeenText = urgency.person.lastCheckInAt?.let(::formatLastSeen),
+                    )
+                }
+            return Result.success()
+        }
 
-    override suspend fun doWork(): Result {
-        getUrgentCheckIns().first()
-            .filter { it.person.notificationsEnabled }
-            .filter { it.status == CheckInStatus.OVERDUE || it.status == CheckInStatus.NEVER }
-            .forEach { urgency ->
-                notifier.showCheckInReminder(
-                    personId = urgency.person.id,
-                    name = urgency.person.firstName,
-                    days = urgency.daysSince?.toInt() ?: 0,
-                    lastSeenText = urgency.person.lastCheckInAt?.let(::formatLastSeen),
-                )
-            }
-        return Result.success()
+        private fun formatLastSeen(instant: Instant): String =
+            instant.atZone(ZoneId.systemDefault()).format(LastSeenFormatter)
+
+        private companion object {
+            val LastSeenFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+        }
     }
-
-    private fun formatLastSeen(instant: Instant): String =
-        instant.atZone(ZoneId.systemDefault()).format(LastSeenFormatter)
-
-    private companion object {
-        val LastSeenFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
-    }
-}

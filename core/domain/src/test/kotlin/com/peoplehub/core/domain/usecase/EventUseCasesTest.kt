@@ -12,29 +12,31 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class EventUseCasesTest {
-
     private val repository = mockk<EventRepository>(relaxed = true)
 
     @Test
-    fun `add event rejects a blank title`() = runTest {
-        val useCase = AddEventUseCase(repository)
+    fun `add event rejects a blank title`() =
+        runTest {
+            val useCase = AddEventUseCase(repository)
 
-        val result = useCase(PersonEvent(title = "  ", dateTime = LocalDateTime.of(2026, 11, 15, 19, 0)))
+            val result = useCase(PersonEvent(title = "  ", dateTime = LocalDateTime.of(2026, 11, 15, 19, 0)))
 
-        assertTrue(result.isFailure)
-        coVerify(exactly = 0) { repository.upsertEvent(any()) }
-    }
+            assertTrue(result.isFailure)
+            coVerify(exactly = 0) { repository.upsertEvent(any()) }
+        }
 
     @Test
-    fun `add event trims the title and drops a blank category`() = runTest {
-        coEvery { repository.upsertEvent(any()) } returns 5L
-        val useCase = AddEventUseCase(repository)
+    fun `add event trims the title and drops a blank category`() =
+        runTest {
+            coEvery { repository.upsertEvent(any()) } returns 5L
+            val useCase = AddEventUseCase(repository)
 
-        val result = useCase(
-            PersonEvent(title = " Gala ", dateTime = LocalDateTime.of(2026, 11, 15, 19, 0), category = "   "),
-        )
+            val result =
+                useCase(
+                    PersonEvent(title = " Gala ", dateTime = LocalDateTime.of(2026, 11, 15, 19, 0), category = "   "),
+                )
 
-        assertEquals(5L, result.getOrNull())
-        coVerify { repository.upsertEvent(match { it.title == "Gala" && it.category == null }) }
-    }
+            assertEquals(5L, result.getOrNull())
+            coVerify { repository.upsertEvent(match { it.title == "Gala" && it.category == null }) }
+        }
 }

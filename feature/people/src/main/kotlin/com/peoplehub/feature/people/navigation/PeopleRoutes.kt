@@ -48,9 +48,10 @@ fun NavGraphBuilder.peopleSection(
         )
     }
     composable<PersonDetailRoute>(
-        deepLinks = listOf(
-            navDeepLink { uriPattern = "${DeepLinks.SCHEME}://${DeepLinks.HOST_PERSON}/{personId}" },
-        ),
+        deepLinks =
+            listOf(
+                navDeepLink { uriPattern = "${DeepLinks.SCHEME}://${DeepLinks.HOST_PERSON}/{personId}" },
+            ),
     ) {
         PersonDetailScreen(
             onBack = onBack,

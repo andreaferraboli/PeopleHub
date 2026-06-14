@@ -23,9 +23,10 @@ fun NavGraphBuilder.birthdaysSection(
     onBack: () -> Unit,
 ) {
     composable<BirthdaysRoute>(
-        deepLinks = listOf(
-            navDeepLink { uriPattern = "${DeepLinks.SCHEME}://${DeepLinks.HOST_BIRTHDAYS}" },
-        ),
+        deepLinks =
+            listOf(
+                navDeepLink { uriPattern = "${DeepLinks.SCHEME}://${DeepLinks.HOST_BIRTHDAYS}" },
+            ),
     ) {
         BirthdaysScreen(
             onPersonClick = onPersonClick,

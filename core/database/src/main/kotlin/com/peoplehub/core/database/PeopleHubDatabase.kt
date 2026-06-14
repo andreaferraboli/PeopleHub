@@ -29,7 +29,6 @@ import com.peoplehub.core.database.entity.PersonTagEntity
     exportSchema = true,
 )
 abstract class PeopleHubDatabase : RoomDatabase() {
-
     abstract fun peopleDao(): PeopleDao
 
     abstract fun checkInDao(): CheckInDao

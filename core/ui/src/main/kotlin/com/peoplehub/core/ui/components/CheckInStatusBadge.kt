@@ -27,10 +27,11 @@ fun CheckInStatusBadge(
 ) {
     val colors = statusColorsFor(status)
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(50))
-            .background(colors.container)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(50))
+                .background(colors.container)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         Text(text = label.uppercase(), style = LabelCaps, color = colors.onContainer)
     }

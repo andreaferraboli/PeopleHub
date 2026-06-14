@@ -13,18 +13,19 @@ import java.util.UUID
  * [Dispatchers.IO] so it never blocks the main thread.
  */
 internal object PhotoStorage {
-
     private const val PHOTO_DIR = "person_photos"
 
-    suspend fun savePhoto(context: Context, uri: Uri): String? = withContext(Dispatchers.IO) {
-        runCatching {
-            val dir = File(context.filesDir, PHOTO_DIR).apply { mkdirs() }
-            val target = File(dir, "${UUID.randomUUID()}.jpg")
-            val copied = context.contentResolver.openInputStream(uri)?.use { input ->
-                target.outputStream().use { output -> input.copyTo(output) }
-                true
-            } ?: false
-            if (copied) target.absolutePath else null
-        }.getOrNull()
-    }
+    suspend fun savePhoto(context: Context, uri: Uri): String? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val dir = File(context.filesDir, PHOTO_DIR).apply { mkdirs() }
+                val target = File(dir, "${UUID.randomUUID()}.jpg")
+                val copied =
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        target.outputStream().use { output -> input.copyTo(output) }
+                        true
+                    } ?: false
+                if (copied) target.absolutePath else null
+            }.getOrNull()
+        }
 }

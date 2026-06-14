@@ -23,31 +23,32 @@ import javax.inject.Inject
  * toggle that marks them as a bare birthday (hidden from the directory but kept in the calendar).
  */
 @HiltViewModel
-class BirthdayOnlyViewModel @Inject constructor(
-    getPeople: GetPeopleUseCase,
-    private val upsertPerson: UpsertPersonUseCase,
-) : ViewModel() {
+class BirthdayOnlyViewModel
+    @Inject
+    constructor(
+        getPeople: GetPeopleUseCase,
+        private val upsertPerson: UpsertPersonUseCase,
+    ) : ViewModel() {
+        val state: StateFlow<UiState<List<Person>>> =
+            getPeople(PeopleFilter(includeBirthdayOnly = true))
+                .map { people -> people.filter { it.birthday != null } }
+                .map { it.toListUiState() }
+                .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
+                .onStart { emit(UiState.Loading) }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                    initialValue = UiState.Loading,
+                )
 
-    val state: StateFlow<UiState<List<Person>>> =
-        getPeople(PeopleFilter(includeBirthdayOnly = true))
-            .map { people -> people.filter { it.birthday != null } }
-            .map { it.toListUiState() }
-            .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
-            .onStart { emit(UiState.Loading) }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-                initialValue = UiState.Loading,
-            )
+        /** Marks [person] as birthday-only (or back to a full profile) and persists the change. */
+        fun onToggle(person: Person, birthdayOnly: Boolean) {
+            viewModelScope.launch {
+                upsertPerson(person.copy(birthdayOnly = birthdayOnly))
+            }
+        }
 
-    /** Marks [person] as birthday-only (or back to a full profile) and persists the change. */
-    fun onToggle(person: Person, birthdayOnly: Boolean) {
-        viewModelScope.launch {
-            upsertPerson(person.copy(birthdayOnly = birthdayOnly))
+        private companion object {
+            const val STOP_TIMEOUT_MILLIS = 5_000L
         }
     }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
-    }
-}

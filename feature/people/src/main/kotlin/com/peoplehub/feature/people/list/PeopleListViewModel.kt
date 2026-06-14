@@ -60,117 +60,121 @@ private data class Controls(val query: String, val tags: Set<String>, val sort: 
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class PeopleListViewModel @Inject constructor(
-    getPeople: GetPeopleUseCase,
-    observeAllTags: ObserveAllTagsUseCase,
-    getSettings: GetSettingsUseCase,
-    private val importPerson: ImportPersonUseCase,
-    private val clock: Clock,
-) : ViewModel() {
+class PeopleListViewModel
+    @Inject
+    constructor(
+        getPeople: GetPeopleUseCase,
+        observeAllTags: ObserveAllTagsUseCase,
+        getSettings: GetSettingsUseCase,
+        private val importPerson: ImportPersonUseCase,
+        private val clock: Clock,
+    ) : ViewModel() {
+        private val query = MutableStateFlow("")
+        private val selectedTags = MutableStateFlow<Set<String>>(emptySet())
+        private val sort = MutableStateFlow(PeopleSort.NAME_ASC)
+        private val importPreview = MutableStateFlow<Person?>(null)
+        private val importMessage = MutableStateFlow<String?>(null)
 
-    private val query = MutableStateFlow("")
-    private val selectedTags = MutableStateFlow<Set<String>>(emptySet())
-    private val sort = MutableStateFlow(PeopleSort.NAME_ASC)
-    private val importPreview = MutableStateFlow<Person?>(null)
-    private val importMessage = MutableStateFlow<String?>(null)
+        private val controls = combine(query, selectedTags, sort, ::Controls)
 
-    private val controls = combine(query, selectedTags, sort, ::Controls)
+        private val listState: kotlinx.coroutines.flow.Flow<UiState<List<PersonListItem>>> =
+            controls
+                .flatMapLatest { c ->
+                    val filter = PeopleFilter(c.query, c.tags, c.sort, includeBirthdayOnly = false)
+                    combine(getPeople(filter), getSettings()) { people, settings ->
+                        people.map { it.toListItem(settings.defaultCheckInThreshold) }
+                    }
+                }.map { it.toListUiState() }
+                .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
+                .onStart { emit(UiState.Loading) }
 
-    private val listState: kotlinx.coroutines.flow.Flow<UiState<List<PersonListItem>>> =
-        controls
-            .flatMapLatest { c ->
-                val filter = PeopleFilter(c.query, c.tags, c.sort, includeBirthdayOnly = false)
-                combine(getPeople(filter), getSettings()) { people, settings ->
-                    people.map { it.toListItem(settings.defaultCheckInThreshold) }
-                }
+        val state: StateFlow<PeopleListScreenState> =
+            combine(
+                listState,
+                observeAllTags(),
+                controls,
+                importPreview,
+                importMessage,
+            ) { list, tags, c, preview, message ->
+                PeopleListScreenState(
+                    listState = list,
+                    allTags = tags,
+                    query = c.query,
+                    selectedTags = c.tags,
+                    sort = c.sort,
+                    importPreview = preview,
+                    importMessage = message,
+                )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue =
+                    PeopleListScreenState(
+                        listState = UiState.Loading,
+                        allTags = emptyList(),
+                        query = "",
+                        selectedTags = emptySet(),
+                        sort = PeopleSort.NAME_ASC,
+                        importPreview = null,
+                        importMessage = null,
+                    ),
+            )
+
+        fun onQueryChange(value: String) = query.update { value }
+
+        fun onToggleTag(tag: String) =
+            selectedTags.update { current ->
+                if (tag in current) current - tag else current + tag
             }
-            .map { it.toListUiState() }
-            .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
-            .onStart { emit(UiState.Loading) }
 
-    val state: StateFlow<PeopleListScreenState> = combine(
-        listState,
-        observeAllTags(),
-        controls,
-        importPreview,
-        importMessage,
-    ) { list, tags, c, preview, message ->
-        PeopleListScreenState(
-            listState = list,
-            allTags = tags,
-            query = c.query,
-            selectedTags = c.tags,
-            sort = c.sort,
-            importPreview = preview,
-            importMessage = message,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-        initialValue = PeopleListScreenState(
-            listState = UiState.Loading,
-            allTags = emptyList(),
-            query = "",
-            selectedTags = emptySet(),
-            sort = PeopleSort.NAME_ASC,
-            importPreview = null,
-            importMessage = null,
-        ),
-    )
+        fun onSortChange(value: PeopleSort) = sort.update { value }
 
-    fun onQueryChange(value: String) = query.update { value }
-
-    fun onToggleTag(tag: String) = selectedTags.update { current ->
-        if (tag in current) current - tag else current + tag
-    }
-
-    fun onSortChange(value: PeopleSort) = sort.update { value }
-
-    /** Parses a selected JSON document and, on success, raises a confirmation preview. */
-    fun onImportFileLoaded(json: String) {
-        importPerson.preview(json).fold(
-            onSuccess = { importPreview.value = it },
-            onFailure = { importMessage.value = it.message ?: "Invalid file" },
-        )
-    }
-
-    fun onConfirmImport() {
-        val candidate = importPreview.value ?: return
-        importPreview.value = null
-        viewModelScope.launch {
-            importMessage.value = importPerson.confirm(candidate).fold(
-                onSuccess = { "Imported ${it.fullName}" },
-                onFailure = { it.message ?: "Import failed" },
+        /** Parses a selected JSON document and, on success, raises a confirmation preview. */
+        fun onImportFileLoaded(json: String) {
+            importPerson.preview(json).fold(
+                onSuccess = { importPreview.value = it },
+                onFailure = { importMessage.value = it.message ?: "Invalid file" },
             )
         }
-    }
 
-    fun onDismissImport() {
-        importPreview.value = null
-    }
+        fun onConfirmImport() {
+            val candidate = importPreview.value ?: return
+            importPreview.value = null
+            viewModelScope.launch {
+                importMessage.value =
+                    importPerson.confirm(candidate).fold(
+                        onSuccess = { "Imported ${it.fullName}" },
+                        onFailure = { it.message ?: "Import failed" },
+                    )
+            }
+        }
 
-    fun onMessageShown() {
-        importMessage.value = null
-    }
+        fun onDismissImport() {
+            importPreview.value = null
+        }
 
-    private fun Person.toListItem(defaultThreshold: CheckInThreshold): PersonListItem {
-        val threshold = checkInThreshold ?: defaultThreshold
-        val days = lastCheckInAt?.let { DateCalculations.daysSince(it, Instant.now(clock)) }
-        val today = LocalDate.now(clock)
-        return PersonListItem(
-            id = id,
-            fullName = fullName,
-            initials = initials,
-            photoPath = photoPath,
-            primaryTag = tags.firstOrNull(),
-            status = CheckInStatus.of(days, threshold),
-            daysSince = days,
-            nextBirthday = birthday?.let { DateCalculations.nextBirthdayOccurrence(it, today) },
-            daysUntilBirthday = birthday?.let { DateCalculations.daysUntilBirthday(it, today) },
-        )
-    }
+        fun onMessageShown() {
+            importMessage.value = null
+        }
 
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
+        private fun Person.toListItem(defaultThreshold: CheckInThreshold): PersonListItem {
+            val threshold = checkInThreshold ?: defaultThreshold
+            val days = lastCheckInAt?.let { DateCalculations.daysSince(it, Instant.now(clock)) }
+            val today = LocalDate.now(clock)
+            return PersonListItem(
+                id = id,
+                fullName = fullName,
+                initials = initials,
+                photoPath = photoPath,
+                primaryTag = tags.firstOrNull(),
+                status = CheckInStatus.of(days, threshold),
+                daysSince = days,
+                nextBirthday = birthday?.let { DateCalculations.nextBirthdayOccurrence(it, today) },
+                daysUntilBirthday = birthday?.let { DateCalculations.daysUntilBirthday(it, today) },
+            )
+        }
+
+        private companion object {
+            const val STOP_TIMEOUT_MILLIS = 5_000L
+        }
     }
-}

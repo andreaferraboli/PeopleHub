@@ -30,12 +30,13 @@ internal fun widgetEntryPoint(context: Context): WidgetEntryPoint =
     EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
 
 /** Builds a package-scoped `ACTION_VIEW` deep-link action for a widget row tap. */
-internal fun deepLinkAction(context: Context, uri: String) = actionStartActivity(
-    Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
-        `package` = context.packageName
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    },
-)
+internal fun deepLinkAction(context: Context, uri: String) =
+    actionStartActivity(
+        Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
+            `package` = context.packageName
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        },
+    )
 
 /**
  * Common widget shell: a rounded surface with the brand header and the supplied [content], wrapped
@@ -49,12 +50,13 @@ internal fun WidgetScaffold(
 ) {
     GlanceTheme {
         Column(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(GlanceTheme.colors.surface)
-                .cornerRadius(16.dp)
-                .padding(12.dp)
-                .let { if (headerAction != null) it.clickable(headerAction) else it },
+            modifier =
+                GlanceModifier
+                    .fillMaxSize()
+                    .background(GlanceTheme.colors.surface)
+                    .cornerRadius(16.dp)
+                    .padding(12.dp)
+                    .let { if (headerAction != null) it.clickable(headerAction) else it },
         ) {
             Text(
                 text = title.uppercase(),

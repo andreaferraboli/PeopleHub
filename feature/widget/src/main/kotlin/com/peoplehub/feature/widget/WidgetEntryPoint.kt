@@ -16,7 +16,10 @@ import java.time.Clock
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
     fun getUpcomingBirthdays(): GetUpcomingBirthdaysUseCase
+
     fun getUrgentCheckIns(): GetUrgentCheckInsUseCase
+
     fun getPinnedEvent(): GetPinnedEventUseCase
+
     fun clock(): Clock
 }

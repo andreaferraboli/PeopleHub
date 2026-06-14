@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
  * the app, dismisses the notification, and refreshes the widgets.
  */
 class MarkSeenReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != NotificationActions.ACTION_MARK_SEEN) return
 

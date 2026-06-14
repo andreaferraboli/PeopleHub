@@ -36,18 +36,20 @@ fun PersonAvatar(
 ) {
     val borderColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
     Box(
-        modifier = modifier
-            .size(size)
-            .clip(shape)
-            .border(1.dp, borderColor, shape),
+        modifier =
+            modifier
+                .size(size)
+                .clip(shape)
+                .border(1.dp, borderColor, shape),
         contentAlignment = Alignment.Center,
     ) {
         if (photoPath.isNullOrBlank()) {
             Box(
-                modifier = Modifier
-                    .size(size)
-                    .clip(shape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier =
+                    Modifier
+                        .size(size)
+                        .clip(shape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -62,9 +64,10 @@ fun PersonAvatar(
                 model = File(photoPath),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(size)
-                    .clip(shape),
+                modifier =
+                    Modifier
+                        .size(size)
+                        .clip(shape),
             )
         }
     }

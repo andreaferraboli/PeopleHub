@@ -7,17 +7,17 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class CsvBirthdaySupportTest {
-
     private val support = CsvBirthdaySupport()
 
     @Test
     fun `parses a well-formed CSV with header`() {
-        val csv = """
+        val csv =
+            """
             nome,cognome,data
             Ada,Lovelace,1815-12-10
             Alan,Turing,1912-06-23
             Grace,Hopper,1906-12-09
-        """.trimIndent()
+            """.trimIndent()
 
         val result = support.parse(csv)
 
@@ -31,12 +31,13 @@ class CsvBirthdaySupportTest {
 
     @Test
     fun `keeps valid rows when one date is malformed`() {
-        val csv = """
+        val csv =
+            """
             nome,cognome,data
             Ada,Lovelace,1815-12-10
             Bad,Row,not-a-date
             Grace,Hopper,1906-12-09
-        """.trimIndent()
+            """.trimIndent()
 
         val result = support.parse(csv)
 
@@ -47,11 +48,12 @@ class CsvBirthdaySupportTest {
 
     @Test
     fun `imports rows with an empty last name`() {
-        val csv = """
+        val csv =
+            """
             nome,cognome,data_nascita
             doni,,1986-02-13
             amore,,2003-06-02
-        """.trimIndent()
+            """.trimIndent()
 
         val result = support.parse(csv)
 
@@ -64,10 +66,11 @@ class CsvBirthdaySupportTest {
 
     @Test
     fun `parses a quoted field containing a comma`() {
-        val csv = """
+        val csv =
+            """
             nome,cognome,data
             John,"Smith, Jr",1990-05-04
-        """.trimIndent()
+            """.trimIndent()
 
         val result = support.parse(csv)
 
@@ -79,10 +82,11 @@ class CsvBirthdaySupportTest {
 
     @Test
     fun `accepts the dd-MM-yyyy date format`() {
-        val csv = """
+        val csv =
+            """
             nome,cognome,data
             Marie,Curie,07/11/1867
-        """.trimIndent()
+            """.trimIndent()
 
         val result = support.parse(csv)
 
@@ -92,11 +96,12 @@ class CsvBirthdaySupportTest {
 
     @Test
     fun `export round-trips and omits people without a birthday`() {
-        val people = listOf(
-            Person(id = 1L, firstName = "Ada", lastName = "Lovelace", birthday = LocalDate.of(1815, 12, 10)),
-            Person(id = 2L, firstName = "No", lastName = "Birthday", birthday = null),
-            Person(id = 3L, firstName = "Grace", lastName = "Hopper", birthday = LocalDate.of(1906, 12, 9)),
-        )
+        val people =
+            listOf(
+                Person(id = 1L, firstName = "Ada", lastName = "Lovelace", birthday = LocalDate.of(1815, 12, 10)),
+                Person(id = 2L, firstName = "No", lastName = "Birthday", birthday = null),
+                Person(id = 3L, firstName = "Grace", lastName = "Hopper", birthday = LocalDate.of(1906, 12, 9)),
+            )
 
         val csv = support.export(people)
         val result = support.parse(csv)
@@ -113,9 +118,10 @@ class CsvBirthdaySupportTest {
 
     @Test
     fun `export quotes fields containing a comma`() {
-        val people = listOf(
-            Person(id = 1L, firstName = "John", lastName = "Smith, Jr", birthday = LocalDate.of(1990, 5, 4)),
-        )
+        val people =
+            listOf(
+                Person(id = 1L, firstName = "John", lastName = "Smith, Jr", birthday = LocalDate.of(1990, 5, 4)),
+            )
 
         val csv = support.export(people)
 

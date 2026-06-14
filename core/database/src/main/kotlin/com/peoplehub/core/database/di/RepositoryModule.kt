@@ -20,7 +20,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class RepositoryModule {
-
     @Binds
     @Singleton
     abstract fun bindPeopleRepository(impl: PeopleRepositoryImpl): PeopleRepository

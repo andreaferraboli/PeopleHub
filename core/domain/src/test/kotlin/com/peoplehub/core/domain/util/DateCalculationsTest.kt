@@ -8,7 +8,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 class DateCalculationsTest {
-
     @Test
     fun `next birthday occurrence is later this year when it has not passed`() {
         val today = LocalDate.of(2026, 6, 10)

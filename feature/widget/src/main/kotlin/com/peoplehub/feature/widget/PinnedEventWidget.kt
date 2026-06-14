@@ -23,7 +23,6 @@ import java.time.LocalDate
 
 /** Home-screen widget showing the user's pinned event with its elapsed/remaining day counter. */
 class PinnedEventWidget : GlanceAppWidget() {
-
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entry = widgetEntryPoint(context)
         val event = entry.getPinnedEvent().invoke().first()
@@ -47,9 +46,10 @@ private fun PinnedEventWidgetContent(context: Context, event: PersonEvent?, toda
             )
         } else {
             Column(
-                modifier = GlanceModifier
-                    .padding(vertical = 4.dp)
-                    .clickable(deepLinkAction(context, DeepLinks.event(event.id))),
+                modifier =
+                    GlanceModifier
+                        .padding(vertical = 4.dp)
+                        .clickable(deepLinkAction(context, DeepLinks.event(event.id))),
             ) {
                 Text(
                     text = event.title,
@@ -64,8 +64,9 @@ private fun PinnedEventWidgetContent(context: Context, event: PersonEvent?, toda
     }
 }
 
-private fun eventDayLabel(context: Context, signedDays: Long): String = when {
-    signedDays == 0L -> context.getString(R.string.widget_today)
-    signedDays > 0L -> context.getString(R.string.widget_in_days, signedDays.toInt())
-    else -> context.getString(R.string.widget_days_ago, (-signedDays).toInt())
-}
+private fun eventDayLabel(context: Context, signedDays: Long): String =
+    when {
+        signedDays == 0L -> context.getString(R.string.widget_today)
+        signedDays > 0L -> context.getString(R.string.widget_in_days, signedDays.toInt())
+        else -> context.getString(R.string.widget_days_ago, (-signedDays).toInt())
+    }

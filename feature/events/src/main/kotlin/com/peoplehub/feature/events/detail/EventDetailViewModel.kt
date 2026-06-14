@@ -37,63 +37,65 @@ data class EventDetailData(
 /** Backs the event detail screen, resolving the linked person and exposing pin/delete actions. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class EventDetailViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    observeEvent: ObserveEventUseCase,
-    observePerson: ObservePersonUseCase,
-    private val setEventPinned: SetEventPinnedUseCase,
-    private val deleteEvent: DeleteEventUseCase,
-    private val clock: Clock,
-) : ViewModel() {
+class EventDetailViewModel
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        observeEvent: ObserveEventUseCase,
+        observePerson: ObservePersonUseCase,
+        private val setEventPinned: SetEventPinnedUseCase,
+        private val deleteEvent: DeleteEventUseCase,
+        private val clock: Clock,
+    ) : ViewModel() {
+        private val eventId: Long = savedStateHandle.toRoute<EventDetailRoute>().eventId
 
-    private val eventId: Long = savedStateHandle.toRoute<EventDetailRoute>().eventId
+        private val closedSignal = MutableStateFlow(false)
 
-    private val closedSignal = MutableStateFlow(false)
+        /** Emits `true` once the event has been deleted so the screen can navigate back. */
+        val closed: StateFlow<Boolean> = closedSignal
 
-    /** Emits `true` once the event has been deleted so the screen can navigate back. */
-    val closed: StateFlow<Boolean> = closedSignal
+        private val eventFlow: Flow<PersonEvent?> = observeEvent(eventId)
 
-    private val eventFlow: Flow<PersonEvent?> = observeEvent(eventId)
+        val state: StateFlow<UiState<EventDetailData>> =
+            eventFlow
+                .flatMapLatest { event ->
+                    val personFlow = event?.personId?.let { observePerson(it) } ?: flowOf(null)
+                    combine(flowOf(event), personFlow) { current, person ->
+                        if (current == null) {
+                            UiState.Error("Event not found")
+                        } else {
+                            UiState.Success(
+                                EventDetailData(
+                                    event = current,
+                                    personName = person?.fullName,
+                                    signedDays =
+                                        DateCalculations.signedDaysFromToday(
+                                            current.dateTime.toLocalDate(),
+                                            LocalDate.now(clock),
+                                        ),
+                                ),
+                            )
+                        }
+                    }
+                }.catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                    initialValue = UiState.Loading,
+                )
 
-    val state: StateFlow<UiState<EventDetailData>> = eventFlow
-        .flatMapLatest { event ->
-            val personFlow = event?.personId?.let { observePerson(it) } ?: flowOf(null)
-            combine(flowOf(event), personFlow) { current, person ->
-                if (current == null) {
-                    UiState.Error("Event not found")
-                } else {
-                    UiState.Success(
-                        EventDetailData(
-                            event = current,
-                            personName = person?.fullName,
-                            signedDays = DateCalculations.signedDaysFromToday(
-                                current.dateTime.toLocalDate(),
-                                LocalDate.now(clock),
-                            ),
-                        ),
-                    )
-                }
+        fun onTogglePin(pinned: Boolean) {
+            viewModelScope.launch { setEventPinned(eventId, pinned) }
+        }
+
+        fun onDelete() {
+            viewModelScope.launch {
+                deleteEvent(eventId)
+                closedSignal.value = true
             }
         }
-        .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = UiState.Loading,
-        )
 
-    fun onTogglePin(pinned: Boolean) {
-        viewModelScope.launch { setEventPinned(eventId, pinned) }
-    }
-
-    fun onDelete() {
-        viewModelScope.launch {
-            deleteEvent(eventId)
-            closedSignal.value = true
+        private companion object {
+            const val STOP_TIMEOUT_MILLIS = 5_000L
         }
     }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
-    }
-}

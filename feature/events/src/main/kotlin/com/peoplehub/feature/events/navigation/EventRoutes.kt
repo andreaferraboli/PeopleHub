@@ -43,9 +43,10 @@ fun NavGraphBuilder.eventsSection(
         )
     }
     composable<EventDetailRoute>(
-        deepLinks = listOf(
-            navDeepLink { uriPattern = "${DeepLinks.SCHEME}://${DeepLinks.HOST_EVENT}/{eventId}" },
-        ),
+        deepLinks =
+            listOf(
+                navDeepLink { uriPattern = "${DeepLinks.SCHEME}://${DeepLinks.HOST_EVENT}/{eventId}" },
+            ),
     ) {
         EventDetailScreen(
             onBack = onBack,

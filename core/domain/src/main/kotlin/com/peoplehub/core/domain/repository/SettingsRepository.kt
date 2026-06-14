@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
  * Read/write access to user preferences, backed by DataStore.
  */
 interface SettingsRepository {
-
     /** Reactive stream of the current [AppSettings]. */
     val settings: Flow<AppSettings>
 

@@ -42,125 +42,136 @@ data class PersonForm(
 }
 
 @HiltViewModel
-class AddEditPersonViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val observePerson: ObservePersonUseCase,
-    private val upsertPerson: UpsertPersonUseCase,
-    private val clock: Clock,
-) : ViewModel() {
+class AddEditPersonViewModel
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        private val observePerson: ObservePersonUseCase,
+        private val upsertPerson: UpsertPersonUseCase,
+        private val clock: Clock,
+    ) : ViewModel() {
+        private val personId: Long = savedStateHandle.toRoute<AddEditPersonRoute>().personId
 
-    private val personId: Long = savedStateHandle.toRoute<AddEditPersonRoute>().personId
+        /** Whether this screen is editing an existing person rather than creating a new one. */
+        val isEditing: Boolean = personId != AddEditPersonRoute.NEW_PERSON
 
-    /** Whether this screen is editing an existing person rather than creating a new one. */
-    val isEditing: Boolean = personId != AddEditPersonRoute.NEW_PERSON
+        private val _form = MutableStateFlow(PersonForm())
+        val form: StateFlow<PersonForm> = _form.asStateFlow()
 
-    private val _form = MutableStateFlow(PersonForm())
-    val form: StateFlow<PersonForm> = _form.asStateFlow()
+        private val _saved = MutableStateFlow(false)
+        val saved: StateFlow<Boolean> = _saved.asStateFlow()
 
-    private val _saved = MutableStateFlow(false)
-    val saved: StateFlow<Boolean> = _saved.asStateFlow()
+        private val _error = MutableStateFlow<String?>(null)
+        val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
-
-    init {
-        if (isEditing) {
-            viewModelScope.launch {
-                observePerson(personId).first()?.let { person ->
-                    _form.value = person.toForm()
+        init {
+            if (isEditing) {
+                viewModelScope.launch {
+                    observePerson(personId).first()?.let { person ->
+                        _form.value = person.toForm()
+                    }
                 }
             }
         }
-    }
 
-    fun onFirstNameChange(value: String) = _form.update { it.copy(firstName = value) }
-    fun onLastNameChange(value: String) = _form.update { it.copy(lastName = value) }
-    fun onNotesChange(value: String) = _form.update { it.copy(notes = value) }
-    fun onBirthdayChange(value: LocalDate?) = _form.update { it.copy(birthday = value) }
-    fun onPhotoChange(path: String?) = _form.update { it.copy(photoPath = path) }
+        fun onFirstNameChange(value: String) = _form.update { it.copy(firstName = value) }
 
-    fun onAddTag(tag: String) {
-        val trimmed = tag.trim()
-        if (trimmed.isBlank()) return
-        _form.update { if (trimmed in it.tags) it else it.copy(tags = it.tags + trimmed) }
-    }
+        fun onLastNameChange(value: String) = _form.update { it.copy(lastName = value) }
 
-    fun onRemoveTag(tag: String) = _form.update { it.copy(tags = it.tags - tag) }
+        fun onNotesChange(value: String) = _form.update { it.copy(notes = value) }
 
-    fun onAddInterest() = _form.update { it.copy(interests = it.interests + Interest(key = "", value = "")) }
+        fun onBirthdayChange(value: LocalDate?) = _form.update { it.copy(birthday = value) }
 
-    fun onInterestChange(index: Int, key: String, value: String) = _form.update { form ->
-        val updated = form.interests.toMutableList()
-        if (index in updated.indices) {
-            updated[index] = updated[index].copy(key = key, value = value)
+        fun onPhotoChange(path: String?) = _form.update { it.copy(photoPath = path) }
+
+        fun onAddTag(tag: String) {
+            val trimmed = tag.trim()
+            if (trimmed.isBlank()) return
+            _form.update { if (trimmed in it.tags) it else it.copy(tags = it.tags + trimmed) }
         }
-        form.copy(interests = updated)
-    }
 
-    fun onRemoveInterest(index: Int) = _form.update { form ->
-        form.copy(interests = form.interests.filterIndexed { i, _ -> i != index })
-    }
+        fun onRemoveTag(tag: String) = _form.update { it.copy(tags = it.tags - tag) }
 
-    /** Toggles whether this person may trigger check-in and birthday notifications. */
-    fun onNotificationsEnabledChange(enabled: Boolean) = _form.update { it.copy(notificationsEnabled = enabled) }
+        fun onAddInterest() = _form.update { it.copy(interests = it.interests + Interest(key = "", value = "")) }
 
-    /** Toggles whether this entry is a bare birthday (hidden from the directory). */
-    fun onBirthdayOnlyChange(enabled: Boolean) = _form.update { it.copy(birthdayOnly = enabled) }
+        fun onInterestChange(index: Int, key: String, value: String) =
+            _form.update { form ->
+                val updated = form.interests.toMutableList()
+                if (index in updated.indices) {
+                    updated[index] = updated[index].copy(key = key, value = value)
+                }
+                form.copy(interests = updated)
+            }
 
-    /** Enables or disables a per-person check-in cadence override (off falls back to the global default). */
-    fun onThresholdEnabledChange(enabled: Boolean) = _form.update {
-        it.copy(checkInThreshold = if (enabled) (it.checkInThreshold ?: CheckInThreshold.Default) else null)
-    }
+        fun onRemoveInterest(index: Int) =
+            _form.update { form ->
+                form.copy(interests = form.interests.filterIndexed { i, _ -> i != index })
+            }
 
-    /** Updates the per-person cadence, keeping the critical window strictly beyond the warning window. */
-    fun onThresholdChange(warningDays: Int, criticalDays: Int) = _form.update {
-        val warning = warningDays.coerceAtLeast(1)
-        it.copy(checkInThreshold = CheckInThreshold(warning, criticalDays.coerceAtLeast(warning + 1)))
-    }
+        /** Toggles whether this person may trigger check-in and birthday notifications. */
+        fun onNotificationsEnabledChange(enabled: Boolean) = _form.update { it.copy(notificationsEnabled = enabled) }
 
-    fun onSave() {
-        val form = _form.value
-        viewModelScope.launch {
-            upsertPerson(form.toPerson()).fold(
-                onSuccess = { _saved.value = true },
-                onFailure = { _error.value = it.message ?: "Could not save" },
+        /** Toggles whether this entry is a bare birthday (hidden from the directory). */
+        fun onBirthdayOnlyChange(enabled: Boolean) = _form.update { it.copy(birthdayOnly = enabled) }
+
+        /** Enables or disables a per-person check-in cadence override (off falls back to the global default). */
+        fun onThresholdEnabledChange(enabled: Boolean) =
+            _form.update {
+                it.copy(checkInThreshold = if (enabled) (it.checkInThreshold ?: CheckInThreshold.Default) else null)
+            }
+
+        /** Updates the per-person cadence, keeping the critical window strictly beyond the warning window. */
+        fun onThresholdChange(warningDays: Int, criticalDays: Int) =
+            _form.update {
+                val warning = warningDays.coerceAtLeast(1)
+                it.copy(checkInThreshold = CheckInThreshold(warning, criticalDays.coerceAtLeast(warning + 1)))
+            }
+
+        fun onSave() {
+            val form = _form.value
+            viewModelScope.launch {
+                upsertPerson(form.toPerson()).fold(
+                    onSuccess = { _saved.value = true },
+                    onFailure = { _error.value = it.message ?: "Could not save" },
+                )
+            }
+        }
+
+        fun onErrorShown() {
+            _error.value = null
+        }
+
+        private fun Person.toForm(): PersonForm =
+            PersonForm(
+                id = id,
+                firstName = firstName,
+                lastName = lastName,
+                birthday = birthday,
+                photoPath = photoPath,
+                tags = tags,
+                interests = interests,
+                notes = notes,
+                checkInThreshold = checkInThreshold,
+                createdAt = createdAt,
+                lastCheckInAt = lastCheckInAt,
+                notificationsEnabled = notificationsEnabled,
+                birthdayOnly = birthdayOnly,
             )
-        }
+
+        private fun PersonForm.toPerson(): Person =
+            Person(
+                id = id,
+                firstName = firstName,
+                lastName = lastName,
+                photoPath = photoPath,
+                birthday = birthday,
+                tags = tags,
+                interests = interests.filter { it.key.isNotBlank() || it.value.isNotBlank() },
+                notes = notes,
+                lastCheckInAt = lastCheckInAt,
+                checkInThreshold = checkInThreshold,
+                createdAt = if (isEditing) createdAt else clock.instant(),
+                notificationsEnabled = notificationsEnabled,
+                birthdayOnly = birthdayOnly,
+            )
     }
-
-    fun onErrorShown() {
-        _error.value = null
-    }
-
-    private fun Person.toForm(): PersonForm = PersonForm(
-        id = id,
-        firstName = firstName,
-        lastName = lastName,
-        birthday = birthday,
-        photoPath = photoPath,
-        tags = tags,
-        interests = interests,
-        notes = notes,
-        checkInThreshold = checkInThreshold,
-        createdAt = createdAt,
-        lastCheckInAt = lastCheckInAt,
-        notificationsEnabled = notificationsEnabled,
-        birthdayOnly = birthdayOnly,
-    )
-
-    private fun PersonForm.toPerson(): Person = Person(
-        id = id,
-        firstName = firstName,
-        lastName = lastName,
-        photoPath = photoPath,
-        birthday = birthday,
-        tags = tags,
-        interests = interests.filter { it.key.isNotBlank() || it.value.isNotBlank() },
-        notes = notes,
-        lastCheckInAt = lastCheckInAt,
-        checkInThreshold = checkInThreshold,
-        createdAt = if (isEditing) createdAt else clock.instant(),
-        notificationsEnabled = notificationsEnabled,
-        birthdayOnly = birthdayOnly,
-    )
-}

@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
  * reads plus `suspend` functions for writes — never Room types.
  */
 interface PeopleRepository {
-
     /** Observes the filtered, sorted directory of people. */
     fun observePeople(filter: PeopleFilter): Flow<List<Person>>
 

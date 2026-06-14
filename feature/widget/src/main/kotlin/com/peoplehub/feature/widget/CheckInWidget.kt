@@ -21,9 +21,13 @@ import kotlinx.coroutines.flow.first
 
 /** Home-screen widget listing the people most overdue for a check-in. */
 class CheckInWidget : GlanceAppWidget() {
-
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val urgent = widgetEntryPoint(context).getUrgentCheckIns().invoke().first().take(MAX_ROWS)
+        val urgent =
+            widgetEntryPoint(context)
+                .getUrgentCheckIns()
+                .invoke()
+                .first()
+                .take(MAX_ROWS)
         provideContent { CheckInWidgetContent(context, urgent) }
     }
 
@@ -48,9 +52,10 @@ private fun CheckInWidgetContent(context: Context, urgent: List<CheckInUrgency>)
         } else {
             urgent.forEach { item ->
                 Column(
-                    modifier = GlanceModifier
-                        .padding(vertical = 4.dp)
-                        .clickable(deepLinkAction(context, DeepLinks.person(item.person.id))),
+                    modifier =
+                        GlanceModifier
+                            .padding(vertical = 4.dp)
+                            .clickable(deepLinkAction(context, DeepLinks.person(item.person.id))),
                 ) {
                     Text(
                         text = item.person.fullName,

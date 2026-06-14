@@ -124,10 +124,11 @@ private fun EventDetailBody(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         data.event.category?.let { CategoryChip(label = it) }
@@ -183,11 +184,12 @@ private fun EventDetailBody(
         }
 
         GhostButton(
-            text = if (data.event.pinnedToWidget) {
-                stringResource(R.string.event_unpin)
-            } else {
-                stringResource(R.string.event_pin)
-            },
+            text =
+                if (data.event.pinnedToWidget) {
+                    stringResource(R.string.event_unpin)
+                } else {
+                    stringResource(R.string.event_pin)
+                },
             onClick = { onTogglePin(!data.event.pinnedToWidget) },
             icon = if (data.event.pinnedToWidget) Icons.Filled.PushPin else Icons.Outlined.PushPin,
             modifier = Modifier.fillMaxWidth(),

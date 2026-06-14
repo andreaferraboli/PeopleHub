@@ -11,7 +11,6 @@ import java.time.temporal.ChronoUnit
  * reference point ("today"/"now") as a parameter so the logic stays deterministic and testable.
  */
 object DateCalculations {
-
     /**
      * Whole days elapsed between [past] and [now]. Returns 0 for future instants.
      */

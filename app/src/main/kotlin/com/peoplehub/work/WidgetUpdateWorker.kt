@@ -10,13 +10,14 @@ import dagger.assisted.AssistedInject
 
 /** Periodic worker that refreshes every Glance widget from the latest data. */
 @HiltWorker
-class WidgetUpdateWorker @AssistedInject constructor(
-    @Assisted private val appContext: Context,
-    @Assisted params: WorkerParameters,
-) : CoroutineWorker(appContext, params) {
-
-    override suspend fun doWork(): Result {
-        WidgetUpdater.updateAll(appContext)
-        return Result.success()
+class WidgetUpdateWorker
+    @AssistedInject
+    constructor(
+        @Assisted private val appContext: Context,
+        @Assisted params: WorkerParameters,
+    ) : CoroutineWorker(appContext, params) {
+        override suspend fun doWork(): Result {
+            WidgetUpdater.updateAll(appContext)
+            return Result.success()
+        }
     }
-}

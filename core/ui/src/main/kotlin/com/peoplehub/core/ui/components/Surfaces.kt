@@ -52,14 +52,15 @@ fun GlassPanel(
 fun GoldDivider(modifier: Modifier = Modifier) {
     val gold = MaterialTheme.colorScheme.primary
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(Color.Transparent, gold.copy(alpha = 0.5f), Color.Transparent),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(Color.Transparent, gold.copy(alpha = 0.5f), Color.Transparent),
+                    ),
                 ),
-            ),
     )
 }
 
@@ -105,10 +106,11 @@ fun SectionHeader(
                 text = actionLabel.uppercase(),
                 style = LabelCaps,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .clickable(onClick = onActionClick)
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                modifier =
+                    Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(onClick = onActionClick)
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
             )
         }
     }

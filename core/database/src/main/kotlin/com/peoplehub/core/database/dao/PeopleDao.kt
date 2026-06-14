@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.Flow
  */
 @Dao
 interface PeopleDao {
-
     @Transaction
     @Query("SELECT * FROM person")
     fun observeAll(): Flow<List<PersonWithDetails>>

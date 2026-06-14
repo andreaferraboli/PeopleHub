@@ -5,7 +5,6 @@ package com.peoplehub.core.ui.state
  * `StateFlow<UiState<T>>` and each screen renders all four cases.
  */
 sealed interface UiState<out T> {
-
     /** Data is being loaded for the first time. */
     data object Loading : UiState<Nothing>
 
@@ -20,12 +19,13 @@ sealed interface UiState<out T> {
 }
 
 /** Maps the [UiState.Success] payload, leaving the other states untouched. */
-inline fun <T, R> UiState<T>.map(transform: (T) -> R): UiState<R> = when (this) {
-    is UiState.Success -> UiState.Success(transform(data))
-    is UiState.Error -> this
-    UiState.Loading -> UiState.Loading
-    UiState.Empty -> UiState.Empty
-}
+inline fun <T, R> UiState<T>.map(transform: (T) -> R): UiState<R> =
+    when (this) {
+        is UiState.Success -> UiState.Success(transform(data))
+        is UiState.Error -> this
+        UiState.Loading -> UiState.Loading
+        UiState.Empty -> UiState.Empty
+    }
 
 /**
  * Builds a list-oriented [UiState] from a loaded [list]: [UiState.Empty] when the list is empty,

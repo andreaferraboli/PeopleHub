@@ -14,7 +14,6 @@ import dagger.hilt.android.EntryPointAccessors
  * reminders, then re-arms the alarm for the following day.
  */
 class BirthdayAlarmReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION_BIRTHDAY_CHECK) return
         WorkManager.getInstance(context).enqueue(OneTimeWorkRequestBuilder<BirthdayReminderWorker>().build())

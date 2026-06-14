@@ -28,7 +28,6 @@ import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PeopleListViewModelTest {
-
     private val clock = Clock.fixed(Instant.parse("2026-06-10T00:00:00Z"), ZoneOffset.UTC)
 
     @BeforeEach
@@ -42,49 +41,51 @@ class PeopleListViewModelTest {
     }
 
     @Test
-    fun `state surfaces people as a Success list`() = runTest {
-        val getPeople = mockk<GetPeopleUseCase>()
-        val observeAllTags = mockk<ObserveAllTagsUseCase>()
-        val getSettings = mockk<GetSettingsUseCase>()
-        val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
-        every { getPeople(any()) } returns flowOf(listOf(Person(id = 1, firstName = "Eleanor", lastName = "Vance")))
-        every { observeAllTags() } returns flowOf(listOf("Family"))
-        every { getSettings() } returns flowOf(AppSettings())
+    fun `state surfaces people as a Success list`() =
+        runTest {
+            val getPeople = mockk<GetPeopleUseCase>()
+            val observeAllTags = mockk<ObserveAllTagsUseCase>()
+            val getSettings = mockk<GetSettingsUseCase>()
+            val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
+            every { getPeople(any()) } returns flowOf(listOf(Person(id = 1, firstName = "Eleanor", lastName = "Vance")))
+            every { observeAllTags() } returns flowOf(listOf("Family"))
+            every { getSettings() } returns flowOf(AppSettings())
 
-        val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, clock)
+            val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, clock)
 
-        viewModel.state.test {
-            var state = awaitItem()
-            while (state.listState !is UiState.Success) {
-                state = awaitItem()
+            viewModel.state.test {
+                var state = awaitItem()
+                while (state.listState !is UiState.Success) {
+                    state = awaitItem()
+                }
+                val data = (state.listState as UiState.Success).data
+                assertEquals(1, data.size)
+                assertEquals("Eleanor Vance", data.first().fullName)
+                assertEquals(listOf("Family"), state.allTags)
+                cancelAndIgnoreRemainingEvents()
             }
-            val data = (state.listState as UiState.Success).data
-            assertEquals(1, data.size)
-            assertEquals("Eleanor Vance", data.first().fullName)
-            assertEquals(listOf("Family"), state.allTags)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     @Test
-    fun `empty repository yields the Empty state`() = runTest {
-        val getPeople = mockk<GetPeopleUseCase>()
-        val observeAllTags = mockk<ObserveAllTagsUseCase>()
-        val getSettings = mockk<GetSettingsUseCase>()
-        val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
-        every { getPeople(any()) } returns flowOf(emptyList())
-        every { observeAllTags() } returns flowOf(emptyList())
-        every { getSettings() } returns flowOf(AppSettings())
+    fun `empty repository yields the Empty state`() =
+        runTest {
+            val getPeople = mockk<GetPeopleUseCase>()
+            val observeAllTags = mockk<ObserveAllTagsUseCase>()
+            val getSettings = mockk<GetSettingsUseCase>()
+            val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
+            every { getPeople(any()) } returns flowOf(emptyList())
+            every { observeAllTags() } returns flowOf(emptyList())
+            every { getSettings() } returns flowOf(AppSettings())
 
-        val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, clock)
+            val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, clock)
 
-        viewModel.state.test {
-            var state = awaitItem()
-            while (state.listState is UiState.Loading) {
-                state = awaitItem()
+            viewModel.state.test {
+                var state = awaitItem()
+                while (state.listState is UiState.Loading) {
+                    state = awaitItem()
+                }
+                assertTrue(state.listState is UiState.Empty)
+                cancelAndIgnoreRemainingEvents()
             }
-            assertTrue(state.listState is UiState.Empty)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 }

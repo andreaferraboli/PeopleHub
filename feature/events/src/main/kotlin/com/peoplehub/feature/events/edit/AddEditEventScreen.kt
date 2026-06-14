@@ -89,11 +89,12 @@ fun AddEditEventScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (viewModel.isEditing) {
-                            stringResource(R.string.edit_event_title_edit)
-                        } else {
-                            stringResource(R.string.edit_event_title_new)
-                        },
+                        text =
+                            if (viewModel.isEditing) {
+                                stringResource(R.string.edit_event_title_edit)
+                            } else {
+                                stringResource(R.string.edit_event_title_new)
+                            },
                         style = MaterialTheme.typography.headlineSmall,
                     )
                 },
@@ -107,11 +108,12 @@ fun AddEditEventScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             OutlinedTextField(
@@ -127,7 +129,12 @@ fun AddEditEventScreen(
             DateTimeFields(
                 date = form.dateTime.toLocalDate().format(DateFormatter),
                 time = form.dateTime.toLocalTime().format(TimeFormatter),
-                dateMillis = form.dateTime.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                dateMillis =
+                    form.dateTime
+                        .toLocalDate()
+                        .atStartOfDay(ZoneOffset.UTC)
+                        .toInstant()
+                        .toEpochMilli(),
                 initialHour = form.dateTime.hour,
                 initialMinute = form.dateTime.minute,
                 onDateMillis = { millis ->
@@ -162,9 +169,10 @@ fun AddEditEventScreen(
 
             GlassPanel(modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -276,9 +284,10 @@ private fun PersonPicker(
             value = selectedName,
             onValueChange = {},
             readOnly = true,
-            modifier = Modifier
-                .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable)
+                    .fillMaxWidth(),
             label = { Text(stringResource(R.string.event_field_person)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             shape = RoundedCornerShape(6.dp),

@@ -93,25 +93,27 @@ fun AddEditPersonScreen(
     }
 
     val scope = rememberCoroutineScope()
-    val photoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
-            scope.launch {
-                val path = PhotoStorage.savePhoto(context, uri)
-                if (path != null) viewModel.onPhotoChange(path)
+    val photoLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val path = PhotoStorage.savePhoto(context, uri)
+                    if (path != null) viewModel.onPhotoChange(path)
+                }
             }
         }
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (viewModel.isEditing) {
-                            stringResource(R.string.edit_title_edit)
-                        } else {
-                            stringResource(R.string.edit_title_new)
-                        },
+                        text =
+                            if (viewModel.isEditing) {
+                                stringResource(R.string.edit_title_edit)
+                            } else {
+                                stringResource(R.string.edit_title_new)
+                            },
                         style = MaterialTheme.typography.headlineSmall,
                     )
                 },
@@ -125,25 +127,31 @@ fun AddEditPersonScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             PersonAvatar(
-                initials = form.firstName.take(1).uppercase().ifEmpty { "+" },
+                initials =
+                    form.firstName
+                        .take(1)
+                        .uppercase()
+                        .ifEmpty { "+" },
                 photoPath = form.photoPath,
                 size = 110.dp,
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clickable {
-                        photoLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                        )
-                    },
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .clickable {
+                            photoLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                            )
+                        },
             )
 
             OutlinedTextField(
@@ -230,9 +238,10 @@ private fun BirthdayField(birthday: LocalDate?, onBirthdayChange: (LocalDate?) -
         }
     }
     if (showPicker) {
-        val pickerState = rememberDatePickerState(
-            initialSelectedDateMillis = birthday?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
-        )
+        val pickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = birthday?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
+            )
         DatePickerDialog(
             onDismissRequest = { showPicker = false },
             confirmButton = {

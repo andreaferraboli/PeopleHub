@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 /** Data-access object for check-in history. */
 @Dao
 interface CheckInDao {
-
     @Insert
     suspend fun insert(checkIn: CheckInEntity): Long
 

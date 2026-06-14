@@ -12,24 +12,24 @@ import java.time.Instant
 import java.time.LocalDate
 
 class PersonJsonImporterTest {
-
     private val importer = PersonJsonImporter()
 
-    private val existing = Person(
-        id = 42L,
-        firstName = "Ada",
-        lastName = "Lovelace",
-        photoPath = "/photos/ada.jpg",
-        birthday = LocalDate.of(1815, 12, 10),
-        tags = listOf("Pioneer"),
-        interests = listOf(Interest(key = "Field", value = "Mathematics")),
-        notes = "Original notes",
-        lastCheckInAt = Instant.ofEpochMilli(1_000L),
-        checkInThreshold = CheckInThreshold(warningDays = 7, criticalDays = 14),
-        createdAt = Instant.ofEpochMilli(500L),
-        notificationsEnabled = false,
-        birthdayOnly = false,
-    )
+    private val existing =
+        Person(
+            id = 42L,
+            firstName = "Ada",
+            lastName = "Lovelace",
+            photoPath = "/photos/ada.jpg",
+            birthday = LocalDate.of(1815, 12, 10),
+            tags = listOf("Pioneer"),
+            interests = listOf(Interest(key = "Field", value = "Mathematics")),
+            notes = "Original notes",
+            lastCheckInAt = Instant.ofEpochMilli(1_000L),
+            checkInThreshold = CheckInThreshold(warningDays = 7, criticalDays = 14),
+            createdAt = Instant.ofEpochMilli(500L),
+            notificationsEnabled = false,
+            birthdayOnly = false,
+        )
 
     @Test
     fun `parse forces a new id and defaults notifications to off`() {

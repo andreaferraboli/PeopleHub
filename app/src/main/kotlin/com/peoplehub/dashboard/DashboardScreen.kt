@@ -124,12 +124,13 @@ private fun DashboardContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 96.dp,
-            start = 20.dp,
-            end = 20.dp,
-        ),
+        contentPadding =
+            PaddingValues(
+                top = contentPadding.calculateTopPadding() + 8.dp,
+                bottom = contentPadding.calculateBottomPadding() + 96.dp,
+                start = 20.dp,
+                end = 20.dp,
+            ),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item(key = "header") {
@@ -234,16 +235,18 @@ private fun UrgentCheckInCard(urgency: CheckInUrgency, onPersonClick: (Long) -> 
 @Composable
 private fun MilestoneRow(birthday: UpcomingBirthday, onPersonClick: (Long) -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onPersonClick(birthday.personId) }
-            .padding(vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onPersonClick(birthday.personId) }
+                .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp)),
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -316,26 +319,34 @@ private fun PinnedEventCard(event: PersonEvent, onEventClick: (Long) -> Unit) {
 private fun DashboardPreview() {
     PeopleHubTheme {
         DashboardContent(
-            data = DashboardData(
-                peopleCount = 12,
-                urgentCount = 3,
-                upcomingBirthdayCount = 2,
-                urgentCheckIns = listOf(
-                    CheckInUrgency(Person(id = 1, firstName = "Eleanor", lastName = "Vance"), 40, CheckInStatus.OVERDUE),
+            data =
+                DashboardData(
+                    peopleCount = 12,
+                    urgentCount = 3,
+                    upcomingBirthdayCount = 2,
+                    urgentCheckIns =
+                        listOf(
+                            CheckInUrgency(Person(id = 1, firstName = "Eleanor", lastName = "Vance"), 40, CheckInStatus.OVERDUE),
+                        ),
+                    upcomingBirthdays =
+                        listOf(
+                            UpcomingBirthday(
+                                personId = 2,
+                                fullName = "Marcus Thorne",
+                                photoPath = null,
+                                birthday = LocalDate.of(1990, 10, 12),
+                                nextOccurrence = LocalDate.of(2026, 10, 12),
+                                daysUntil = 5,
+                                turningAge = 36,
+                            ),
+                        ),
+                    pinnedEvent =
+                        PersonEvent(
+                            id = 3,
+                            title = "The Annual Foundation Gala",
+                            dateTime = LocalDateTime.of(2026, 11, 15, 19, 0),
+                        ),
                 ),
-                upcomingBirthdays = listOf(
-                    UpcomingBirthday(
-                        personId = 2,
-                        fullName = "Marcus Thorne",
-                        photoPath = null,
-                        birthday = LocalDate.of(1990, 10, 12),
-                        nextOccurrence = LocalDate.of(2026, 10, 12),
-                        daysUntil = 5,
-                        turningAge = 36,
-                    ),
-                ),
-                pinnedEvent = PersonEvent(id = 3, title = "The Annual Foundation Gala", dateTime = LocalDateTime.of(2026, 11, 15, 19, 0)),
-            ),
             contentPadding = PaddingValues(0.dp),
             onPersonClick = {},
             onEventClick = {},

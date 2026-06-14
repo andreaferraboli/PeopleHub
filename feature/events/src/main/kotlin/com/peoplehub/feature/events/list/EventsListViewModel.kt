@@ -52,71 +52,73 @@ private data class Controls(val timeFilter: EventTimeFilter, val category: Strin
 /** Backs the events timeline ("Timeline") with filtering and pin toggling. */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class EventsListViewModel @Inject constructor(
-    getEvents: GetEventsUseCase,
-    observeCategories: ObserveEventCategoriesUseCase,
-    private val setEventPinned: SetEventPinnedUseCase,
-    private val clock: Clock,
-) : ViewModel() {
+class EventsListViewModel
+    @Inject
+    constructor(
+        getEvents: GetEventsUseCase,
+        observeCategories: ObserveEventCategoriesUseCase,
+        private val setEventPinned: SetEventPinnedUseCase,
+        private val clock: Clock,
+    ) : ViewModel() {
+        private val timeFilter = MutableStateFlow(EventTimeFilter.ALL)
+        private val category = MutableStateFlow<String?>(null)
 
-    private val timeFilter = MutableStateFlow(EventTimeFilter.ALL)
-    private val category = MutableStateFlow<String?>(null)
+        private val controls = combine(timeFilter, category, ::Controls)
 
-    private val controls = combine(timeFilter, category, ::Controls)
+        private val listState: Flow<UiState<List<EventListItem>>> =
+            controls
+                .flatMapLatest { c ->
+                    getEvents(EventFilter(timeFilter = c.timeFilter, category = c.category))
+                        .map { events -> events.map { it.toListItem() } }
+                }.map { it.toListUiState() }
+                .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
+                .onStart { emit(UiState.Loading) }
 
-    private val listState: Flow<UiState<List<EventListItem>>> =
-        controls
-            .flatMapLatest { c ->
-                getEvents(EventFilter(timeFilter = c.timeFilter, category = c.category))
-                    .map { events -> events.map { it.toListItem() } }
-            }
-            .map { it.toListUiState() }
-            .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
-            .onStart { emit(UiState.Loading) }
+        val state: StateFlow<EventsListScreenState> =
+            combine(
+                listState,
+                observeCategories(),
+                controls,
+            ) { list, categories, c ->
+                EventsListScreenState(
+                    listState = list,
+                    categories = categories,
+                    timeFilter = c.timeFilter,
+                    category = c.category,
+                )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                initialValue =
+                    EventsListScreenState(
+                        listState = UiState.Loading,
+                        categories = emptyList(),
+                        timeFilter = EventTimeFilter.ALL,
+                        category = null,
+                    ),
+            )
 
-    val state: StateFlow<EventsListScreenState> = combine(
-        listState,
-        observeCategories(),
-        controls,
-    ) { list, categories, c ->
-        EventsListScreenState(
-            listState = list,
-            categories = categories,
-            timeFilter = c.timeFilter,
-            category = c.category,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-        initialValue = EventsListScreenState(
-            listState = UiState.Loading,
-            categories = emptyList(),
-            timeFilter = EventTimeFilter.ALL,
-            category = null,
-        ),
-    )
+        fun onTimeFilterChange(value: EventTimeFilter) = timeFilter.update { value }
 
-    fun onTimeFilterChange(value: EventTimeFilter) = timeFilter.update { value }
+        fun onCategoryChange(value: String?) = category.update { current -> if (current == value) null else value }
 
-    fun onCategoryChange(value: String?) = category.update { current -> if (current == value) null else value }
+        fun onTogglePin(eventId: Long, pinned: Boolean) {
+            viewModelScope.launch { setEventPinned(eventId, pinned) }
+        }
 
-    fun onTogglePin(eventId: Long, pinned: Boolean) {
-        viewModelScope.launch { setEventPinned(eventId, pinned) }
+        private fun PersonEvent.toListItem(): EventListItem {
+            val signedDays = DateCalculations.signedDaysFromToday(dateTime.toLocalDate(), LocalDate.now(clock))
+            return EventListItem(
+                id = id,
+                title = title,
+                category = category,
+                signedDays = signedDays,
+                isPast = signedDays < 0,
+                pinned = pinnedToWidget,
+            )
+        }
+
+        private companion object {
+            const val STOP_TIMEOUT_MILLIS = 5_000L
+        }
     }
-
-    private fun PersonEvent.toListItem(): EventListItem {
-        val signedDays = DateCalculations.signedDaysFromToday(dateTime.toLocalDate(), LocalDate.now(clock))
-        return EventListItem(
-            id = id,
-            title = title,
-            category = category,
-            signedDays = signedDays,
-            isPast = signedDays < 0,
-            pinned = pinnedToWidget,
-        )
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MILLIS = 5_000L
-    }
-}

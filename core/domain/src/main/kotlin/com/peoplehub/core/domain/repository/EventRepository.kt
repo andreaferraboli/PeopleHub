@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
  * Read/write access to personal events.
  */
 interface EventRepository {
-
     /** Observes the filtered list of events (ordering applied by the implementation). */
     fun observeEvents(filter: EventFilter): Flow<List<PersonEvent>>
 

@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.Color
  * variant is provided for completeness.
  */
 internal object MidnightGold {
-
     // --- Dark scheme (primary brand experience) ---
     val DarkPrimary = Color(0xFFF2CA50)
     val DarkOnPrimary = Color(0xFF3C2F00)

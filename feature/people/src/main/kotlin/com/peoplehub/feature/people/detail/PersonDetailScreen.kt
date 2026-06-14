@@ -99,14 +99,19 @@ fun PersonDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
 
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            val json = runCatching {
-                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            }.getOrNull()
-            if (json != null) pendingImportJson = json
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                val json =
+                    runCatching {
+                        context.contentResolver
+                            .openInputStream(uri)
+                            ?.bufferedReader()
+                            ?.use { it.readText() }
+                    }.getOrNull()
+                if (json != null) pendingImportJson = json
+            }
         }
-    }
 
     Scaffold(
         topBar = {
@@ -164,7 +169,12 @@ fun PersonDetailScreen(
 
     val pendingJson = pendingImportJson
     if (pendingJson != null) {
-        val personName = (state as? UiState.Success)?.data?.person?.fullName.orEmpty()
+        val personName =
+            (state as? UiState.Success)
+                ?.data
+                ?.person
+                ?.fullName
+                .orEmpty()
         AlertDialog(
             onDismissRequest = { pendingImportJson = null },
             title = { Text(stringResource(R.string.detail_import_json_title)) },
@@ -197,9 +207,10 @@ private fun PersonDetailBody(
         PrimaryGoldButton(
             text = stringResource(R.string.detail_seen_today_button, data.person.firstName),
             onClick = { showCheckInDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
         )
         TabRow(selectedTabIndex = selectedTab, containerColor = MaterialTheme.colorScheme.surface) {
             detailTabs().forEachIndexed { index, titleRes ->
@@ -232,9 +243,10 @@ private fun PersonDetailBody(
 @Composable
 private fun DetailHero(data: PersonDetailData) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         PersonAvatar(
@@ -251,7 +263,9 @@ private fun DetailHero(data: PersonDetailData) {
         )
         if (data.person.tags.isNotEmpty()) {
             Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                data.person.tags.take(3).forEach { tag -> CategoryChip(label = tag) }
+                data.person.tags
+                    .take(3)
+                    .forEach { tag -> CategoryChip(label = tag) }
             }
         }
         CheckInStatusBadge(
@@ -353,11 +367,12 @@ private fun CadencePanel(data: PersonDetailData) {
                 modifier = Modifier.weight(1f),
             )
             CategoryChip(
-                label = if (data.isCustomThreshold) {
-                    stringResource(R.string.detail_cadence_custom)
-                } else {
-                    stringResource(R.string.detail_cadence_default)
-                },
+                label =
+                    if (data.isCustomThreshold) {
+                        stringResource(R.string.detail_cadence_custom)
+                    } else {
+                        stringResource(R.string.detail_cadence_default)
+                    },
             )
         }
     }

@@ -10,16 +10,17 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /** Room-backed [CheckInRepository]. */
-internal class CheckInRepositoryImpl @Inject constructor(
-    private val dao: CheckInDao,
-) : CheckInRepository {
+internal class CheckInRepositoryImpl
+    @Inject
+    constructor(
+        private val dao: CheckInDao,
+    ) : CheckInRepository {
+        override suspend fun recordCheckIn(checkIn: CheckIn): Long = dao.insert(checkIn.toEntity())
 
-    override suspend fun recordCheckIn(checkIn: CheckIn): Long = dao.insert(checkIn.toEntity())
+        override fun observeHistory(personId: Long): Flow<List<CheckIn>> =
+            dao.observeForPerson(personId).map { list -> list.map { it.toDomain() } }
 
-    override fun observeHistory(personId: Long): Flow<List<CheckIn>> =
-        dao.observeForPerson(personId).map { list -> list.map { it.toDomain() } }
+        override suspend fun getAllCheckIns(): List<CheckIn> = dao.getAll().map { it.toDomain() }
 
-    override suspend fun getAllCheckIns(): List<CheckIn> = dao.getAll().map { it.toDomain() }
-
-    override suspend fun deleteAll() = dao.deleteAll()
-}
+        override suspend fun deleteAll() = dao.deleteAll()
+    }

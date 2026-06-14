@@ -14,56 +14,61 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class BackupSerializerTest {
-
     private val serializer = BackupSerializer()
 
     @Test
     fun `encode then decode round-trips a full backup`() {
-        val richPerson = Person(
-            id = 1L,
-            firstName = "Ada",
-            lastName = "Lovelace",
-            photoPath = "/photos/ada.jpg",
-            birthday = LocalDate.of(1815, 12, 10),
-            tags = listOf("friend", "mentor"),
-            interests = listOf(
-                Interest(key = "Field", value = "Mathematics", id = 7L),
-                Interest(key = "Hobby", value = "Poetry", id = 8L),
-            ),
-            notes = "First programmer",
-            lastCheckInAt = Instant.ofEpochMilli(1_700_000_000_000L),
-            checkInThreshold = CheckInThreshold(warningDays = 10, criticalDays = 20),
-            createdAt = Instant.ofEpochMilli(1_600_000_000_000L),
-        )
-        val minimalPerson = Person(
-            id = 2L,
-            firstName = "Bob",
-            lastName = "Stone",
-            createdAt = Instant.ofEpochMilli(1_650_000_000_000L),
-        )
-        val original = BackupData(
-            schemaVersion = BackupData.CURRENT_SCHEMA_VERSION,
-            people = listOf(richPerson, minimalPerson),
-            checkIns = listOf(
-                CheckIn(
-                    id = 5L,
-                    personId = 1L,
-                    timestamp = Instant.ofEpochMilli(1_700_000_500_000L),
-                    note = "Coffee",
-                ),
-            ),
-            events = listOf(
-                PersonEvent(
-                    id = 9L,
-                    title = "Gala",
-                    dateTime = LocalDateTime.of(2026, 1, 15, 19, 30),
-                    description = "Annual gala",
-                    category = "Gala",
-                    personId = 1L,
-                    pinnedToWidget = true,
-                ),
-            ),
-        )
+        val richPerson =
+            Person(
+                id = 1L,
+                firstName = "Ada",
+                lastName = "Lovelace",
+                photoPath = "/photos/ada.jpg",
+                birthday = LocalDate.of(1815, 12, 10),
+                tags = listOf("friend", "mentor"),
+                interests =
+                    listOf(
+                        Interest(key = "Field", value = "Mathematics", id = 7L),
+                        Interest(key = "Hobby", value = "Poetry", id = 8L),
+                    ),
+                notes = "First programmer",
+                lastCheckInAt = Instant.ofEpochMilli(1_700_000_000_000L),
+                checkInThreshold = CheckInThreshold(warningDays = 10, criticalDays = 20),
+                createdAt = Instant.ofEpochMilli(1_600_000_000_000L),
+            )
+        val minimalPerson =
+            Person(
+                id = 2L,
+                firstName = "Bob",
+                lastName = "Stone",
+                createdAt = Instant.ofEpochMilli(1_650_000_000_000L),
+            )
+        val original =
+            BackupData(
+                schemaVersion = BackupData.CURRENT_SCHEMA_VERSION,
+                people = listOf(richPerson, minimalPerson),
+                checkIns =
+                    listOf(
+                        CheckIn(
+                            id = 5L,
+                            personId = 1L,
+                            timestamp = Instant.ofEpochMilli(1_700_000_500_000L),
+                            note = "Coffee",
+                        ),
+                    ),
+                events =
+                    listOf(
+                        PersonEvent(
+                            id = 9L,
+                            title = "Gala",
+                            dateTime = LocalDateTime.of(2026, 1, 15, 19, 30),
+                            description = "Annual gala",
+                            category = "Gala",
+                            personId = 1L,
+                            pinnedToWidget = true,
+                        ),
+                    ),
+            )
 
         val decoded = serializer.decode(serializer.encode(original))
 
@@ -74,9 +79,10 @@ class BackupSerializerTest {
     @Test
     fun `decode rejects a newer schema version`() {
         val futureVersion = BackupData.CURRENT_SCHEMA_VERSION + 1
-        val json = """
+        val json =
+            """
             { "schemaVersion": $futureVersion, "people": [], "checkIns": [], "events": [] }
-        """.trimIndent()
+            """.trimIndent()
 
         val result = serializer.decode(json)
 
@@ -85,7 +91,8 @@ class BackupSerializerTest {
 
     @Test
     fun `decode tolerates unknown JSON fields`() {
-        val json = """
+        val json =
+            """
             {
               "schemaVersion": ${BackupData.CURRENT_SCHEMA_VERSION},
               "people": [],
@@ -94,7 +101,7 @@ class BackupSerializerTest {
               "exportedBy": "PeopleHub 9.9",
               "futureField": 42
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val result = serializer.decode(json)
 

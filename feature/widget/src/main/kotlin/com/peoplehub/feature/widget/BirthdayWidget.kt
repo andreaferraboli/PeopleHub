@@ -21,9 +21,13 @@ import kotlinx.coroutines.flow.first
 
 /** Home-screen widget listing the next three upcoming birthdays with days remaining. */
 class BirthdayWidget : GlanceAppWidget() {
-
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val birthdays = widgetEntryPoint(context).getUpcomingBirthdays().invoke().first().take(MAX_ROWS)
+        val birthdays =
+            widgetEntryPoint(context)
+                .getUpcomingBirthdays()
+                .invoke()
+                .first()
+                .take(MAX_ROWS)
         provideContent { BirthdayWidgetContent(context, birthdays) }
     }
 
@@ -48,9 +52,10 @@ private fun BirthdayWidgetContent(context: Context, birthdays: List<UpcomingBirt
         } else {
             birthdays.forEach { birthday ->
                 Column(
-                    modifier = GlanceModifier
-                        .padding(vertical = 4.dp)
-                        .clickable(deepLinkAction(context, DeepLinks.person(birthday.personId))),
+                    modifier =
+                        GlanceModifier
+                            .padding(vertical = 4.dp)
+                            .clickable(deepLinkAction(context, DeepLinks.person(birthday.personId))),
                 ) {
                     Text(
                         text = birthday.fullName,
@@ -66,8 +71,9 @@ private fun BirthdayWidgetContent(context: Context, birthdays: List<UpcomingBirt
     }
 }
 
-private fun birthdayDaysLabel(context: Context, daysUntil: Int): String = when (daysUntil) {
-    0 -> context.getString(R.string.widget_today)
-    1 -> context.getString(R.string.widget_tomorrow)
-    else -> context.getString(R.string.widget_in_days, daysUntil)
-}
+private fun birthdayDaysLabel(context: Context, daysUntil: Int): String =
+    when (daysUntil) {
+        0 -> context.getString(R.string.widget_today)
+        1 -> context.getString(R.string.widget_tomorrow)
+        else -> context.getString(R.string.widget_in_days, daysUntil)
+    }

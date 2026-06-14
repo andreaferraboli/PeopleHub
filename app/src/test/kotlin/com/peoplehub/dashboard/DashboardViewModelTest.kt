@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
-
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -38,41 +37,44 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun `dashboard aggregates counts into a Success state`() = runTest {
-        val getPeople = mockk<GetPeopleUseCase>()
-        val getUrgentCheckIns = mockk<GetUrgentCheckInsUseCase>()
-        val getUpcomingBirthdays = mockk<GetUpcomingBirthdaysUseCase>()
-        val getPinnedEvent = mockk<GetPinnedEventUseCase>()
-        val checkInPerson = mockk<CheckInPersonUseCase>(relaxed = true)
-        val workScheduler = mockk<PeopleHubWorkScheduler>(relaxed = true)
+    fun `dashboard aggregates counts into a Success state`() =
+        runTest {
+            val getPeople = mockk<GetPeopleUseCase>()
+            val getUrgentCheckIns = mockk<GetUrgentCheckInsUseCase>()
+            val getUpcomingBirthdays = mockk<GetUpcomingBirthdaysUseCase>()
+            val getPinnedEvent = mockk<GetPinnedEventUseCase>()
+            val checkInPerson = mockk<CheckInPersonUseCase>(relaxed = true)
+            val workScheduler = mockk<PeopleHubWorkScheduler>(relaxed = true)
 
-        every { getPeople(any()) } returns flowOf(
-            listOf(
-                Person(id = 1, firstName = "Eleanor", lastName = "Vance"),
-                Person(id = 2, firstName = "Marcus", lastName = "Thorne"),
-            ),
-        )
-        every { getUrgentCheckIns() } returns flowOf(emptyList())
-        every { getUpcomingBirthdays(any()) } returns flowOf(emptyList())
-        every { getPinnedEvent() } returns flowOf(null)
+            every { getPeople(any()) } returns
+                flowOf(
+                    listOf(
+                        Person(id = 1, firstName = "Eleanor", lastName = "Vance"),
+                        Person(id = 2, firstName = "Marcus", lastName = "Thorne"),
+                    ),
+                )
+            every { getUrgentCheckIns() } returns flowOf(emptyList())
+            every { getUpcomingBirthdays(any()) } returns flowOf(emptyList())
+            every { getPinnedEvent() } returns flowOf(null)
 
-        val viewModel = DashboardViewModel(
-            getPeople,
-            getUrgentCheckIns,
-            getUpcomingBirthdays,
-            getPinnedEvent,
-            checkInPerson,
-            workScheduler,
-        )
+            val viewModel =
+                DashboardViewModel(
+                    getPeople,
+                    getUrgentCheckIns,
+                    getUpcomingBirthdays,
+                    getPinnedEvent,
+                    checkInPerson,
+                    workScheduler,
+                )
 
-        viewModel.state.test {
-            var emitted = awaitItem()
-            while (emitted is UiState.Loading) {
-                emitted = awaitItem()
+            viewModel.state.test {
+                var emitted = awaitItem()
+                while (emitted is UiState.Loading) {
+                    emitted = awaitItem()
+                }
+                assertTrue(emitted is UiState.Success)
+                assertEquals(2, (emitted as UiState.Success).data.peopleCount)
+                cancelAndIgnoreRemainingEvents()
             }
-            assertTrue(emitted is UiState.Success)
-            assertEquals(2, (emitted as UiState.Success).data.peopleCount)
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 }

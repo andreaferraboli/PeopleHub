@@ -54,9 +54,13 @@ private val CSV_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text
 /** A documented field in an import format. */
 private data class FieldDoc(val name: String, val type: String, val required: Boolean, val description: String)
 
-private fun readText(context: Context, uri: Uri): String? = runCatching {
-    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-}.getOrNull()
+private fun readText(context: Context, uri: Uri): String? =
+    runCatching {
+        context.contentResolver
+            .openInputStream(uri)
+            ?.bufferedReader()
+            ?.use { it.readText() }
+    }.getOrNull()
 
 /** In-app reference documenting every import format, with one-tap import + a result banner. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,15 +74,18 @@ fun ImportGuideScreen(
     val context = LocalContext.current
     var pendingBackupJson by remember { mutableStateOf<String?>(null) }
 
-    val csvLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) readText(context, uri)?.let(viewModel::importBirthdaysCsv)
-    }
-    val personLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) readText(context, uri)?.let(viewModel::importPersonJson)
-    }
-    val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) pendingBackupJson = readText(context, uri)
-    }
+    val csvLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) readText(context, uri)?.let(viewModel::importBirthdaysCsv)
+        }
+    val personLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) readText(context, uri)?.let(viewModel::importPersonJson)
+        }
+    val backupLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) pendingBackupJson = readText(context, uri)
+        }
 
     Scaffold(
         topBar = {
@@ -93,11 +100,12 @@ fun ImportGuideScreen(
         },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             if (isBusy) {
@@ -215,7 +223,12 @@ private fun FieldRow(field: FieldDoc) {
     val requiredColor = if (field.required) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(modifier = Modifier.weight(0.42f)) {
-            Text(field.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.primary)
+            Text(
+                field.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.primary,
+            )
             Text("${field.type} · $requiredLabel", style = MaterialTheme.typography.labelSmall, color = requiredColor)
         }
         Text(
@@ -229,16 +242,21 @@ private fun FieldRow(field: FieldDoc) {
 
 @Composable
 private fun CodeBlock(code: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainerHighest, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Text(
             text = code,
             style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(16.dp),
         )
     }
 }
@@ -254,32 +272,35 @@ private fun BackupStrategyDialog(onMerge: () -> Unit, onReplace: () -> Unit, onD
     )
 }
 
-private fun csvFields(): List<FieldDoc> = listOf(
-    FieldDoc("nome", "text", true, "First name."),
-    FieldDoc("cognome", "text", true, "Last name."),
-    FieldDoc("data_nascita", "date", true, "Birth date — YYYY-MM-DD or DD/MM/YYYY."),
-)
+private fun csvFields(): List<FieldDoc> =
+    listOf(
+        FieldDoc("nome", "text", true, "First name."),
+        FieldDoc("cognome", "text", true, "Last name."),
+        FieldDoc("data_nascita", "date", true, "Birth date — YYYY-MM-DD or DD/MM/YYYY."),
+    )
 
-private fun personFields(): List<FieldDoc> = listOf(
-    FieldDoc("firstName", "string", true, "First name."),
-    FieldDoc("lastName", "string", true, "Last name."),
-    FieldDoc("birthday", "string", false, "Birth date in ISO form YYYY-MM-DD."),
-    FieldDoc("tags", "string[]", false, "Free labels, e.g. Family, Work."),
-    FieldDoc("interests", "object[]", false, "List of { \"key\": ..., \"value\": ... } likes & tastes."),
-    FieldDoc("notes", "string", false, "Free-text notes."),
-    FieldDoc("warningDays", "number", false, "Days seen-ago before a check-in is due (warning)."),
-    FieldDoc("criticalDays", "number", false, "Days seen-ago before it becomes critical."),
-    FieldDoc("lastCheckInEpochMillis", "number", false, "Unix time in ms you last saw them."),
-    FieldDoc("photoPath", "string", false, "Leave out — photos are added inside the app."),
-    FieldDoc("id", "number", false, "Ignored on import; a new person is always created."),
-)
+private fun personFields(): List<FieldDoc> =
+    listOf(
+        FieldDoc("firstName", "string", true, "First name."),
+        FieldDoc("lastName", "string", true, "Last name."),
+        FieldDoc("birthday", "string", false, "Birth date in ISO form YYYY-MM-DD."),
+        FieldDoc("tags", "string[]", false, "Free labels, e.g. Family, Work."),
+        FieldDoc("interests", "object[]", false, "List of { \"key\": ..., \"value\": ... } likes & tastes."),
+        FieldDoc("notes", "string", false, "Free-text notes."),
+        FieldDoc("warningDays", "number", false, "Days seen-ago before a check-in is due (warning)."),
+        FieldDoc("criticalDays", "number", false, "Days seen-ago before it becomes critical."),
+        FieldDoc("lastCheckInEpochMillis", "number", false, "Unix time in ms you last saw them."),
+        FieldDoc("photoPath", "string", false, "Leave out — photos are added inside the app."),
+        FieldDoc("id", "number", false, "Ignored on import; a new person is always created."),
+    )
 
-private fun backupFields(): List<FieldDoc> = listOf(
-    FieldDoc("schemaVersion", "number", true, "Always 1 for this app version."),
-    FieldDoc("people", "object[]", true, "Person objects (fields above). Give each an id so check-ins/events can link to it."),
-    FieldDoc("checkIns", "object[]", false, "Visit history: personId, timestampEpochMillis, optional note."),
-    FieldDoc("events", "object[]", false, "Events: title, dateTime (YYYY-MM-DDTHH:MM:SS), optional category/personId."),
-)
+private fun backupFields(): List<FieldDoc> =
+    listOf(
+        FieldDoc("schemaVersion", "number", true, "Always 1 for this app version."),
+        FieldDoc("people", "object[]", true, "Person objects (fields above). Give each an id so check-ins/events can link to it."),
+        FieldDoc("checkIns", "object[]", false, "Visit history: personId, timestampEpochMillis, optional note."),
+        FieldDoc("events", "object[]", false, "Events: title, dateTime (YYYY-MM-DDTHH:MM:SS), optional category/personId."),
+    )
 
 private const val CSV_EXAMPLE = """nome,cognome,data_nascita
 Eleanor,Vance,1989-10-12

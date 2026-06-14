@@ -25,11 +25,12 @@ data class ExtendedColors(
     val fresh: StatusColors,
 )
 
-internal val LocalExtendedColors = staticCompositionLocalOf {
-    ExtendedColors(
-        fresh = StatusColors(MidnightGold.FreshContainerDark, MidnightGold.OnFreshContainerDark),
-    )
-}
+internal val LocalExtendedColors =
+    staticCompositionLocalOf {
+        ExtendedColors(
+            fresh = StatusColors(MidnightGold.FreshContainerDark, MidnightGold.OnFreshContainerDark),
+        )
+    }
 
 /**
  * Resolves the [StatusColors] for a [CheckInStatus] against the active [ColorScheme] and

@@ -11,7 +11,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object CoreModule {
-
     /**
      * The system clock used by every "now"-dependent use case. Injecting it (rather than calling
      * [java.time.Instant.now] directly) keeps the domain layer deterministic and testable.

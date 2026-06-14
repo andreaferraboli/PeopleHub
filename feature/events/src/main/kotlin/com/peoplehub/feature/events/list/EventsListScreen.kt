@@ -103,12 +103,13 @@ private fun EventsListContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 96.dp,
-            start = 20.dp,
-            end = 20.dp,
-        ),
+        contentPadding =
+            PaddingValues(
+                top = contentPadding.calculateTopPadding() + 8.dp,
+                bottom = contentPadding.calculateBottomPadding() + 96.dp,
+                start = 20.dp,
+                end = 20.dp,
+            ),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "header") {
@@ -164,22 +165,24 @@ private fun LazyListScope.eventsListBody(
 ) {
     when (listState) {
         UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
-        UiState.Empty -> item(key = "empty") {
-            StateBox {
-                EmptyView(
-                    title = stringResource(R.string.events_empty_title),
-                    description = stringResource(R.string.events_empty_desc),
+        UiState.Empty ->
+            item(key = "empty") {
+                StateBox {
+                    EmptyView(
+                        title = stringResource(R.string.events_empty_title),
+                        description = stringResource(R.string.events_empty_desc),
+                    )
+                }
+            }
+        is UiState.Error -> item(key = "error") { StateBox { ErrorView(message = listState.message) } }
+        is UiState.Success ->
+            items(listState.data, key = { it.id }) { event ->
+                EventCard(
+                    event = event,
+                    onClick = { onEventClick(event.id) },
+                    onTogglePin = { onTogglePin(event.id, !event.pinned) },
                 )
             }
-        }
-        is UiState.Error -> item(key = "error") { StateBox { ErrorView(message = listState.message) } }
-        is UiState.Success -> items(listState.data, key = { it.id }) { event ->
-            EventCard(
-                event = event,
-                onClick = { onEventClick(event.id) },
-                onTogglePin = { onTogglePin(event.id, !event.pinned) },
-            )
-        }
     }
 }
 
@@ -222,11 +225,12 @@ private fun EventCard(event: EventListItem, onClick: () -> Unit, onTogglePin: ()
             IconButton(onClick = onTogglePin) {
                 Icon(
                     imageVector = if (event.pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                    contentDescription = if (event.pinned) {
-                        stringResource(R.string.event_unpin)
-                    } else {
-                        stringResource(R.string.event_pin)
-                    },
+                    contentDescription =
+                        if (event.pinned) {
+                            stringResource(R.string.event_unpin)
+                        } else {
+                            stringResource(R.string.event_pin)
+                        },
                     tint = if (event.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -234,11 +238,12 @@ private fun EventCard(event: EventListItem, onClick: () -> Unit, onTogglePin: ()
     }
 }
 
-private fun timeFilterOptions(): List<Pair<EventTimeFilter, Int>> = listOf(
-    EventTimeFilter.ALL to R.string.filter_all,
-    EventTimeFilter.UPCOMING to R.string.filter_upcoming,
-    EventTimeFilter.PAST to R.string.filter_past,
-)
+private fun timeFilterOptions(): List<Pair<EventTimeFilter, Int>> =
+    listOf(
+        EventTimeFilter.ALL to R.string.filter_all,
+        EventTimeFilter.UPCOMING to R.string.filter_upcoming,
+        EventTimeFilter.PAST to R.string.filter_past,
+    )
 
 @Preview(name = "Phone", device = "spec:width=411dp,height=891dp")
 @Preview(name = "Tablet", device = "spec:width=800dp,height=1280dp")
@@ -246,18 +251,20 @@ private fun timeFilterOptions(): List<Pair<EventTimeFilter, Int>> = listOf(
 private fun EventsListPreview() {
     PeopleHubTheme {
         EventsListContent(
-            state = EventsListScreenState(
-                listState = UiState.Success(
-                    listOf(
-                        EventListItem(1, "Metropolitan Opera Opening", "Gala", 14, isPast = false, pinned = true),
-                        EventListItem(2, "Alpine Solitude", "Retreat", 42, isPast = false, pinned = false),
-                        EventListItem(3, "Venice Biennale Preview", "Exhibition", -5, isPast = true, pinned = false),
-                    ),
+            state =
+                EventsListScreenState(
+                    listState =
+                        UiState.Success(
+                            listOf(
+                                EventListItem(1, "Metropolitan Opera Opening", "Gala", 14, isPast = false, pinned = true),
+                                EventListItem(2, "Alpine Solitude", "Retreat", 42, isPast = false, pinned = false),
+                                EventListItem(3, "Venice Biennale Preview", "Exhibition", -5, isPast = true, pinned = false),
+                            ),
+                        ),
+                    categories = listOf("Gala", "Retreat", "Exhibition"),
+                    timeFilter = EventTimeFilter.ALL,
+                    category = null,
                 ),
-                categories = listOf("Gala", "Retreat", "Exhibition"),
-                timeFilter = EventTimeFilter.ALL,
-                category = null,
-            ),
             contentPadding = PaddingValues(0.dp),
             onTimeFilterChange = {},
             onCategoryChange = {},

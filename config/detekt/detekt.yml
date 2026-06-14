@@ -17,13 +17,19 @@ comments:
 
 complexity:
   active: true
+  ComplexCondition:
+    active: true
+    threshold: 5
   LongMethod:
     active: true
     threshold: 80
+    # Compose screens are intentionally long, declarative trees; their size is not a smell.
+    ignoreAnnotated: ['Composable']
   LongParameterList:
     active: true
     functionThreshold: 8
-    constructorThreshold: 9
+    # Hilt view models inject one use case per action, so constructors are legitimately wide.
+    constructorThreshold: 13
     ignoreDefaultParameters: true
     ignoreAnnotated: ['Composable']
   CyclomaticComplexMethod:
@@ -32,6 +38,8 @@ complexity:
   TooManyFunctions:
     active: true
     thresholdInClasses: 20
+    # Room DAOs are interfaces with one method per query/mutation.
+    thresholdInInterfaces: 25
     thresholdInFiles: 30
     ignoreAnnotatedFunctions: ['Composable', 'Preview']
   NestedBlockDepth:
@@ -46,6 +54,10 @@ naming:
   TopLevelPropertyNaming:
     active: true
     constantPattern: '[A-Z][_A-Za-z0-9]*'
+  # Files deliberately group related declarations under a semantic name
+  # (e.g. Color.kt, Type.kt, CsvModels.kt, BirthdayRoutes.kt).
+  MatchingDeclarationName:
+    active: false
 
 style:
   active: true
@@ -69,12 +81,11 @@ style:
     maxLineLength: 140
     excludeCommentStatements: true
 
-formatting:
+performance:
   active: true
-  Indentation:
+  # `(0 until n).forEach { }` reads naturally in the calendar-grid builders; the ranges are tiny.
+  ForEachOnRange:
     active: false
-  MaximumLineLength:
+  # Spreading the small, fixed migrations array into Room's builder is the idiomatic DI call.
+  SpreadOperator:
     active: false
-
-compose:
-  active: false
