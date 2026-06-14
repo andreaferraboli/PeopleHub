@@ -13,6 +13,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - **v3** — adds `notifications_enabled` (per-person notification opt-in, defaulting to off/`0` for
  *   every existing profile) and `birthday_only` (entries that are bare birthdays, hidden from the
  *   directory) to `person`.
+ * - **v4** — adds `background_image_path` to `event` (an optional image rendered behind the event
+ *   card) and `check_in_disabled` to `person` (excludes the person from check-in tracking entirely,
+ *   defaulting to off/`0`).
  */
 internal val MIGRATION_1_2: Migration =
     object : Migration(1, 2) {
@@ -30,5 +33,13 @@ internal val MIGRATION_2_3: Migration =
         }
     }
 
+internal val MIGRATION_3_4: Migration =
+    object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE event ADD COLUMN background_image_path TEXT")
+            db.execSQL("ALTER TABLE person ADD COLUMN check_in_disabled INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
 /** All migrations registered with the database builder, in order. */
-internal val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+internal val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)

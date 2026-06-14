@@ -1,5 +1,6 @@
 package com.peoplehub.core.domain.repository
 
+import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.Person
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +30,22 @@ interface PeopleRepository {
 
     /** Records that the person was seen, updating the denormalised last-check-in timestamp. */
     suspend fun updateLastCheckIn(personId: Long, lastCheckInEpochMillis: Long)
+
+    /** Enables or disables notifications for every person in [personIds] in a single statement. */
+    suspend fun bulkSetNotificationsEnabled(personIds: List<Long>, enabled: Boolean)
+
+    /** Sets the "birthday only" flag for every person in [personIds]. */
+    suspend fun bulkSetBirthdayOnly(personIds: List<Long>, birthdayOnly: Boolean)
+
+    /**
+     * Applies a check-in cadence to every person in [personIds]. A `null` [threshold] clears the
+     * per-person override (falling back to the global default); a non-null value re-enables check-in
+     * tracking for the affected people.
+     */
+    suspend fun bulkSetCheckInThreshold(personIds: List<Long>, threshold: CheckInThreshold?)
+
+    /** Enables or disables ("never") check-in tracking for every person in [personIds]. */
+    suspend fun bulkSetCheckInDisabled(personIds: List<Long>, disabled: Boolean)
 
     /** Deletes a person and all of their dependent rows (tags, interests, check-ins). */
     suspend fun deletePerson(id: Long)

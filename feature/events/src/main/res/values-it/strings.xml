@@ -51,4 +51,10 @@
     <string name="event_field_person">Persona collegata</string>
     <string name="event_field_pin">Aggiungi al widget</string>
     <string name="event_person_none">Nessuna</string>
+
+    <!-- Immagine di sfondo della card -->
+    <string name="event_field_background">Sfondo della card</string>
+    <string name="event_background_add">Scegli un\'immagine</string>
+    <string name="event_background_remove">Rimuovi immagine</string>
+    <string name="event_background_existing">Riusa un\'immagine esistente</string>
 </resources>

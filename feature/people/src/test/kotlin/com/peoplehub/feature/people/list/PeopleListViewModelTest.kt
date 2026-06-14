@@ -3,6 +3,7 @@ package com.peoplehub.feature.people.list
 import app.cash.turbine.test
 import com.peoplehub.core.domain.model.AppSettings
 import com.peoplehub.core.domain.model.Person
+import com.peoplehub.core.domain.usecase.BulkUpdatePeopleUseCase
 import com.peoplehub.core.domain.usecase.GetPeopleUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.domain.usecase.ObserveAllTagsUseCase
@@ -47,11 +48,12 @@ class PeopleListViewModelTest {
             val observeAllTags = mockk<ObserveAllTagsUseCase>()
             val getSettings = mockk<GetSettingsUseCase>()
             val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
+            val bulkUpdatePeople = mockk<BulkUpdatePeopleUseCase>(relaxed = true)
             every { getPeople(any()) } returns flowOf(listOf(Person(id = 1, firstName = "Eleanor", lastName = "Vance")))
             every { observeAllTags() } returns flowOf(listOf("Family"))
             every { getSettings() } returns flowOf(AppSettings())
 
-            val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, clock)
+            val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, bulkUpdatePeople, clock)
 
             viewModel.state.test {
                 var state = awaitItem()
@@ -73,11 +75,12 @@ class PeopleListViewModelTest {
             val observeAllTags = mockk<ObserveAllTagsUseCase>()
             val getSettings = mockk<GetSettingsUseCase>()
             val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
+            val bulkUpdatePeople = mockk<BulkUpdatePeopleUseCase>(relaxed = true)
             every { getPeople(any()) } returns flowOf(emptyList())
             every { observeAllTags() } returns flowOf(emptyList())
             every { getSettings() } returns flowOf(AppSettings())
 
-            val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, clock)
+            val viewModel = PeopleListViewModel(getPeople, observeAllTags, getSettings, importPerson, bulkUpdatePeople, clock)
 
             viewModel.state.test {
                 var state = awaitItem()

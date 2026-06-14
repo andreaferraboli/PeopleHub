@@ -8,6 +8,8 @@ import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.usecase.AddEventUseCase
 import com.peoplehub.core.domain.usecase.GetPeopleUseCase
+import com.peoplehub.core.domain.usecase.ObserveEventBackgroundImagesUseCase
+import com.peoplehub.core.domain.usecase.ObserveEventCategoriesUseCase
 import com.peoplehub.core.domain.usecase.ObserveEventUseCase
 import com.peoplehub.feature.events.navigation.AddEditEventRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +38,7 @@ data class EventForm(
     val dateTime: LocalDateTime = LocalDateTime.MIN,
     val description: String = "",
     val category: String = "",
+    val backgroundImagePath: String? = null,
     val personId: Long? = null,
     val pinnedToWidget: Boolean = false,
 ) {
@@ -50,6 +53,8 @@ class AddEditEventViewModel
         savedStateHandle: SavedStateHandle,
         private val observeEvent: ObserveEventUseCase,
         getPeople: GetPeopleUseCase,
+        observeCategories: ObserveEventCategoriesUseCase,
+        observeBackgroundImages: ObserveEventBackgroundImagesUseCase,
         private val addEvent: AddEventUseCase,
         private val clock: Clock,
     ) : ViewModel() {
@@ -77,6 +82,24 @@ class AddEditEventViewModel
                     initialValue = emptyList(),
                 )
 
+        /** Existing event categories, offered as quick-pick suggestions in the form. */
+        val categorySuggestions: StateFlow<List<String>> =
+            observeCategories()
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                    initialValue = emptyList(),
+                )
+
+        /** Card background images already used by other events, offered for reuse in the form. */
+        val backgroundImageSuggestions: StateFlow<List<String>> =
+            observeBackgroundImages()
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+                    initialValue = emptyList(),
+                )
+
         init {
             if (isEditing) {
                 viewModelScope.launch {
@@ -92,6 +115,8 @@ class AddEditEventViewModel
         fun onDescriptionChange(value: String) = _form.update { it.copy(description = value) }
 
         fun onCategoryChange(value: String) = _form.update { it.copy(category = value) }
+
+        fun onBackgroundImageChange(path: String?) = _form.update { it.copy(backgroundImagePath = path) }
 
         fun onPersonChange(value: Long?) = _form.update { it.copy(personId = value) }
 
@@ -125,6 +150,7 @@ class AddEditEventViewModel
                 dateTime = dateTime,
                 description = description.orEmpty(),
                 category = category.orEmpty(),
+                backgroundImagePath = backgroundImagePath,
                 personId = personId,
                 pinnedToWidget = pinnedToWidget,
             )
@@ -136,6 +162,7 @@ class AddEditEventViewModel
                 dateTime = dateTime,
                 description = description.ifBlank { null },
                 category = category.ifBlank { null },
+                backgroundImagePath = backgroundImagePath,
                 personId = personId,
                 pinnedToWidget = pinnedToWidget,
             )

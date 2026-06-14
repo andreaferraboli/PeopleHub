@@ -1,5 +1,6 @@
 package com.peoplehub.core.domain.usecase
 
+import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.repository.PeopleRepository
@@ -59,6 +60,35 @@ class UpsertPersonUseCase
                     ),
                 )
             }
+    }
+
+/**
+ * Applies a notification / check-in change to a whole selection of people at once, used by the
+ * directory's multi-select action bar.
+ *
+ * Each operation is a single bulk statement:
+ * - [setNotificationsEnabled] toggles per-person reminder opt-in.
+ * - [setBirthdayOnly] turns the selected entries into bare birthdays (or back into tracked people).
+ * - [setCheckInThreshold] applies a custom cadence (and re-enables check-in tracking); a `null`
+ *   threshold clears the override back to the global default.
+ * - [disableCheckIn] is the "never" option: excludes the selected people from check-in tracking.
+ */
+class BulkUpdatePeopleUseCase
+    @Inject
+    constructor(
+        private val repository: PeopleRepository,
+    ) {
+        suspend fun setNotificationsEnabled(personIds: List<Long>, enabled: Boolean): Result<Unit> =
+            runCatching { repository.bulkSetNotificationsEnabled(personIds, enabled) }
+
+        suspend fun setBirthdayOnly(personIds: List<Long>, birthdayOnly: Boolean): Result<Unit> =
+            runCatching { repository.bulkSetBirthdayOnly(personIds, birthdayOnly) }
+
+        suspend fun setCheckInThreshold(personIds: List<Long>, threshold: CheckInThreshold?): Result<Unit> =
+            runCatching { repository.bulkSetCheckInThreshold(personIds, threshold) }
+
+        suspend fun disableCheckIn(personIds: List<Long>): Result<Unit> =
+            runCatching { repository.bulkSetCheckInDisabled(personIds, disabled = true) }
     }
 
 /** Deletes a person and their dependent data. */

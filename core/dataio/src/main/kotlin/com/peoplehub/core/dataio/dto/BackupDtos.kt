@@ -27,6 +27,7 @@ data class PersonDto(
     val createdAtEpochMillis: Long = 0L,
     val notificationsEnabled: Boolean = false,
     val birthdayOnly: Boolean = false,
+    val checkInDisabled: Boolean = false,
 )
 
 /** Serialization-friendly mirror of the domain `Interest` (an editable key/value pair). */
@@ -54,6 +55,7 @@ data class EventDto(
     val dateTime: String,
     val description: String? = null,
     val category: String? = null,
+    val backgroundImagePath: String? = null,
     val personId: Long? = null,
     val pinnedToWidget: Boolean = false,
 )

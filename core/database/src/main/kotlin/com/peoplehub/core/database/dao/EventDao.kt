@@ -34,6 +34,12 @@ interface EventDao {
     @Query("SELECT DISTINCT category FROM event WHERE category IS NOT NULL ORDER BY category COLLATE NOCASE ASC")
     fun observeCategories(): Flow<List<String>>
 
+    @Query(
+        "SELECT DISTINCT background_image_path FROM event " +
+            "WHERE background_image_path IS NOT NULL ORDER BY background_image_path ASC",
+    )
+    fun observeBackgroundImages(): Flow<List<String>>
+
     @Query("SELECT * FROM event")
     suspend fun getAll(): List<EventEntity>
 

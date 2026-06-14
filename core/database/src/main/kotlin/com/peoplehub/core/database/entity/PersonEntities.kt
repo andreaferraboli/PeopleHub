@@ -27,6 +27,7 @@ data class PersonEntity(
     @ColumnInfo(name = "created_at_epoch_millis") val createdAtEpochMillis: Long,
     @ColumnInfo(name = "notifications_enabled", defaultValue = "0") val notificationsEnabled: Boolean = false,
     @ColumnInfo(name = "birthday_only", defaultValue = "0") val birthdayOnly: Boolean = false,
+    @ColumnInfo(name = "check_in_disabled", defaultValue = "0") val checkInDisabled: Boolean = false,
 )
 
 /**

@@ -28,6 +28,7 @@ data class EventEntity(
     @ColumnInfo(name = "date_time_epoch_millis") val dateTimeEpochMillis: Long,
     @ColumnInfo(name = "description") val description: String?,
     @ColumnInfo(name = "category") val category: String?,
+    @ColumnInfo(name = "background_image_path") val backgroundImagePath: String?,
     @ColumnInfo(name = "person_id") val personId: Long?,
     @ColumnInfo(name = "pinned_to_widget") val pinnedToWidget: Boolean,
 )

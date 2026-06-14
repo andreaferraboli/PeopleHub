@@ -10,6 +10,8 @@ import java.time.LocalDateTime
  * widget, and optionally linked to a [personId].
  *
  * @property category free-form tag (e.g. "Gala", "Anniversary") rendered as a coloured chip.
+ * @property backgroundImagePath optional absolute path to an image (in internal storage) rendered
+ * behind the event card; `null` falls back to the plain glass panel.
  */
 data class PersonEvent(
     val id: Long = 0L,
@@ -17,6 +19,7 @@ data class PersonEvent(
     val dateTime: LocalDateTime,
     val description: String? = null,
     val category: String? = null,
+    val backgroundImagePath: String? = null,
     val personId: Long? = null,
     val pinnedToWidget: Boolean = false,
 )

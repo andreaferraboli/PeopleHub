@@ -56,6 +56,8 @@ internal class EventRepositoryImpl
 
         override fun observeCategories(): Flow<List<String>> = dao.observeCategories()
 
+        override fun observeBackgroundImages(): Flow<List<String>> = dao.observeBackgroundImages()
+
         override suspend fun getAllEvents(): List<PersonEvent> = dao.getAll().map { it.toDomain() }
 
         override suspend fun upsertEvent(event: PersonEvent): Long {

@@ -1,19 +1,32 @@
 package com.peoplehub.feature.events.edit
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.AddPhotoAlternate
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -38,19 +51,29 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.peoplehub.core.ui.components.CapsLabel
+import com.peoplehub.core.ui.components.CategoryChip
+import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.feature.events.R
+import kotlinx.coroutines.launch
+import java.io.File
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneOffset
@@ -70,7 +93,20 @@ fun AddEditEventScreen(
     val saved by viewModel.saved.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val people by viewModel.people.collectAsStateWithLifecycle()
+    val categorySuggestions by viewModel.categorySuggestions.collectAsStateWithLifecycle()
+    val backgroundImageSuggestions by viewModel.backgroundImageSuggestions.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val imageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val path = EventImageStorage.saveImage(context, uri)
+                    if (path != null) viewModel.onBackgroundImageChange(path)
+                }
+            }
+        }
 
     LaunchedEffect(saved) {
         if (saved) onBack()
@@ -151,6 +187,24 @@ fun AddEditEventScreen(
                 singleLine = true,
                 label = { Text(stringResource(R.string.event_field_category)) },
                 shape = RoundedCornerShape(6.dp),
+            )
+
+            CategorySuggestions(
+                suggestions = categorySuggestions,
+                selected = form.category,
+                onSelect = viewModel::onCategoryChange,
+            )
+
+            BackgroundImageSection(
+                selectedPath = form.backgroundImagePath,
+                suggestions = backgroundImageSuggestions,
+                onPickNew = {
+                    imageLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                    )
+                },
+                onSelectExisting = viewModel::onBackgroundImageChange,
+                onRemove = { viewModel.onBackgroundImageChange(null) },
             )
 
             PersonPicker(
@@ -263,6 +317,111 @@ private fun DateTimeFields(
                             showTimePicker = false
                         }) { Text(stringResource(R.string.action_confirm)) }
                     }
+                }
+            }
+        }
+    }
+}
+
+/** Quick-pick chips for categories already used by other events. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CategorySuggestions(
+    suggestions: List<String>,
+    selected: String,
+    onSelect: (String) -> Unit,
+) {
+    if (suggestions.isEmpty()) return
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        suggestions.forEach { category ->
+            CategoryChip(
+                label = category,
+                onClick = { onSelect(category) },
+                tint =
+                    if (category.equals(selected, ignoreCase = true)) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+            )
+        }
+    }
+}
+
+/**
+ * Lets the user attach a card background image: a preview of the current choice, a button to pick a
+ * brand-new image, and a row of images already used by other events for quick reuse.
+ */
+@Composable
+private fun BackgroundImageSection(
+    selectedPath: String?,
+    suggestions: List<String>,
+    onPickNew: () -> Unit,
+    onSelectExisting: (String) -> Unit,
+    onRemove: () -> Unit,
+) {
+    Column {
+        CapsLabel(text = stringResource(R.string.event_field_background))
+        Spacer(Modifier.height(8.dp))
+        if (selectedPath != null) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                AsyncImage(
+                    model = File(selectedPath),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                )
+                TooltipIconButton(
+                    icon = Icons.Outlined.Delete,
+                    description = stringResource(R.string.event_background_remove),
+                    onClick = onRemove,
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+        GhostButton(
+            text = stringResource(R.string.event_background_add),
+            onClick = onPickNew,
+            icon = Icons.Outlined.AddPhotoAlternate,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (suggestions.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.event_background_existing),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(suggestions, key = { it }) { path ->
+                    val isSelected = path == selectedPath
+                    val borderColor =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            Color.Transparent
+                        }
+                    AsyncImage(
+                        model = File(path),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier =
+                            Modifier
+                                .size(72.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .border(2.dp, borderColor, RoundedCornerShape(8.dp))
+                                .clickable { onSelectExisting(path) },
+                    )
                 }
             }
         }

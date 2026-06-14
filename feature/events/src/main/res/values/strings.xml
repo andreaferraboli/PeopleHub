@@ -51,4 +51,10 @@
     <string name="event_field_person">Linked person</string>
     <string name="event_field_pin">Pin to widget</string>
     <string name="event_person_none">None</string>
+
+    <!-- Card background image -->
+    <string name="event_field_background">Card background</string>
+    <string name="event_background_add">Choose an image</string>
+    <string name="event_background_remove">Remove image</string>
+    <string name="event_background_existing">Reuse an existing image</string>
 </resources>

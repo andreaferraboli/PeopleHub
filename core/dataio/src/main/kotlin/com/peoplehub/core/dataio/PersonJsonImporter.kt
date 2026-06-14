@@ -93,6 +93,12 @@ class PersonJsonImporter
                         } else {
                             existing.birthdayOnly
                         },
+                    checkInDisabled =
+                        if ("checkInDisabled" in obj) {
+                            obj.booleanOr("checkInDisabled", existing.checkInDisabled)
+                        } else {
+                            existing.checkInDisabled
+                        },
                 )
             }
 

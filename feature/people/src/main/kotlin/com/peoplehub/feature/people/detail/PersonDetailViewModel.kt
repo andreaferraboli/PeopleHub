@@ -19,6 +19,7 @@ import com.peoplehub.core.domain.usecase.ObserveCheckInHistoryUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
 import com.peoplehub.core.domain.util.DateCalculations
 import com.peoplehub.core.ui.state.UiState
+import com.peoplehub.feature.people.ExportPersonUseCase
 import com.peoplehub.feature.people.ImportPersonUseCase
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,6 +61,7 @@ class PersonDetailViewModel
         private val checkInPerson: CheckInPersonUseCase,
         private val deletePerson: DeletePersonUseCase,
         private val importPerson: ImportPersonUseCase,
+        private val exportPerson: ExportPersonUseCase,
         private val clock: Clock,
     ) : ViewModel() {
         private val personId: Long = savedStateHandle.toRoute<PersonDetailRoute>().personId
@@ -142,6 +144,14 @@ class PersonDetailViewModel
 
         fun onImportMessageShown() {
             importMessageSignal.value = null
+        }
+
+        /** Serializes [person] to the importable JSON person schema, ready to be written to a file. */
+        fun exportJson(person: Person): String = exportPerson(person)
+
+        /** Reports the outcome of an export to the user via the shared snackbar channel. */
+        fun onExported(success: Boolean, name: String) {
+            importMessageSignal.value = if (success) "Exported $name" else "Export failed"
         }
 
         private fun birthdayOf(person: Person, birthday: LocalDate): UpcomingBirthday {

@@ -7,6 +7,7 @@ import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.PeopleSort
 import com.peoplehub.core.domain.model.Person
+import com.peoplehub.core.domain.usecase.BulkUpdatePeopleUseCase
 import com.peoplehub.core.domain.usecase.GetPeopleUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.domain.usecase.ObserveAllTagsUseCase
@@ -41,7 +42,11 @@ data class PeopleListScreenState(
     val sort: PeopleSort,
     val importPreview: Person?,
     val importMessage: String?,
-)
+    val selectedIds: Set<Long> = emptySet(),
+) {
+    /** Whether the multi-select action bar should be shown. */
+    val inSelectionMode: Boolean get() = selectedIds.isNotEmpty()
+}
 
 /** A person as rendered in the directory list. */
 data class PersonListItem(
@@ -54,6 +59,7 @@ data class PersonListItem(
     val daysSince: Long?,
     val nextBirthday: LocalDate? = null,
     val daysUntilBirthday: Int? = null,
+    val checkInDisabled: Boolean = false,
 )
 
 private data class Controls(val query: String, val tags: Set<String>, val sort: PeopleSort)
@@ -67,6 +73,7 @@ class PeopleListViewModel
         observeAllTags: ObserveAllTagsUseCase,
         getSettings: GetSettingsUseCase,
         private val importPerson: ImportPersonUseCase,
+        private val bulkUpdatePeople: BulkUpdatePeopleUseCase,
         private val clock: Clock,
     ) : ViewModel() {
         private val query = MutableStateFlow("")
@@ -74,6 +81,7 @@ class PeopleListViewModel
         private val sort = MutableStateFlow(PeopleSort.NAME_ASC)
         private val importPreview = MutableStateFlow<Person?>(null)
         private val importMessage = MutableStateFlow<String?>(null)
+        private val selectedIds = MutableStateFlow<Set<Long>>(emptySet())
 
         private val controls = combine(query, selectedTags, sort, ::Controls)
 
@@ -88,7 +96,7 @@ class PeopleListViewModel
                 .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
                 .onStart { emit(UiState.Loading) }
 
-        val state: StateFlow<PeopleListScreenState> =
+        private val baseState =
             combine(
                 listState,
                 observeAllTags(),
@@ -105,6 +113,13 @@ class PeopleListViewModel
                     importPreview = preview,
                     importMessage = message,
                 )
+            }
+
+        val state: StateFlow<PeopleListScreenState> =
+            combine(baseState, selectedIds) { base, ids ->
+                // Drop selections for people no longer visible (e.g. filtered out) to avoid stale ids.
+                val visible = (base.listState as? UiState.Success)?.data?.mapTo(mutableSetOf()) { it.id }
+                base.copy(selectedIds = if (visible == null) ids else ids intersect visible)
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -157,6 +172,57 @@ class PeopleListViewModel
             importMessage.value = null
         }
 
+        /** Adds or removes [id] from the current multi-selection. */
+        fun onToggleSelection(id: Long) =
+            selectedIds.update { current -> if (id in current) current - id else current + id }
+
+        /** Selects every person currently visible in the directory. */
+        fun onSelectAll() {
+            val ids = (state.value.listState as? UiState.Success)?.data?.map { it.id } ?: return
+            selectedIds.value = ids.toSet()
+        }
+
+        /** Leaves multi-select mode, clearing the selection. */
+        fun onClearSelection() {
+            selectedIds.value = emptySet()
+        }
+
+        /** Enables or disables per-person reminders for the whole selection. */
+        fun onBulkNotifications(enabled: Boolean) =
+            runBulk(if (enabled) "Notifications enabled" else "Notifications disabled") { ids ->
+                bulkUpdatePeople.setNotificationsEnabled(ids, enabled)
+            }
+
+        /** Marks the selection as birthday-only (or restores them to tracked relationships). */
+        fun onBulkBirthdayOnly(enabled: Boolean) =
+            runBulk(if (enabled) "Marked as birthday-only" else "Restored to the circle") { ids ->
+                bulkUpdatePeople.setBirthdayOnly(ids, enabled)
+            }
+
+        /** Applies a custom check-in cadence to the whole selection. */
+        fun onBulkCustomCheckIn(warningDays: Int, criticalDays: Int) {
+            val warning = warningDays.coerceAtLeast(1)
+            val threshold = CheckInThreshold(warning, criticalDays.coerceAtLeast(warning + 1))
+            runBulk("Check-in cadence updated") { ids -> bulkUpdatePeople.setCheckInThreshold(ids, threshold) }
+        }
+
+        /** The "never" option: disables check-in tracking for the whole selection. */
+        fun onBulkDisableCheckIn() =
+            runBulk("Check-in disabled") { ids -> bulkUpdatePeople.disableCheckIn(ids) }
+
+        private fun runBulk(successMessage: String, action: suspend (List<Long>) -> Result<Unit>) {
+            val ids = selectedIds.value.toList()
+            if (ids.isEmpty()) return
+            viewModelScope.launch {
+                importMessage.value =
+                    action(ids).fold(
+                        onSuccess = { successMessage },
+                        onFailure = { it.message ?: "Operation failed" },
+                    )
+                selectedIds.value = emptySet()
+            }
+        }
+
         private fun Person.toListItem(defaultThreshold: CheckInThreshold): PersonListItem {
             val threshold = checkInThreshold ?: defaultThreshold
             val days = lastCheckInAt?.let { DateCalculations.daysSince(it, Instant.now(clock)) }
@@ -171,6 +237,7 @@ class PeopleListViewModel
                 daysSince = days,
                 nextBirthday = birthday?.let { DateCalculations.nextBirthdayOccurrence(it, today) },
                 daysUntilBirthday = birthday?.let { DateCalculations.daysUntilBirthday(it, today) },
+                checkInDisabled = checkInDisabled,
             )
         }
 

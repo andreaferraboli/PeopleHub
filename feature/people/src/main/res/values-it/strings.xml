@@ -9,6 +9,7 @@
     <string name="action_confirm">Conferma</string>
     <string name="action_save">Salva</string>
     <string name="action_remove">Rimuovi</string>
+    <string name="action_add">Aggiungi</string>
     <string name="action_import">Importa</string>
 
     <!-- People list -->
@@ -51,6 +52,24 @@
     <string name="detail_history_empty_desc">Tocca il pulsante qui sopra la prima volta che la vedi.</string>
     <string name="detail_related_empty_title">Ancora nessun collegamento</string>
     <string name="detail_related_empty_desc">Gli eventi collegati a questa persona compariranno qui.</string>
+
+    <!-- Export a single profile to JSON -->
+    <string name="detail_export_json">Esporta profilo</string>
+
+    <!-- Multi-select bulk actions -->
+    <string name="circle_checkin_off">Check-in disattivato</string>
+    <string name="circle_selected_count">%1$d selezionati</string>
+    <string name="circle_selection_clear">Annulla selezione</string>
+    <string name="circle_bulk_more">Altre azioni</string>
+    <string name="circle_bulk_notifications_on">Attiva notifiche</string>
+    <string name="circle_bulk_notifications_off">Disattiva notifiche</string>
+    <string name="circle_bulk_birthday_only_on">Segna come solo compleanno</string>
+    <string name="circle_bulk_birthday_only_off">Riporta nella Cerchia</string>
+    <string name="circle_bulk_custom_checkin">Check-in personalizzato…</string>
+    <string name="circle_bulk_disable_checkin">Disattiva check-in (mai)</string>
+    <string name="circle_bulk_select_all">Seleziona tutti</string>
+    <string name="circle_custom_checkin_title">Cadenza check-in personalizzata</string>
+    <string name="circle_custom_checkin_hint">Applica questa cadenza alle persone selezionate.</string>
 
     <!-- Update an existing profile from JSON -->
     <string name="detail_import_json">Aggiorna da JSON</string>

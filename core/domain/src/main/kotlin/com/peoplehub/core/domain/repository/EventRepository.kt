@@ -20,6 +20,9 @@ interface EventRepository {
     /** Observes the distinct set of categories in use, for the filter chips. */
     fun observeCategories(): Flow<List<String>>
 
+    /** Observes the distinct set of card background images already used, for reuse when editing. */
+    fun observeBackgroundImages(): Flow<List<String>>
+
     /** One-shot read of every event, used by backup/export. */
     suspend fun getAllEvents(): List<PersonEvent>
 

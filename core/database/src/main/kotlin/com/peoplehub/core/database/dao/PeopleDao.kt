@@ -55,6 +55,21 @@ interface PeopleDao {
     @Query("UPDATE person SET last_check_in_epoch_millis = :epochMillis WHERE id = :personId")
     suspend fun updateLastCheckIn(personId: Long, epochMillis: Long)
 
+    @Query("UPDATE person SET notifications_enabled = :enabled WHERE id IN (:personIds)")
+    suspend fun bulkUpdateNotifications(personIds: List<Long>, enabled: Boolean)
+
+    @Query("UPDATE person SET birthday_only = :birthdayOnly WHERE id IN (:personIds)")
+    suspend fun bulkUpdateBirthdayOnly(personIds: List<Long>, birthdayOnly: Boolean)
+
+    @Query(
+        "UPDATE person SET warning_days = :warningDays, critical_days = :criticalDays, " +
+            "check_in_disabled = 0 WHERE id IN (:personIds)",
+    )
+    suspend fun bulkUpdateThreshold(personIds: List<Long>, warningDays: Int?, criticalDays: Int?)
+
+    @Query("UPDATE person SET check_in_disabled = :disabled WHERE id IN (:personIds)")
+    suspend fun bulkUpdateCheckInDisabled(personIds: List<Long>, disabled: Boolean)
+
     @Query("DELETE FROM person WHERE id = :id")
     suspend fun deletePerson(id: Long)
 

@@ -19,6 +19,9 @@ import java.time.LocalDate
  * @property birthdayOnly whether this entry is a bare birthday rather than a tracked relationship.
  * Birthday-only entries are hidden from the directory ("The Circle") and the urgent check-ins, but
  * still appear in the Milestones / birthday calendar.
+ * @property checkInDisabled when `true` the person is excluded from check-in tracking entirely: they
+ * never surface in the urgent check-ins, the widget, or the reminder worker, regardless of how long
+ * it has been since the last interaction. Set in bulk via the directory's "never" action.
  */
 data class Person(
     val id: Long = 0L,
@@ -34,6 +37,7 @@ data class Person(
     val createdAt: Instant = Instant.EPOCH,
     val notificationsEnabled: Boolean = false,
     val birthdayOnly: Boolean = false,
+    val checkInDisabled: Boolean = false,
 ) {
     /** Display name combining first and last name, trimmed of stray whitespace. */
     val fullName: String

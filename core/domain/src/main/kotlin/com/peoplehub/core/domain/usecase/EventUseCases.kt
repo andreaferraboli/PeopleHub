@@ -42,6 +42,15 @@ class ObserveEventCategoriesUseCase
         operator fun invoke(): Flow<List<String>> = repository.observeCategories()
     }
 
+/** Observes the distinct set of event card background images already in use, for reuse when editing. */
+class ObserveEventBackgroundImagesUseCase
+    @Inject
+    constructor(
+        private val repository: EventRepository,
+    ) {
+        operator fun invoke(): Flow<List<String>> = repository.observeBackgroundImages()
+    }
+
 /** Validates and persists an event. The title is mandatory. */
 class AddEventUseCase
     @Inject

@@ -1,5 +1,6 @@
 package com.peoplehub.feature.events.list
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,12 +30,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.peoplehub.core.domain.model.EventTimeFilter
 import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.DayCountDisplay
@@ -49,6 +54,7 @@ import com.peoplehub.core.ui.components.WithTooltip
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.feature.events.R
+import java.io.File
 import kotlin.math.absoluteValue
 
 /** Stateful entry point for the events timeline ("Timeline"). */
@@ -198,44 +204,67 @@ private fun StateBox(content: @Composable () -> Unit) {
 
 @Composable
 private fun EventCard(event: EventListItem, onClick: () -> Unit, onTogglePin: () -> Unit) {
+    val hasBackground = event.backgroundImagePath != null
     GlassPanel(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (event.category != null) {
-                    CategoryChip(label = event.category)
-                }
-                Text(
-                    text = event.title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (hasBackground) {
+                AsyncImage(
+                    model = File(event.backgroundImagePath!!),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize(),
                 )
-                val days = event.signedDays.absoluteValue.toInt()
-                if (event.isPast) {
-                    DayCountDisplay(
-                        number = days,
-                        unitLabel = stringResource(R.string.event_days_ago),
-                        emphasized = false,
-                    )
-                } else {
-                    DayCountDisplay(
-                        number = days,
-                        unitLabel = stringResource(R.string.event_days),
-                        prefix = stringResource(R.string.event_in),
-                        emphasized = true,
-                    )
-                }
+                // Scrim so the gold/serif text stays legible over any photo.
+                Box(
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.65f)),
+                                ),
+                            ),
+                )
             }
-            TooltipIconButton(
-                icon = if (event.pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                description =
-                    if (event.pinned) {
-                        stringResource(R.string.event_unpin)
+            val contentColor = if (hasBackground) Color.White else MaterialTheme.colorScheme.onSurface
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (event.category != null) {
+                        CategoryChip(label = event.category)
+                    }
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = contentColor,
+                    )
+                    val days = event.signedDays.absoluteValue.toInt()
+                    if (event.isPast) {
+                        DayCountDisplay(
+                            number = days,
+                            unitLabel = stringResource(R.string.event_days_ago),
+                            emphasized = false,
+                        )
                     } else {
-                        stringResource(R.string.event_pin)
-                    },
-                onClick = onTogglePin,
-                tint = if (event.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+                        DayCountDisplay(
+                            number = days,
+                            unitLabel = stringResource(R.string.event_days),
+                            prefix = stringResource(R.string.event_in),
+                            emphasized = true,
+                        )
+                    }
+                }
+                TooltipIconButton(
+                    icon = if (event.pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                    description =
+                        if (event.pinned) {
+                            stringResource(R.string.event_unpin)
+                        } else {
+                            stringResource(R.string.event_pin)
+                        },
+                    onClick = onTogglePin,
+                    tint = if (event.pinned) MaterialTheme.colorScheme.primary else contentColor,
+                )
+            }
         }
     }
 }

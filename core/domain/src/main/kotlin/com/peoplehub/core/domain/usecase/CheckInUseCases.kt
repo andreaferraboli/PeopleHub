@@ -63,6 +63,7 @@ class GetUrgentCheckInsUseCase
             ) { people, settings ->
                 val now = clock.instant()
                 people
+                    .filter { !it.checkInDisabled }
                     .map { person ->
                         val threshold = person.checkInThreshold ?: settings.defaultCheckInThreshold
                         val daysSince = person.lastCheckInAt?.let { DateCalculations.daysSince(it, now) }

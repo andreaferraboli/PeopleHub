@@ -45,6 +45,7 @@ data class EventListItem(
     val signedDays: Long,
     val isPast: Boolean,
     val pinned: Boolean,
+    val backgroundImagePath: String? = null,
 )
 
 private data class Controls(val timeFilter: EventTimeFilter, val category: String?)
@@ -115,6 +116,7 @@ class EventsListViewModel
                 signedDays = signedDays,
                 isPast = signedDays < 0,
                 pinned = pinnedToWidget,
+                backgroundImagePath = backgroundImagePath,
             )
         }
 

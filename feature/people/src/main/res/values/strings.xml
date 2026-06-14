@@ -9,6 +9,7 @@
     <string name="action_confirm">Confirm</string>
     <string name="action_save">Save</string>
     <string name="action_remove">Remove</string>
+    <string name="action_add">Add</string>
     <string name="action_import">Import</string>
 
     <!-- People list -->
@@ -51,6 +52,24 @@
     <string name="detail_history_empty_desc">Tap the button above the first time you see them.</string>
     <string name="detail_related_empty_title">Nothing linked yet</string>
     <string name="detail_related_empty_desc">Events linked to this person will appear here.</string>
+
+    <!-- Export a single profile to JSON -->
+    <string name="detail_export_json">Export profile</string>
+
+    <!-- Multi-select bulk actions -->
+    <string name="circle_checkin_off">Check-in off</string>
+    <string name="circle_selected_count">%1$d selected</string>
+    <string name="circle_selection_clear">Clear selection</string>
+    <string name="circle_bulk_more">More actions</string>
+    <string name="circle_bulk_notifications_on">Enable notifications</string>
+    <string name="circle_bulk_notifications_off">Disable notifications</string>
+    <string name="circle_bulk_birthday_only_on">Mark as birthday only</string>
+    <string name="circle_bulk_birthday_only_off">Restore to The Circle</string>
+    <string name="circle_bulk_custom_checkin">Custom check-in…</string>
+    <string name="circle_bulk_disable_checkin">Disable check-in (never)</string>
+    <string name="circle_bulk_select_all">Select all</string>
+    <string name="circle_custom_checkin_title">Custom check-in cadence</string>
+    <string name="circle_custom_checkin_hint">Apply this cadence to the selected people.</string>
 
     <!-- Update an existing profile from JSON -->
     <string name="detail_import_json">Update from JSON</string>

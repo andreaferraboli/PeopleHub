@@ -8,6 +8,7 @@ import com.peoplehub.core.database.mapper.toDomain
 import com.peoplehub.core.database.mapper.toEntity
 import com.peoplehub.core.database.mapper.toInterestEntities
 import com.peoplehub.core.database.mapper.toTagEntities
+import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.PeopleSort
 import com.peoplehub.core.domain.model.Person
@@ -81,6 +82,24 @@ internal class PeopleRepositoryImpl
 
         override suspend fun updateLastCheckIn(personId: Long, lastCheckInEpochMillis: Long) =
             dao.updateLastCheckIn(personId, lastCheckInEpochMillis)
+
+        override suspend fun bulkSetNotificationsEnabled(personIds: List<Long>, enabled: Boolean) {
+            if (personIds.isNotEmpty()) dao.bulkUpdateNotifications(personIds, enabled)
+        }
+
+        override suspend fun bulkSetBirthdayOnly(personIds: List<Long>, birthdayOnly: Boolean) {
+            if (personIds.isNotEmpty()) dao.bulkUpdateBirthdayOnly(personIds, birthdayOnly)
+        }
+
+        override suspend fun bulkSetCheckInThreshold(personIds: List<Long>, threshold: CheckInThreshold?) {
+            if (personIds.isNotEmpty()) {
+                dao.bulkUpdateThreshold(personIds, threshold?.warningDays, threshold?.criticalDays)
+            }
+        }
+
+        override suspend fun bulkSetCheckInDisabled(personIds: List<Long>, disabled: Boolean) {
+            if (personIds.isNotEmpty()) dao.bulkUpdateCheckInDisabled(personIds, disabled)
+        }
 
         override suspend fun deletePerson(id: Long) =
             database.withTransaction {

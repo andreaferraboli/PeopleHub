@@ -41,6 +41,7 @@ fun PersonDto.toDomain(): Person =
         createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
         notificationsEnabled = notificationsEnabled,
         birthdayOnly = birthdayOnly,
+        checkInDisabled = checkInDisabled,
     )
 
 /** Converts a domain [Person] into its serializable [PersonDto]. */
@@ -60,6 +61,7 @@ fun Person.toDto(): PersonDto =
         createdAtEpochMillis = createdAt.toEpochMilli(),
         notificationsEnabled = notificationsEnabled,
         birthdayOnly = birthdayOnly,
+        checkInDisabled = checkInDisabled,
     )
 
 /** Converts an [InterestDto] into the domain [Interest]. */
@@ -99,6 +101,7 @@ fun EventDto.toDomain(): PersonEvent =
         dateTime = LocalDateTime.parse(dateTime, DATE_TIME_FORMATTER),
         description = description,
         category = category,
+        backgroundImagePath = backgroundImagePath,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )
@@ -111,6 +114,7 @@ fun PersonEvent.toDto(): EventDto =
         dateTime = dateTime.format(DATE_TIME_FORMATTER),
         description = description,
         category = category,
+        backgroundImagePath = backgroundImagePath,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )

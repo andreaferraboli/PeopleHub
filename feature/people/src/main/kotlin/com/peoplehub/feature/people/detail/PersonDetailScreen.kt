@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -69,6 +70,18 @@ private val HistoryFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • HH:m
 private fun Instant.formatHistory(): String =
     atZone(ZoneId.systemDefault()).format(HistoryFormatter)
 
+/** Builds a safe, lowercase JSON filename from a person's name (e.g. "Eleanor Vance" → "eleanor-vance.json"). */
+private fun suggestedExportName(fullName: String): String {
+    val slug =
+        fullName
+            .trim()
+            .lowercase()
+            .replace(Regex("[^a-z0-9]+"), "-")
+            .trim('-')
+            .ifBlank { "person" }
+    return "$slug.json"
+}
+
 /** Tabbed detail screen for a single person (Info / Check-in / Related). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +125,21 @@ fun PersonDetailScreen(
             }
         }
 
+    val exportPerson = (state as? UiState.Success)?.data?.person
+    val exportLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            val person = exportPerson
+            if (uri != null && person != null) {
+                val written =
+                    runCatching {
+                        context.contentResolver.openOutputStream(uri)?.use { output ->
+                            output.write(viewModel.exportJson(person).toByteArray())
+                        }
+                    }.isSuccess
+                viewModel.onExported(written, person.fullName)
+            }
+        }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -130,6 +158,11 @@ fun PersonDetailScreen(
                             icon = Icons.Outlined.FileDownload,
                             description = stringResource(R.string.detail_import_json),
                             onClick = { importLauncher.launch(arrayOf("application/json")) },
+                        )
+                        TooltipIconButton(
+                            icon = Icons.Outlined.FileUpload,
+                            description = stringResource(R.string.detail_export_json),
+                            onClick = { exportLauncher.launch(suggestedExportName(data.person.fullName)) },
                         )
                         TooltipIconButton(
                             icon = Icons.Outlined.Edit,

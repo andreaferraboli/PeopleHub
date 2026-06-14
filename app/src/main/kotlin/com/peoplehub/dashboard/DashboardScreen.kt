@@ -1,5 +1,6 @@
 package com.peoplehub.dashboard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -133,6 +137,26 @@ private fun DashboardContent(
             ),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
+        item(key = "brand") {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.brand_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                )
+                Spacer(Modifier.width(12.dp))
+                Image(
+                    painter = painterResource(R.drawable.brand_lettering),
+                    contentDescription = stringResource(R.string.brand_wordmark),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.height(28.dp),
+                )
+            }
+        }
+
         item(key = "header") {
             Column {
                 Text(

@@ -48,6 +48,7 @@ fun PersonWithDetails.toDomain(): Person =
         createdAt = Instant.ofEpochMilli(person.createdAtEpochMillis),
         notificationsEnabled = person.notificationsEnabled,
         birthdayOnly = person.birthdayOnly,
+        checkInDisabled = person.checkInDisabled,
     )
 
 /** Maps a domain [Person] to its [PersonEntity] row (child rows are handled separately). */
@@ -65,6 +66,7 @@ fun Person.toEntity(): PersonEntity =
         createdAtEpochMillis = createdAt.toEpochMilli(),
         notificationsEnabled = notificationsEnabled,
         birthdayOnly = birthdayOnly,
+        checkInDisabled = checkInDisabled,
     )
 
 /** Maps the person's tags to child rows keyed by [personId]. */
@@ -101,6 +103,7 @@ fun EventEntity.toDomain(): PersonEvent =
         dateTime = dateTimeEpochMillis.toLocalDateTime(),
         description = description,
         category = category,
+        backgroundImagePath = backgroundImagePath,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )
@@ -113,6 +116,7 @@ fun PersonEvent.toEntity(): EventEntity =
         dateTimeEpochMillis = dateTime.toEpochMillis(),
         description = description,
         category = category,
+        backgroundImagePath = backgroundImagePath,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )
