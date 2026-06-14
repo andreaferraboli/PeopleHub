@@ -28,7 +28,6 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -59,6 +58,7 @@ import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
+import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.feature.people.R
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -118,9 +118,11 @@ fun AddEditPersonScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
-                    }
+                    TooltipIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        description = stringResource(R.string.action_back),
+                        onClick = onBack,
+                    )
                 },
             )
         },
@@ -285,12 +287,14 @@ private fun TagEditor(tags: List<String>, onAddTag: (String) -> Unit, onRemoveTa
                 placeholder = { Text(stringResource(R.string.edit_tag_add)) },
                 shape = RoundedCornerShape(6.dp),
             )
-            IconButton(onClick = {
-                onAddTag(input)
-                input = ""
-            }) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.edit_tag_add))
-            }
+            TooltipIconButton(
+                icon = Icons.Filled.Add,
+                description = stringResource(R.string.edit_tag_add),
+                onClick = {
+                    onAddTag(input)
+                    input = ""
+                },
+            )
         }
     }
 }
@@ -324,9 +328,11 @@ private fun InterestEditor(
                     placeholder = { Text(stringResource(R.string.edit_interest_value)) },
                     shape = RoundedCornerShape(6.dp),
                 )
-                IconButton(onClick = { onRemoveInterest(index) }) {
-                    Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.action_remove))
-                }
+                TooltipIconButton(
+                    icon = Icons.Outlined.Close,
+                    description = stringResource(R.string.action_remove),
+                    onClick = { onRemoveInterest(index) },
+                )
             }
         }
         GhostButton(
@@ -389,12 +395,16 @@ private fun ThresholdEditor(
             ThresholdStepper(
                 label = stringResource(R.string.edit_threshold_warning),
                 value = threshold.warningDays,
+                decrementDescription = stringResource(R.string.cd_threshold_decrease_warning),
+                incrementDescription = stringResource(R.string.cd_threshold_increase_warning),
                 onDecrement = { onChange(threshold.warningDays - 1, threshold.criticalDays) },
                 onIncrement = { onChange(threshold.warningDays + 1, threshold.criticalDays) },
             )
             ThresholdStepper(
                 label = stringResource(R.string.edit_threshold_critical),
                 value = threshold.criticalDays,
+                decrementDescription = stringResource(R.string.cd_threshold_decrease_critical),
+                incrementDescription = stringResource(R.string.cd_threshold_increase_critical),
                 onDecrement = { onChange(threshold.warningDays, threshold.criticalDays - 1) },
                 onIncrement = { onChange(threshold.warningDays, threshold.criticalDays + 1) },
             )
@@ -403,7 +413,14 @@ private fun ThresholdEditor(
 }
 
 @Composable
-private fun ThresholdStepper(label: String, value: Int, onDecrement: () -> Unit, onIncrement: () -> Unit) {
+private fun ThresholdStepper(
+    label: String,
+    value: Int,
+    decrementDescription: String,
+    incrementDescription: String,
+    onDecrement: () -> Unit,
+    onIncrement: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -411,9 +428,17 @@ private fun ThresholdStepper(label: String, value: Int, onDecrement: () -> Unit,
     ) {
         Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onDecrement) { Icon(Icons.Outlined.Remove, contentDescription = null) }
+            TooltipIconButton(
+                icon = Icons.Outlined.Remove,
+                description = decrementDescription,
+                onClick = onDecrement,
+            )
             Text(value.toString(), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-            IconButton(onClick = onIncrement) { Icon(Icons.Filled.Add, contentDescription = null) }
+            TooltipIconButton(
+                icon = Icons.Filled.Add,
+                description = incrementDescription,
+                onClick = onIncrement,
+            )
         }
     }
 }

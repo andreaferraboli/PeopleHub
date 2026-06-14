@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Indietro</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_confirm">Conferma</string>
+    <string name="action_save">Salva</string>
+    <string name="action_remove">Rimuovi</string>
+    <string name="action_import">Importa</string>
+
+    <!-- People list -->
+    <string name="people_title">La Cerchia</string>
+    <string name="people_subtitle">Un elenco curato delle persone della tua vita.</string>
+    <string name="people_search_hint">Cerca nel registro…</string>
+    <string name="people_add">Aggiungi persona</string>
+    <string name="people_sort">Ordina</string>
+    <string name="people_import">Importa profilo</string>
+    <string name="people_empty_title">Ancora nessuno qui</string>
+    <string name="people_empty_desc">Aggiungi la prima persona alla tua cerchia.</string>
+
+    <!-- Sort options -->
+    <string name="sort_name">Nome A–Z</string>
+    <string name="sort_last_checkin">Ultimo check-in</string>
+    <string name="sort_birthday">Compleanno in arrivo</string>
+
+    <!-- Upcoming-birthday card line -->
+    <string name="circle_birthday_today">Oggi</string>
+    <string name="circle_birthday_in_days">tra %1$d giorni</string>
+
+    <!-- Single-profile import -->
+    <string name="import_confirm_title">Importare il profilo?</string>
+    <string name="import_confirm_message">Aggiungere %1$s alla tua cerchia?</string>
+
+    <!-- Person detail -->
+    <string name="detail_edit">Modifica</string>
+    <string name="detail_delete">Elimina</string>
+    <string name="detail_delete_title">Eliminare la persona?</string>
+    <string name="detail_delete_message">Questa azione la rimuove definitivamente insieme a tutti i suoi check-in.</string>
+    <string name="detail_seen_today_button">Ho visto %1$s oggi</string>
+    <string name="tab_info">Info</string>
+    <string name="tab_checkin">Check-in</string>
+    <string name="tab_related">Collegati</string>
+    <string name="detail_birthday">Compleanno</string>
+    <string name="detail_turns">Compie %1$d</string>
+    <string name="detail_interests">Interessi e gusti</string>
+    <string name="detail_notes">Note</string>
+    <string name="detail_history_empty_title">Ancora nessun check-in</string>
+    <string name="detail_history_empty_desc">Tocca il pulsante qui sopra la prima volta che la vedi.</string>
+    <string name="detail_related_empty_title">Ancora nessun collegamento</string>
+    <string name="detail_related_empty_desc">Gli eventi collegati a questa persona compariranno qui.</string>
+
+    <!-- Update an existing profile from JSON -->
+    <string name="detail_import_json">Aggiorna da JSON</string>
+    <string name="detail_import_json_title">Aggiornare da JSON?</string>
+    <string name="detail_import_json_message">Aggiornare %1$s dal file selezionato? I campi presenti nel file sovrascrivono i valori attuali; ciò che manca viene mantenuto. L\'id del profilo non cambia mai.</string>
+    <string name="detail_import_json_confirm">Aggiorna</string>
+
+    <!-- Check-in dialog -->
+    <string name="checkin_dialog_title">Registra del tempo con %1$s</string>
+    <string name="checkin_note_hint">Aggiungi una nota (facoltativo)</string>
+    <string name="checkin_confirm">Registra</string>
+
+    <!-- Add / edit person -->
+    <string name="edit_title_new">Nuova persona</string>
+    <string name="edit_title_edit">Modifica persona</string>
+    <string name="edit_first_name">Nome</string>
+    <string name="edit_last_name">Cognome (facoltativo)</string>
+    <string name="edit_birthday">Compleanno</string>
+    <string name="edit_birthday_add">Aggiungi un compleanno</string>
+    <string name="edit_tags">Etichette</string>
+    <string name="edit_tag_add">Aggiungi etichetta</string>
+    <string name="edit_interests">Interessi e gusti</string>
+    <string name="edit_interest_key">Etichetta</string>
+    <string name="edit_interest_value">Valore</string>
+    <string name="edit_interest_add">Aggiungi interesse</string>
+    <string name="edit_notes">Note</string>
+
+    <!-- Per-person notification opt-in -->
+    <string name="edit_notifications_title">Notifiche</string>
+    <string name="edit_notifications_hint">Ricevi promemoria di check-in e compleanno per questa persona</string>
+
+    <!-- Birthday-only entry -->
+    <string name="edit_birthday_only_title">Solo compleanno</string>
+    <string name="edit_birthday_only_hint">Nascondi dalla Cerchia e mantieni solo nelle Ricorrenze</string>
+
+    <!-- Birthday-only management screen -->
+    <string name="birthday_only_title">Solo compleanno</string>
+    <string name="birthday_only_subtitle">Segna le voci che sono solo un compleanno. Restano nelle Ricorrenze ma vengono nascoste dalla Cerchia.</string>
+    <string name="birthday_only_empty_title">Ancora nessun compleanno</string>
+    <string name="birthday_only_empty_desc">Le persone con un compleanno compariranno qui.</string>
+
+    <!-- Per-person check-in cadence override -->
+    <string name="edit_threshold_title">Cadenza dei check-in</string>
+    <string name="edit_threshold_hint">Usa una cadenza personalizzata per questa persona</string>
+    <string name="edit_threshold_warning">Avviso dopo (giorni)</string>
+    <string name="edit_threshold_critical">Critico dopo (giorni)</string>
+    <string name="cd_threshold_increase_warning">Aumenta i giorni di avviso</string>
+    <string name="cd_threshold_decrease_warning">Riduci i giorni di avviso</string>
+    <string name="cd_threshold_increase_critical">Aumenta i giorni critici</string>
+    <string name="cd_threshold_decrease_critical">Riduci i giorni critici</string>
+
+    <!-- Detail: effective cadence -->
+    <string name="detail_cadence">Cadenza dei check-in</string>
+    <string name="detail_cadence_value">Avvisa dopo %1$d giorni · critico dopo %2$d</string>
+    <string name="detail_cadence_custom">Personalizzata</string>
+    <string name="detail_cadence_default">Predefinita</string>
+</resources>

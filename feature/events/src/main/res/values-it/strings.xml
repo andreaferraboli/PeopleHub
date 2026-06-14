@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Indietro</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_confirm">Conferma</string>
+    <string name="action_save">Salva</string>
+
+    <!-- Events list -->
+    <string name="events_title">Cronologia</string>
+    <string name="events_subtitle">L\'architettura dei tuoi momenti.</string>
+    <string name="events_add">Aggiungi evento</string>
+    <string name="events_section_upcoming">In arrivo</string>
+    <string name="events_section_archive">Archivio</string>
+    <string name="events_empty_title">Ancora nessun momento</string>
+    <string name="events_empty_desc">Aggiungi il primo evento alla tua cronologia.</string>
+
+    <!-- Time filter -->
+    <string name="filter_all">Tutti</string>
+    <string name="filter_upcoming">In arrivo</string>
+    <string name="filter_past">Passati</string>
+
+    <!-- Day count -->
+    <string name="event_in">Tra</string>
+    <string name="event_days">Giorni</string>
+    <string name="event_days_ago">Giorni fa</string>
+
+    <!-- Pin -->
+    <string name="event_pin">Aggiungi al widget</string>
+    <string name="event_unpin">Rimuovi dal widget</string>
+
+    <!-- Event detail -->
+    <string name="event_detail_edit">Modifica</string>
+    <string name="event_detail_delete">Elimina</string>
+    <string name="event_detail_delete_title">Eliminare l\'evento?</string>
+    <string name="event_detail_delete_message">Questo rimuove definitivamente l\'evento dalla tua cronologia.</string>
+    <string name="event_detail_description">Descrizione</string>
+    <string name="event_detail_linked_person">Con %1$s</string>
+
+    <!-- Add / edit event -->
+    <string name="edit_event_title_new">Nuovo evento</string>
+    <string name="edit_event_title_edit">Modifica evento</string>
+    <string name="event_field_title">Titolo</string>
+    <string name="event_field_date">Data</string>
+    <string name="event_field_time">Ora</string>
+    <string name="event_field_category">Categoria</string>
+    <string name="event_field_description">Descrizione</string>
+    <string name="event_field_person">Persona collegata</string>
+    <string name="event_field_pin">Aggiungi al widget</string>
+    <string name="event_person_none">Nessuna</string>
+</resources>

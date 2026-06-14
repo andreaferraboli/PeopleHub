@@ -13,6 +13,8 @@
     <string name="action_check_in">I saw them</string>
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
+    <string name="cd_stepper_increase">Increase</string>
+    <string name="cd_stepper_decrease">Decrease</string>
 
     <!-- Dashboard / Reflect -->
     <string name="dashboard_welcome">Welcome back</string>
@@ -90,6 +92,15 @@
     <string name="vault_birthday_only_title">Birthday only</string>
     <string name="vault_birthday_only_desc">Choose which entries are just a birthday — kept in Milestones but hidden from The Circle.</string>
     <string name="vault_birthday_only_open">Manage birthday-only</string>
+
+    <!-- Vault: language -->
+    <string name="vault_language_title">Language</string>
+    <string name="vault_language_desc">Choose the language used across the app.</string>
+    <string name="vault_language_open">Change language</string>
+    <string name="vault_language_note">Notifications fully switch language after the next app start.</string>
+    <string name="language_system">System default</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_english">English</string>
 
     <!-- Import guide screen -->
     <string name="import_guide_title">Import guide</string>

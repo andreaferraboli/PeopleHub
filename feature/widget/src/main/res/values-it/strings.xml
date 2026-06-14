@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget labels (shown in the launcher's widget picker) -->
+    <string name="widget_birthdays_label">PeopleHub · Compleanni</string>
+    <string name="widget_checkins_label">PeopleHub · Check-in</string>
+    <string name="widget_event_label">PeopleHub · Evento fissato</string>
+
+    <!-- Widget content -->
+    <string name="widget_birthdays_title">Compleanni in arrivo</string>
+    <string name="widget_birthdays_empty">Nessun compleanno a breve</string>
+    <string name="widget_checkins_title">Check-in urgenti</string>
+    <string name="widget_checkins_empty">Tutto in pari ✨</string>
+    <string name="widget_event_title">Evento fissato</string>
+    <string name="widget_event_empty">Fissa un evento per vederlo qui</string>
+
+    <string name="widget_today">Oggi</string>
+    <string name="widget_tomorrow">Domani</string>
+    <string name="widget_in_days">tra %1$d giorni</string>
+    <string name="widget_days_ago">%1$d giorni fa</string>
+    <string name="widget_never_seen">Mai visto</string>
+</resources>

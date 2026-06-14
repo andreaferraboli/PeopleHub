@@ -34,7 +34,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -70,6 +69,8 @@ import com.peoplehub.core.ui.components.LoadingView
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.TagChip
+import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.core.ui.components.WithTooltip
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.core.ui.util.RelativeTime
@@ -123,19 +124,23 @@ fun PeopleListScreen(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     SortMenu(current = state.sort, onSortChange = viewModel::onSortChange)
-                    IconButton(onClick = { importLauncher.launch(arrayOf("application/json")) }) {
-                        Icon(Icons.Outlined.FileDownload, contentDescription = stringResource(R.string.people_import))
-                    }
+                    TooltipIconButton(
+                        icon = Icons.Outlined.FileDownload,
+                        description = stringResource(R.string.people_import),
+                        onClick = { importLauncher.launch(arrayOf("application/json")) },
+                    )
                 },
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddPerson,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.people_add))
+            WithTooltip(description = stringResource(R.string.people_add)) {
+                FloatingActionButton(
+                    onClick = onAddPerson,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.people_add))
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -313,9 +318,11 @@ private fun BirthdayLine(date: java.time.LocalDate, daysUntil: Int?) {
 @Composable
 private fun SortMenu(current: PeopleSort, onSortChange: (PeopleSort) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    IconButton(onClick = { expanded = true }) {
-        Icon(Icons.AutoMirrored.Outlined.Sort, contentDescription = stringResource(R.string.people_sort))
-    }
+    TooltipIconButton(
+        icon = Icons.AutoMirrored.Outlined.Sort,
+        description = stringResource(R.string.people_sort),
+        onClick = { expanded = true },
+    )
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         sortOptions().forEach { (sort, labelRes) ->
             DropdownMenuItem(

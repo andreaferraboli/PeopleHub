@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PeopleHub</string>
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_reflect">Riflessione</string>
+    <string name="tab_circle">Cerchia</string>
+    <string name="tab_events">Eventi</string>
+    <string name="tab_vault">Cassaforte</string>
+
+    <!-- Shared -->
+    <string name="action_check_in">Li ho visti</string>
+    <string name="action_back">Indietro</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="cd_stepper_increase">Aumenta</string>
+    <string name="cd_stepper_decrease">Diminuisci</string>
+
+    <!-- Dashboard / Reflect -->
+    <string name="dashboard_welcome">Bentornato</string>
+    <string name="dashboard_subtitle">Una panoramica curata della tua rete e dei momenti in arrivo.</string>
+    <string name="dashboard_vitality">Vitalità della rete</string>
+    <string name="dashboard_active">Connessioni attive</string>
+    <string name="dashboard_birthdays">Compleanni in arrivo</string>
+    <string name="dashboard_attention">Richiedono attenzione</string>
+    <string name="dashboard_urgent_title">Check-in urgenti</string>
+    <string name="dashboard_milestones">Ricorrenze</string>
+    <string name="dashboard_pinned">Evento fissato</string>
+    <string name="milestone_birthday">Compleanno</string>
+    <string name="milestone_event">Evento</string>
+    <string name="dashboard_view_all">Vedi tutti</string>
+    <string name="dashboard_birthday_today">Oggi 🎂</string>
+    <string name="dashboard_birthday_in_days">tra %1$d giorni</string>
+    <string name="dashboard_empty_title">Il tuo hub è vuoto</string>
+    <string name="dashboard_empty_desc">Aggiungi la prima persona per iniziare a tracciare le tue relazioni.</string>
+    <string name="dashboard_empty_cta">Aggiungi la tua prima persona</string>
+
+    <!-- Settings / Vault -->
+    <string name="vault_title">La Cassaforte</string>
+    <string name="vault_backup_title">Backup e ripristino</string>
+    <string name="vault_backup_desc">Esporta le tue riflessioni in un file, o ripristinale su un nuovo dispositivo.</string>
+    <string name="vault_export_all">Esporta tutto (JSON)</string>
+    <string name="vault_import_all">Importa backup</string>
+    <string name="vault_export_birthdays">Esporta compleanni (CSV)</string>
+    <string name="vault_share_birthdays">Condividi compleanni</string>
+    <string name="vault_threshold_title">Soglie dei check-in</string>
+    <string name="vault_threshold_desc">Numero di giorni predefinito prima che qualcuno richieda attenzione.</string>
+    <string name="vault_threshold_warning">Avviso dopo (giorni)</string>
+    <string name="vault_threshold_critical">Critico dopo (giorni)</string>
+    <string name="vault_reminders_title">Promemoria compleanni</string>
+    <string name="vault_reminder_1d">1 giorno prima</string>
+    <string name="vault_reminder_3d">3 giorni prima</string>
+    <string name="vault_reminder_7d">7 giorni prima</string>
+    <string name="vault_reminder_30d">30 giorni prima</string>
+    <string name="vault_alarms_title">Orario dei promemoria</string>
+    <string name="vault_exact_alarms">Usa allarmi esatti</string>
+    <string name="vault_reminder_hour">Ora del promemoria giornaliero</string>
+    <string name="vault_import_title">Importa backup</string>
+    <string name="vault_import_message">Sostituire tutti i dati attuali, o unire solo i nuovi record?</string>
+    <string name="vault_import_merge">Unisci</string>
+    <string name="vault_import_replace">Sostituisci tutto</string>
+
+    <!-- Vault: updates -->
+    <string name="vault_updates_title">Aggiornamenti</string>
+    <string name="vault_current_version">Versione attuale: %1$s</string>
+    <string name="vault_check_updates">Cerca aggiornamenti</string>
+    <string name="vault_update_to">Aggiorna alla v%1$s</string>
+
+    <!-- Update flow -->
+    <string name="update_available_title">Aggiornamento disponibile</string>
+    <string name="update_available_message">La versione %1$s è pronta per l\'installazione.</string>
+    <string name="update_install">Scarica e installa</string>
+    <string name="update_later">Più tardi</string>
+    <string name="update_downloading">Download dell\'aggiornamento…</string>
+    <string name="update_downloading_hint">Attendi — l\'installazione si apre automaticamente.</string>
+    <string name="update_up_to_date">Hai già l\'ultima versione.</string>
+    <string name="update_checking">Controllo in corso…</string>
+
+    <!-- Vault: danger zone -->
+    <string name="vault_danger_title">Zona pericolosa</string>
+    <string name="vault_delete_all">Elimina tutte le persone</string>
+    <string name="vault_delete_all_desc">Rimuove ogni persona e i relativi check-in. Gli eventi vengono mantenuti ma diventano scollegati. L\'operazione non può essere annullata.</string>
+    <string name="vault_delete_all_confirm_title">Eliminare tutte le persone?</string>
+    <string name="vault_delete_all_confirm_message">Questa operazione rimuove definitivamente tutte le persone che hai aggiunto, insieme ai loro check-in. Non può essere annullata.</string>
+
+    <!-- Vault: import guide entry -->
+    <string name="vault_guide_title">Come importare</string>
+    <string name="vault_guide_desc">Formati, campi ed esempi — e importa direttamente dalla guida.</string>
+    <string name="vault_open_guide">Apri la guida all\'importazione</string>
+
+    <!-- Vault: birthday-only entry -->
+    <string name="vault_birthday_only_title">Solo compleanno</string>
+    <string name="vault_birthday_only_desc">Scegli quali voci sono solo un compleanno — mantenute nelle Ricorrenze ma nascoste dalla Cerchia.</string>
+    <string name="vault_birthday_only_open">Gestisci solo compleanno</string>
+
+    <!-- Vault: language -->
+    <string name="vault_language_title">Lingua</string>
+    <string name="vault_language_desc">Scegli la lingua usata in tutta l\'app.</string>
+    <string name="vault_language_open">Cambia lingua</string>
+    <string name="vault_language_note">Le notifiche cambiano completamente lingua dopo il prossimo avvio dell\'app.</string>
+    <string name="language_system">Predefinita di sistema</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_english">English</string>
+
+    <!-- Import guide screen -->
+    <string name="import_guide_title">Guida all\'importazione</string>
+    <string name="ig_intro">PeopleHub legge tre formati di file. Scegli un file in una qualsiasi delle sezioni qui sotto per importarlo, poi apri Cerchia o Ricorrenze per vedere i risultati.\n\nSuggerimento: esporta prima dalla Cassaforte — il file che crea ha esattamente questo formato, già compilato con i tuoi dati.</string>
+    <string name="ig_fields">Campi</string>
+    <string name="ig_example">Esempio</string>
+    <string name="ig_required">obbligatorio</string>
+    <string name="ig_optional">facoltativo</string>
+    <string name="ig_result_dismiss">Ho capito</string>
+
+    <string name="ig_csv_title">Compleanni · CSV</string>
+    <string name="ig_csv_desc">Una persona per riga: nome, cognome, data di nascita. La riga di intestazione è facoltativa e rilevata automaticamente. Una riga errata viene saltata (non l\'intero file); racchiudi un campo tra virgolette per includere una virgola.</string>
+    <string name="ig_csv_import">Scegli file CSV</string>
+
+    <string name="ig_person_title">Una persona · JSON</string>
+    <string name="ig_person_desc">Un singolo oggetto JSON che descrive una persona. Solo nome e cognome sono obbligatori; tutto il resto è facoltativo.</string>
+    <string name="ig_person_import">Scegli profilo JSON</string>
+
+    <string name="ig_backup_title">Backup completo · JSON</string>
+    <string name="ig_backup_desc">L\'istantanea completa — persone, check-in ed eventi. Dopo aver scelto il file, seleziona Unisci per aggiungere solo i nuovi record o Sostituisci per sovrascrivere tutto.</string>
+    <string name="ig_backup_import">Scegli file di backup</string>
+</resources>

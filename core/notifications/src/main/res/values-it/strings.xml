@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channels -->
+    <string name="channel_checkin_name">Promemoria check-in</string>
+    <string name="channel_checkin_desc">Ti avvisa quando è passato un po\' dall\'ultima volta che hai visto qualcuno.</string>
+    <string name="channel_birthday_name">Promemoria compleanni</string>
+    <string name="channel_birthday_desc">Promemoria per i compleanni in arrivo e di oggi.</string>
+
+    <!-- Check-in reminder -->
+    <string name="notif_checkin_title">Non vedi %1$s da %2$d giorni</string>
+    <string name="notif_checkin_body">Visto l\'ultima volta %1$s</string>
+
+    <!-- Birthday reminders -->
+    <string name="notif_birthday_today_title">Oggi è il compleanno di %1$s! 🎂</string>
+    <string name="notif_birthday_upcoming_title">Il compleanno di %1$s è tra %2$d giorni</string>
+
+    <!-- Actions -->
+    <string name="notif_action_mark_seen">Segna come visto</string>
+</resources>

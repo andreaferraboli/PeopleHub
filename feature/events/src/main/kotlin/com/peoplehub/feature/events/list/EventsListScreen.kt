@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,6 +44,8 @@ import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.LoadingView
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.TagChip
+import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.core.ui.components.WithTooltip
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.feature.events.R
@@ -71,12 +72,14 @@ fun EventsListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddEvent,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.events_add))
+            WithTooltip(description = stringResource(R.string.events_add)) {
+                FloatingActionButton(
+                    onClick = onAddEvent,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.events_add))
+                }
             }
         },
     ) { innerPadding ->
@@ -222,18 +225,17 @@ private fun EventCard(event: EventListItem, onClick: () -> Unit, onTogglePin: ()
                     )
                 }
             }
-            IconButton(onClick = onTogglePin) {
-                Icon(
-                    imageVector = if (event.pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                    contentDescription =
-                        if (event.pinned) {
-                            stringResource(R.string.event_unpin)
-                        } else {
-                            stringResource(R.string.event_pin)
-                        },
-                    tint = if (event.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            TooltipIconButton(
+                icon = if (event.pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                description =
+                    if (event.pinned) {
+                        stringResource(R.string.event_unpin)
+                    } else {
+                        stringResource(R.string.event_pin)
+                    },
+                onClick = onTogglePin,
+                tint = if (event.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

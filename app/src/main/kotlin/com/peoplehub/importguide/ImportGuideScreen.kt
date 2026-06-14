@@ -17,8 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -47,6 +45,7 @@ import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
+import com.peoplehub.core.ui.components.TooltipIconButton
 
 private val JSON_TYPES = arrayOf("application/json", "text/plain", "application/octet-stream")
 private val CSV_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")
@@ -92,9 +91,11 @@ fun ImportGuideScreen(
             PeopleHubTopBar(
                 title = stringResource(R.string.import_guide_title),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
-                    }
+                    TooltipIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        description = stringResource(R.string.action_back),
+                        onClick = onBack,
+                    )
                 },
             )
         },

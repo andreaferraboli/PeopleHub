@@ -20,8 +20,6 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -56,6 +54,7 @@ import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
+import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.core.ui.components.UiStateContent
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.util.RelativeTime
@@ -118,22 +117,30 @@ fun PersonDetailScreen(
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
-                    }
+                    TooltipIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        description = stringResource(R.string.action_back),
+                        onClick = onBack,
+                    )
                 },
                 actions = {
                     val data = (state as? UiState.Success)?.data
                     if (data != null) {
-                        IconButton(onClick = { importLauncher.launch(arrayOf("application/json")) }) {
-                            Icon(Icons.Outlined.FileDownload, contentDescription = stringResource(R.string.detail_import_json))
-                        }
-                        IconButton(onClick = { onEdit(data.person.id) }) {
-                            Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.detail_edit))
-                        }
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.detail_delete))
-                        }
+                        TooltipIconButton(
+                            icon = Icons.Outlined.FileDownload,
+                            description = stringResource(R.string.detail_import_json),
+                            onClick = { importLauncher.launch(arrayOf("application/json")) },
+                        )
+                        TooltipIconButton(
+                            icon = Icons.Outlined.Edit,
+                            description = stringResource(R.string.detail_edit),
+                            onClick = { onEdit(data.person.id) },
+                        )
+                        TooltipIconButton(
+                            icon = Icons.Outlined.Delete,
+                            description = stringResource(R.string.detail_delete),
+                            onClick = { showDeleteDialog = true },
+                        )
                     }
                 },
             )

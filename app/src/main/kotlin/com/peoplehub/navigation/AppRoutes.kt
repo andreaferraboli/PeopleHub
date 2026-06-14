@@ -22,6 +22,10 @@ data object SettingsRoute
 @Serializable
 data object ImportGuideRoute
 
+/** The language picker, reached from the Vault. */
+@Serializable
+data object LanguageRoute
+
 /**
  * The four bottom-navigation destinations. Each maps to the start route of its section; detail and
  * edit screens are reached from within and are not top-level destinations.

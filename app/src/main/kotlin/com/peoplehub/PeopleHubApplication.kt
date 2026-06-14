@@ -1,9 +1,11 @@
 package com.peoplehub
 
 import android.app.Application
+import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.peoplehub.core.notifications.PeopleHubNotifier
+import com.peoplehub.locale.AppLocale
 import com.peoplehub.work.PeopleHubWorkScheduler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -14,6 +16,10 @@ import javax.inject.Inject
  */
 @HiltAndroidApp
 class PeopleHubApplication : Application(), Configuration.Provider {
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(AppLocale.wrap(base))
+    }
+
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 

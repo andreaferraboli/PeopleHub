@@ -17,6 +17,7 @@ import com.peoplehub.feature.people.navigation.PeopleListRoute
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
 import com.peoplehub.feature.people.navigation.peopleSection
 import com.peoplehub.importguide.ImportGuideScreen
+import com.peoplehub.settings.LanguageScreen
 import com.peoplehub.settings.SettingsScreen
 
 /** The single navigation graph wiring the dashboard, settings and all feature sections together. */
@@ -58,11 +59,16 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
             SettingsScreen(
                 onOpenImportGuide = { navController.navigate(ImportGuideRoute) },
                 onOpenBirthdayOnly = { navController.navigate(BirthdayOnlyRoute) },
+                onOpenLanguage = { navController.navigate(LanguageRoute) },
             )
         }
 
         composable<ImportGuideRoute> {
             ImportGuideScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable<LanguageRoute> {
+            LanguageScreen(onBack = { navController.popBackStack() })
         }
     }
 }

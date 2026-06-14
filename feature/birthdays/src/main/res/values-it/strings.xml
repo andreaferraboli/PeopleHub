@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">PeopleHub</string>
+
+    <!-- Birthdays / Milestones -->
+    <string name="birthdays_title">Ricorrenze</string>
+    <string name="birthdays_subtitle">I momenti che definiscono il tuo percorso.</string>
+
+    <!-- View modes -->
+    <string name="view_year">Anno</string>
+    <string name="view_month">Mese</string>
+    <string name="view_list">Elenco</string>
+    <string name="view_mode">Modalità di visualizzazione</string>
+
+    <!-- Birthday rows -->
+    <string name="birthday_turns">Compie %1$d</string>
+    <string name="birthday_today">Oggi</string>
+    <string name="birthday_in_days">Tra</string>
+    <string name="birthday_days_unit">Giorni</string>
+    <string name="birthday_label">Compleanno</string>
+
+    <!-- Calendar -->
+    <string name="calendar_previous_month">Mese precedente</string>
+    <string name="calendar_next_month">Mese successivo</string>
+    <string name="weekday_sunday">Dom</string>
+    <string name="weekday_monday">Lun</string>
+    <string name="weekday_tuesday">Mar</string>
+    <string name="weekday_wednesday">Mer</string>
+    <string name="weekday_thursday">Gio</string>
+    <string name="weekday_friday">Ven</string>
+    <string name="weekday_saturday">Sab</string>
+
+    <!-- Shared actions -->
+    <string name="action_back">Indietro</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_more">Altre opzioni</string>
+
+    <!-- Import / export -->
+    <string name="import_csv">Importa CSV</string>
+    <string name="import_json">Importa profilo (JSON)</string>
+    <string name="export_csv">Esporta CSV</string>
+    <string name="export_json">Esporta backup (JSON)</string>
+    <string name="import_result">%1$d importati, %2$d errori</string>
+    <string name="import_failed">Importazione non riuscita</string>
+    <string name="import_one_profile">%1$s importato</string>
+    <string name="share_birthdays">Condividi compleanni</string>
+
+    <!-- Empty / loading -->
+    <string name="birthdays_empty_title">Ancora nessun compleanno</string>
+    <string name="birthdays_empty_desc">Aggiungi un compleanno a qualcuno della tua cerchia per vederlo qui.</string>
+</resources>

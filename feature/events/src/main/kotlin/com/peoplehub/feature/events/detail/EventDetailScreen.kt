@@ -15,8 +15,6 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,6 +37,7 @@ import com.peoplehub.core.ui.components.DayCountDisplay
 import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.GoldDivider
+import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.core.ui.components.UiStateContent
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.feature.events.R
@@ -70,19 +69,25 @@ fun EventDetailScreen(
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
-                    }
+                    TooltipIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        description = stringResource(R.string.action_back),
+                        onClick = onBack,
+                    )
                 },
                 actions = {
                     val data = (state as? UiState.Success)?.data
                     if (data != null) {
-                        IconButton(onClick = { onEdit(data.event.id) }) {
-                            Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.event_detail_edit))
-                        }
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.event_detail_delete))
-                        }
+                        TooltipIconButton(
+                            icon = Icons.Outlined.Edit,
+                            description = stringResource(R.string.event_detail_edit),
+                            onClick = { onEdit(data.event.id) },
+                        )
+                        TooltipIconButton(
+                            icon = Icons.Outlined.Delete,
+                            description = stringResource(R.string.event_detail_delete),
+                            onClick = { showDeleteDialog = true },
+                        )
                     }
                 },
             )

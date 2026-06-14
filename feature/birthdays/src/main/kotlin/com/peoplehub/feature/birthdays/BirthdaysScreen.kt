@@ -37,7 +37,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -69,6 +68,7 @@ import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.LoadingView
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PersonAvatar
+import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import java.time.LocalDate
@@ -170,12 +170,11 @@ fun BirthdaysScreen(
                 title = stringResource(R.string.birthdays_title),
                 centered = true,
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
-                        )
-                    }
+                    TooltipIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        description = stringResource(R.string.action_back),
+                        onClick = onBack,
+                    )
                 },
                 actions = {
                     ViewModeMenu(current = viewMode, onViewModeChange = viewModel::onViewModeChange)
@@ -478,20 +477,18 @@ private fun MonthHeader(month: YearMonth, onPreviousMonth: () -> Unit, onNextMon
             color = MaterialTheme.colorScheme.primary,
         )
         Row {
-            IconButton(onClick = onPreviousMonth) {
-                Icon(
-                    Icons.Filled.ChevronLeft,
-                    contentDescription = stringResource(R.string.calendar_previous_month),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            IconButton(onClick = onNextMonth) {
-                Icon(
-                    Icons.Filled.ChevronRight,
-                    contentDescription = stringResource(R.string.calendar_next_month),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            TooltipIconButton(
+                icon = Icons.Filled.ChevronLeft,
+                description = stringResource(R.string.calendar_previous_month),
+                onClick = onPreviousMonth,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TooltipIconButton(
+                icon = Icons.Filled.ChevronRight,
+                description = stringResource(R.string.calendar_next_month),
+                onClick = onNextMonth,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -600,9 +597,11 @@ private fun DayCell(
 @Composable
 private fun ViewModeMenu(current: BirthdayViewMode, onViewModeChange: (BirthdayViewMode) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    IconButton(onClick = { expanded = true }) {
-        Icon(iconFor(current), contentDescription = stringResource(R.string.view_mode))
-    }
+    TooltipIconButton(
+        icon = iconFor(current),
+        description = stringResource(R.string.view_mode),
+        onClick = { expanded = true },
+    )
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         viewModeOptions().forEach { (mode, labelRes) ->
             DropdownMenuItem(
@@ -626,9 +625,11 @@ private fun OverflowMenu(
     onShare: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    IconButton(onClick = { expanded = true }) {
-        Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.action_more))
-    }
+    TooltipIconButton(
+        icon = Icons.Outlined.MoreVert,
+        description = stringResource(R.string.action_more),
+        onClick = { expanded = true },
+    )
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         MenuRow(R.string.import_csv) {
             expanded = false

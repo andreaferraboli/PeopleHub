@@ -19,8 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -52,6 +50,7 @@ import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
+import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.update.AvailableUpdate
 import com.peoplehub.update.UpdateUiState
 import com.peoplehub.update.UpdateViewModel
@@ -63,6 +62,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onOpenImportGuide: () -> Unit,
     onOpenBirthdayOnly: () -> Unit,
+    onOpenLanguage: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel(),
 ) {
@@ -143,6 +143,10 @@ fun SettingsScreen(
                 onCheck = { updateViewModel.check(silent = false) },
                 onInstall = { update -> updateViewModel.downloadAndInstall(update) },
             )
+
+            GoldDivider()
+
+            LanguageEntry(onOpenLanguage = onOpenLanguage)
 
             GoldDivider()
 
@@ -314,6 +318,22 @@ private fun ImportGuideEntry(onOpenImportGuide: () -> Unit) {
 }
 
 @Composable
+private fun LanguageEntry(onOpenLanguage: () -> Unit) {
+    SettingsPanel(title = stringResource(R.string.vault_language_title)) {
+        Text(
+            text = stringResource(R.string.vault_language_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        GhostButton(
+            text = stringResource(R.string.vault_language_open),
+            onClick = onOpenLanguage,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
 private fun BirthdayOnlyEntry(onOpenBirthdayOnly: () -> Unit) {
     SettingsPanel(title = stringResource(R.string.vault_birthday_only_title)) {
         Text(
@@ -433,9 +453,17 @@ private fun Stepper(label: String, value: Int, onDecrement: () -> Unit, onIncrem
     ) {
         Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onDecrement) { Icon(Icons.Outlined.Remove, contentDescription = null) }
+            TooltipIconButton(
+                icon = Icons.Outlined.Remove,
+                description = stringResource(R.string.cd_stepper_decrease),
+                onClick = onDecrement,
+            )
             Text(value.toString(), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-            IconButton(onClick = onIncrement) { Icon(Icons.Outlined.Add, contentDescription = null) }
+            TooltipIconButton(
+                icon = Icons.Outlined.Add,
+                description = stringResource(R.string.cd_stepper_increase),
+                onClick = onIncrement,
+            )
         }
     }
 }

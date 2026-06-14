@@ -97,6 +97,10 @@
     <string name="edit_threshold_hint">Use a custom cadence for this person</string>
     <string name="edit_threshold_warning">Warning after (days)</string>
     <string name="edit_threshold_critical">Critical after (days)</string>
+    <string name="cd_threshold_increase_warning">Increase warning days</string>
+    <string name="cd_threshold_decrease_warning">Decrease warning days</string>
+    <string name="cd_threshold_increase_critical">Increase critical days</string>
+    <string name="cd_threshold_decrease_critical">Decrease critical days</string>
 
     <!-- Detail: effective cadence -->
     <string name="detail_cadence">Check-in cadence</string>
