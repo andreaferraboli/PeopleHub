@@ -25,6 +25,8 @@ data class PersonDto(
     val warningDays: Int? = null,
     val criticalDays: Int? = null,
     val createdAtEpochMillis: Long = 0L,
+    val notificationsEnabled: Boolean = false,
+    val birthdayOnly: Boolean = false,
 )
 
 /** Serialization-friendly mirror of the domain `Interest` (an editable key/value pair). */

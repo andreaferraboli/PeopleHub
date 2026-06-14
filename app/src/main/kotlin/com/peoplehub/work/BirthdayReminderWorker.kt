@@ -27,13 +27,15 @@ class BirthdayReminderWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val enabledOffsets = getSettings().first().birthdayReminderOffsets.map { it.daysBefore }.toSet()
-        getAllBirthdays().first().forEach { birthday ->
-            when {
-                birthday.daysUntil == 0 -> notifier.showBirthdayToday(birthday.personId, birthday.fullName)
-                birthday.daysUntil in enabledOffsets ->
-                    notifier.showBirthdayUpcoming(birthday.personId, birthday.fullName, birthday.daysUntil)
+        getAllBirthdays().first()
+            .filter { it.notificationsEnabled }
+            .forEach { birthday ->
+                when {
+                    birthday.daysUntil == 0 -> notifier.showBirthdayToday(birthday.personId, birthday.fullName)
+                    birthday.daysUntil in enabledOffsets ->
+                        notifier.showBirthdayUpcoming(birthday.personId, birthday.fullName, birthday.daysUntil)
+                }
             }
-        }
         return Result.success()
     }
 }

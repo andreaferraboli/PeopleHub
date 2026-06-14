@@ -16,6 +16,12 @@ class ImportPersonUseCase @Inject constructor(
     /** Parses [json] into a candidate [Person] without persisting it (for a confirmation preview). */
     fun preview(json: String): Result<Person> = importer.parse(json)
 
+    /**
+     * Merges [json] onto [existing] without persisting it (for a confirmation preview). Keys absent
+     * from the JSON keep their stored value; the id is preserved.
+     */
+    fun previewMerge(json: String, existing: Person): Result<Person> = importer.merge(json, existing)
+
     /** Persists an already-previewed [person]. */
     suspend fun confirm(person: Person): Result<Person> =
         upsertPerson(person).map { person }

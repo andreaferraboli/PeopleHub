@@ -19,13 +19,16 @@ import com.peoplehub.core.domain.usecase.ObserveCheckInHistoryUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
 import com.peoplehub.core.domain.util.DateCalculations
 import com.peoplehub.core.ui.state.UiState
+import com.peoplehub.feature.people.ImportPersonUseCase
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Clock
@@ -48,12 +51,13 @@ data class PersonDetailData(
 @HiltViewModel
 class PersonDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    observePerson: ObservePersonUseCase,
+    private val observePerson: ObservePersonUseCase,
     observeHistory: ObserveCheckInHistoryUseCase,
     getEvents: GetEventsUseCase,
     getSettings: GetSettingsUseCase,
     private val checkInPerson: CheckInPersonUseCase,
     private val deletePerson: DeletePersonUseCase,
+    private val importPerson: ImportPersonUseCase,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -63,6 +67,11 @@ class PersonDetailViewModel @Inject constructor(
 
     /** Emits `true` once the person has been deleted so the screen can navigate back. */
     val closed: StateFlow<Boolean> = closedSignal
+
+    private val importMessageSignal = MutableStateFlow<String?>(null)
+
+    /** A one-shot message describing the outcome of a JSON merge-update, shown via snackbar. */
+    val importMessage: StateFlow<String?> = importMessageSignal.asStateFlow()
 
     val state: StateFlow<UiState<PersonDetailData>> = combine(
         observePerson(personId),
@@ -107,6 +116,30 @@ class PersonDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Merges a selected JSON document onto this person — every field present in the file overwrites
+     * the stored value, absent fields are kept — and persists the result. The id never changes.
+     */
+    fun onImportJson(json: String) {
+        viewModelScope.launch {
+            val existing = observePerson(personId).first()
+            if (existing == null) {
+                importMessageSignal.value = "Person not found"
+                return@launch
+            }
+            importMessageSignal.value = importPerson.previewMerge(json, existing)
+                .mapCatching { importPerson.confirm(it).getOrThrow() }
+                .fold(
+                    onSuccess = { "Updated ${it.fullName}" },
+                    onFailure = { it.message ?: "Import failed" },
+                )
+        }
+    }
+
+    fun onImportMessageShown() {
+        importMessageSignal.value = null
+    }
+
     private fun birthdayOf(person: Person, birthday: LocalDate): UpcomingBirthday {
         val today = LocalDate.now(clock)
         return UpcomingBirthday(
@@ -117,6 +150,7 @@ class PersonDetailViewModel @Inject constructor(
             nextOccurrence = DateCalculations.nextBirthdayOccurrence(birthday, today),
             daysUntil = DateCalculations.daysUntilBirthday(birthday, today),
             turningAge = DateCalculations.ageOnNextBirthday(birthday, today),
+            notificationsEnabled = person.notificationsEnabled,
         )
     }
 

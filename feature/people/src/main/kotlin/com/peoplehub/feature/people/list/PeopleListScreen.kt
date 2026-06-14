@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -23,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Search
@@ -55,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.time.format.DateTimeFormatter
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.core.domain.model.CheckInStatus
@@ -72,6 +75,8 @@ import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.core.ui.util.RelativeTime
 import com.peoplehub.feature.people.R
+
+private val BirthdayCardFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM d")
 
 /** Stateful entry point for the people directory ("The Circle"). */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -213,12 +218,13 @@ private fun PeopleListContent(
             }
         }
 
-        peopleListBody(state.listState, onPersonClick)
+        peopleListBody(state.listState, state.sort == PeopleSort.UPCOMING_BIRTHDAY, onPersonClick)
     }
 }
 
 private fun LazyListScope.peopleListBody(
     listState: UiState<List<PersonListItem>>,
+    showBirthday: Boolean,
     onPersonClick: (Long) -> Unit,
 ) {
     when (listState) {
@@ -233,7 +239,7 @@ private fun LazyListScope.peopleListBody(
         }
         is UiState.Error -> item(key = "error") { StateBox { ErrorView(message = listState.message) } }
         is UiState.Success -> items(listState.data, key = { it.id }) { person ->
-            PersonCard(person = person, onClick = { onPersonClick(person.id) })
+            PersonCard(person = person, showBirthday = showBirthday, onClick = { onPersonClick(person.id) })
         }
     }
 }
@@ -246,7 +252,7 @@ private fun StateBox(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun PersonCard(person: PersonListItem, onClick: () -> Unit) {
+private fun PersonCard(person: PersonListItem, showBirthday: Boolean, onClick: () -> Unit) {
     GlassPanel(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             PersonAvatar(initials = person.initials, photoPath = person.photoPath, size = 64.dp)
@@ -260,9 +266,37 @@ private fun PersonCard(person: PersonListItem, onClick: () -> Unit) {
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                CheckInStatusBadge(label = RelativeTime.seenLabel(person.daysSince), status = person.status)
+                if (showBirthday && person.nextBirthday != null) {
+                    BirthdayLine(date = person.nextBirthday, daysUntil = person.daysUntilBirthday)
+                } else {
+                    CheckInStatusBadge(label = RelativeTime.seenLabel(person.daysSince), status = person.status)
+                }
             }
         }
+    }
+}
+
+/** A compact "🎁 October 12 · in 5 days" line shown on directory cards under the upcoming-birthday sort. */
+@Composable
+private fun BirthdayLine(date: java.time.LocalDate, daysUntil: Int?) {
+    val suffix = when {
+        daysUntil == null -> ""
+        daysUntil == 0 -> " · ${stringResource(R.string.circle_birthday_today)}"
+        else -> " · ${stringResource(R.string.circle_birthday_in_days, daysUntil)}"
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = Icons.Outlined.CardGiftcard,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = date.format(BirthdayCardFormatter) + suffix,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 

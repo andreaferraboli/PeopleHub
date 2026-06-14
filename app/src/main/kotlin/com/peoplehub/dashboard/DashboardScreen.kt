@@ -15,7 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CardGiftcard
+import androidx.compose.material.icons.outlined.Celebration
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -252,6 +256,13 @@ private fun MilestoneRow(birthday: UpcomingBirthday, onPersonClick: (Long) -> Un
             }
         }
         Spacer(Modifier.width(12.dp))
+        Icon(
+            imageVector = Icons.Outlined.CardGiftcard,
+            contentDescription = stringResource(R.string.milestone_birthday),
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(birthday.fullName, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
             Text(
@@ -275,7 +286,16 @@ private fun milestoneSubtitle(birthday: UpcomingBirthday): String =
 private fun PinnedEventCard(event: PersonEvent, onEventClick: (Long) -> Unit) {
     GlassPanel(modifier = Modifier.fillMaxWidth().clickable { onEventClick(event.id) }) {
         Column(modifier = Modifier.padding(20.dp)) {
-            CapsLabel(text = stringResource(R.string.dashboard_pinned))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.Celebration,
+                    contentDescription = stringResource(R.string.milestone_event),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                CapsLabel(text = stringResource(R.string.dashboard_pinned))
+            }
             Spacer(Modifier.size(8.dp))
             event.category?.let {
                 Text(it.uppercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)

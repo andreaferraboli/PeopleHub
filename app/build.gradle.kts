@@ -31,11 +31,12 @@ val updateRepo = "PeopleHub"
 // Release signing is configured from a (git-ignored) keystore.properties for local builds, or from
 // environment variables in CI. When neither is present, the release build remains unsigned.
 val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties().apply {
-    if (keystorePropertiesFile.exists()) {
-        load(FileInputStream(keystorePropertiesFile))
+val keystoreProperties =
+    Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            load(FileInputStream(keystorePropertiesFile))
+        }
     }
-}
 val ciKeystoreFile: String? = System.getenv("KEYSTORE_FILE")
 val hasSigning = keystorePropertiesFile.exists() || ciKeystoreFile != null
 

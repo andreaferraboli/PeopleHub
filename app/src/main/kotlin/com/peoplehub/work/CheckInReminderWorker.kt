@@ -28,6 +28,7 @@ class CheckInReminderWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         getUrgentCheckIns().first()
+            .filter { it.person.notificationsEnabled }
             .filter { it.status == CheckInStatus.OVERDUE || it.status == CheckInStatus.NEVER }
             .forEach { urgency ->
                 notifier.showCheckInReminder(

@@ -45,6 +45,8 @@ fun PersonWithDetails.toDomain(): Person = Person(
     lastCheckInAt = person.lastCheckInEpochMillis?.let(Instant::ofEpochMilli),
     checkInThreshold = thresholdOf(person.warningDays, person.criticalDays),
     createdAt = Instant.ofEpochMilli(person.createdAtEpochMillis),
+    notificationsEnabled = person.notificationsEnabled,
+    birthdayOnly = person.birthdayOnly,
 )
 
 /** Maps a domain [Person] to its [PersonEntity] row (child rows are handled separately). */
@@ -59,6 +61,8 @@ fun Person.toEntity(): PersonEntity = PersonEntity(
     warningDays = checkInThreshold?.warningDays,
     criticalDays = checkInThreshold?.criticalDays,
     createdAtEpochMillis = createdAt.toEpochMilli(),
+    notificationsEnabled = notificationsEnabled,
+    birthdayOnly = birthdayOnly,
 )
 
 /** Maps the person's tags to child rows keyed by [personId]. */

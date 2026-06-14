@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 /** Immutable state for the people directory screen. */
@@ -51,6 +52,8 @@ data class PersonListItem(
     val primaryTag: String?,
     val status: CheckInStatus,
     val daysSince: Long?,
+    val nextBirthday: LocalDate? = null,
+    val daysUntilBirthday: Int? = null,
 )
 
 private data class Controls(val query: String, val tags: Set<String>, val sort: PeopleSort)
@@ -76,7 +79,8 @@ class PeopleListViewModel @Inject constructor(
     private val listState: kotlinx.coroutines.flow.Flow<UiState<List<PersonListItem>>> =
         controls
             .flatMapLatest { c ->
-                combine(getPeople(PeopleFilter(c.query, c.tags, c.sort)), getSettings()) { people, settings ->
+                val filter = PeopleFilter(c.query, c.tags, c.sort, includeBirthdayOnly = false)
+                combine(getPeople(filter), getSettings()) { people, settings ->
                     people.map { it.toListItem(settings.defaultCheckInThreshold) }
                 }
             }
@@ -152,6 +156,7 @@ class PeopleListViewModel @Inject constructor(
     private fun Person.toListItem(defaultThreshold: CheckInThreshold): PersonListItem {
         val threshold = checkInThreshold ?: defaultThreshold
         val days = lastCheckInAt?.let { DateCalculations.daysSince(it, Instant.now(clock)) }
+        val today = LocalDate.now(clock)
         return PersonListItem(
             id = id,
             fullName = fullName,
@@ -160,6 +165,8 @@ class PeopleListViewModel @Inject constructor(
             primaryTag = tags.firstOrNull(),
             status = CheckInStatus.of(days, threshold),
             daysSince = days,
+            nextBirthday = birthday?.let { DateCalculations.nextBirthdayOccurrence(it, today) },
+            daysUntilBirthday = birthday?.let { DateCalculations.daysUntilBirthday(it, today) },
         )
     }
 

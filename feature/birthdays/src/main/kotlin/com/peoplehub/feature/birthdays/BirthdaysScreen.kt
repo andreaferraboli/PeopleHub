@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarViewMonth
+import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -304,7 +305,16 @@ private fun BirthdayRow(birthday: UpcomingBirthday, onClick: () -> Unit) {
             )
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                CapsLabel(text = stringResource(R.string.birthday_label))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.CardGiftcard,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    CapsLabel(text = stringResource(R.string.birthday_label))
+                }
                 Text(
                     text = birthday.fullName,
                     style = MaterialTheme.typography.headlineSmall,

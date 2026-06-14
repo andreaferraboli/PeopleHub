@@ -38,6 +38,8 @@ fun PersonDto.toDomain(): Person = Person(
     lastCheckInAt = lastCheckInEpochMillis?.let(Instant::ofEpochMilli),
     checkInThreshold = thresholdFrom(warningDays, criticalDays),
     createdAt = Instant.ofEpochMilli(createdAtEpochMillis),
+    notificationsEnabled = notificationsEnabled,
+    birthdayOnly = birthdayOnly,
 )
 
 /** Converts a domain [Person] into its serializable [PersonDto]. */
@@ -54,6 +56,8 @@ fun Person.toDto(): PersonDto = PersonDto(
     warningDays = checkInThreshold?.warningDays,
     criticalDays = checkInThreshold?.criticalDays,
     createdAtEpochMillis = createdAt.toEpochMilli(),
+    notificationsEnabled = notificationsEnabled,
+    birthdayOnly = birthdayOnly,
 )
 
 /** Converts an [InterestDto] into the domain [Interest]. */

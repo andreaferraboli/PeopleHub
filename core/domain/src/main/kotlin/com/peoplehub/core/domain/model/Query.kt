@@ -20,6 +20,7 @@ data class PeopleFilter(
     val query: String = "",
     val tags: Set<String> = emptySet(),
     val sort: PeopleSort = PeopleSort.NAME_ASC,
+    val includeBirthdayOnly: Boolean = true,
 )
 
 /** Time-based filter for the events screen. */

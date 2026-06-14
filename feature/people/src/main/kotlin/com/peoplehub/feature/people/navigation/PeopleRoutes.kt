@@ -4,6 +4,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.peoplehub.core.domain.navigation.DeepLinks
+import com.peoplehub.feature.people.birthdayonly.BirthdayOnlyScreen
 import com.peoplehub.feature.people.detail.PersonDetailScreen
 import com.peoplehub.feature.people.edit.AddEditPersonScreen
 import com.peoplehub.feature.people.list.PeopleListScreen
@@ -24,6 +25,10 @@ data class AddEditPersonRoute(val personId: Long = NEW_PERSON) {
         const val NEW_PERSON: Long = -1L
     }
 }
+
+/** Birthday-only management route (reached from the Vault). */
+@Serializable
+data object BirthdayOnlyRoute
 
 /**
  * Registers the people screens into the host graph. Navigation out of these screens is delegated to
@@ -55,5 +60,8 @@ fun NavGraphBuilder.peopleSection(
     }
     composable<AddEditPersonRoute> {
         AddEditPersonScreen(onBack = onBack)
+    }
+    composable<BirthdayOnlyRoute> {
+        BirthdayOnlyScreen(onBack = onBack)
     }
 }

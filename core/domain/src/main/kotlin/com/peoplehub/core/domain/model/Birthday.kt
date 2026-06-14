@@ -8,6 +8,8 @@ import java.time.LocalDate
  *
  * @property nextOccurrence the next calendar date the birthday falls on (today counts as 0 days).
  * @property turningAge the age reached on [nextOccurrence], or `null` if the birth year is unknown.
+ * @property notificationsEnabled whether the owning person opted in to notifications; the calendar
+ * UI shows every birthday regardless, but the reminder worker honours this flag.
  */
 data class UpcomingBirthday(
     val personId: Long,
@@ -17,6 +19,7 @@ data class UpcomingBirthday(
     val nextOccurrence: LocalDate,
     val daysUntil: Int,
     val turningAge: Int?,
+    val notificationsEnabled: Boolean = false,
 )
 
 /**

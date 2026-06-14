@@ -37,7 +37,7 @@ abstract class PeopleHubDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
 
     companion object {
-        const val VERSION: Int = 2
+        const val VERSION: Int = 3
         const val NAME: String = "peoplehub.db"
     }
 }

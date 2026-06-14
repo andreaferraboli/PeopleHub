@@ -1,5 +1,7 @@
 package com.peoplehub.feature.people.detail
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,6 +25,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -36,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -75,12 +81,32 @@ fun PersonDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val closed by viewModel.closed.collectAsStateWithLifecycle()
+    val importMessage by viewModel.importMessage.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(closed) {
         if (closed) onBack()
     }
+    LaunchedEffect(importMessage) {
+        val message = importMessage
+        if (message != null) {
+            snackbarHostState.showSnackbar(message)
+            viewModel.onImportMessageShown()
+        }
+    }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var pendingImportJson by remember { mutableStateOf<String?>(null) }
+
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val json = runCatching {
+                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            }.getOrNull()
+            if (json != null) pendingImportJson = json
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -94,6 +120,9 @@ fun PersonDetailScreen(
                 actions = {
                     val data = (state as? UiState.Success)?.data
                     if (data != null) {
+                        IconButton(onClick = { importLauncher.launch(arrayOf("application/json")) }) {
+                            Icon(Icons.Outlined.FileDownload, contentDescription = stringResource(R.string.detail_import_json))
+                        }
                         IconButton(onClick = { onEdit(data.person.id) }) {
                             Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.detail_edit))
                         }
@@ -104,6 +133,7 @@ fun PersonDetailScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         UiStateContent(state = state) { data ->
             PersonDetailBody(
@@ -128,6 +158,25 @@ fun PersonDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+
+    val pendingJson = pendingImportJson
+    if (pendingJson != null) {
+        val personName = (state as? UiState.Success)?.data?.person?.fullName.orEmpty()
+        AlertDialog(
+            onDismissRequest = { pendingImportJson = null },
+            title = { Text(stringResource(R.string.detail_import_json_title)) },
+            text = { Text(stringResource(R.string.detail_import_json_message, personName)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingImportJson = null
+                    viewModel.onImportJson(pendingJson)
+                }) { Text(stringResource(R.string.detail_import_json_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingImportJson = null }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }

@@ -42,6 +42,7 @@ internal class PeopleRepositoryImpl @Inject constructor(
             val today = LocalDate.now(clock)
             rows.asSequence()
                 .map { it.toDomain() }
+                .filter { person -> filter.includeBirthdayOnly || !person.birthdayOnly }
                 .filter { person -> filter.tags.isEmpty() || person.tags.any { it in filter.tags } }
                 .sortedWith(comparatorFor(filter.sort, today))
                 .toList()

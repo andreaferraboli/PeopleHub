@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onOpenImportGuide: () -> Unit,
+    onOpenBirthdayOnly: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel(),
 ) {
@@ -138,6 +139,10 @@ fun SettingsScreen(
             GoldDivider()
 
             ImportGuideEntry(onOpenImportGuide = onOpenImportGuide)
+
+            GoldDivider()
+
+            BirthdayOnlyEntry(onOpenBirthdayOnly = onOpenBirthdayOnly)
 
             GoldDivider()
 
@@ -285,6 +290,22 @@ private fun ImportGuideEntry(onOpenImportGuide: () -> Unit) {
         GhostButton(
             text = stringResource(R.string.vault_open_guide),
             onClick = onOpenImportGuide,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun BirthdayOnlyEntry(onOpenBirthdayOnly: () -> Unit) {
+    SettingsPanel(title = stringResource(R.string.vault_birthday_only_title)) {
+        Text(
+            text = stringResource(R.string.vault_birthday_only_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        GhostButton(
+            text = stringResource(R.string.vault_birthday_only_open),
+            onClick = onOpenBirthdayOnly,
             modifier = Modifier.fillMaxWidth(),
         )
     }

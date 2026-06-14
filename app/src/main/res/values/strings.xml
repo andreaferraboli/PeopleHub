@@ -24,6 +24,8 @@
     <string name="dashboard_urgent_title">Urgent check-ins</string>
     <string name="dashboard_milestones">Milestones</string>
     <string name="dashboard_pinned">Pinned event</string>
+    <string name="milestone_birthday">Birthday</string>
+    <string name="milestone_event">Event</string>
     <string name="dashboard_view_all">View all</string>
     <string name="dashboard_birthday_today">Today 🎂</string>
     <string name="dashboard_birthday_in_days">in %1$d days</string>
@@ -83,6 +85,11 @@
     <string name="vault_guide_title">How to import</string>
     <string name="vault_guide_desc">Formats, fields and examples — and import right from the guide.</string>
     <string name="vault_open_guide">Open import guide</string>
+
+    <!-- Vault: birthday-only entry -->
+    <string name="vault_birthday_only_title">Birthday only</string>
+    <string name="vault_birthday_only_desc">Choose which entries are just a birthday — kept in Milestones but hidden from The Circle.</string>
+    <string name="vault_birthday_only_open">Manage birthday-only</string>
 
     <!-- Import guide screen -->
     <string name="import_guide_title">Import guide</string>

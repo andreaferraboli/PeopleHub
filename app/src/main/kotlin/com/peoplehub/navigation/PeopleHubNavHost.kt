@@ -13,6 +13,7 @@ import com.peoplehub.feature.events.navigation.AddEditEventRoute
 import com.peoplehub.feature.events.navigation.EventDetailRoute
 import com.peoplehub.feature.events.navigation.eventsSection
 import com.peoplehub.feature.people.navigation.AddEditPersonRoute
+import com.peoplehub.feature.people.navigation.BirthdayOnlyRoute
 import com.peoplehub.feature.people.navigation.PeopleListRoute
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
 import com.peoplehub.feature.people.navigation.peopleSection
@@ -54,7 +55,10 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
         )
 
         composable<SettingsRoute> {
-            SettingsScreen(onOpenImportGuide = { navController.navigate(ImportGuideRoute) })
+            SettingsScreen(
+                onOpenImportGuide = { navController.navigate(ImportGuideRoute) },
+                onOpenBirthdayOnly = { navController.navigate(BirthdayOnlyRoute) },
+            )
         }
 
         composable<ImportGuideRoute> {

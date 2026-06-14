@@ -35,6 +35,8 @@ data class PersonForm(
     val checkInThreshold: CheckInThreshold? = null,
     val createdAt: Instant = Instant.EPOCH,
     val lastCheckInAt: Instant? = null,
+    val notificationsEnabled: Boolean = false,
+    val birthdayOnly: Boolean = false,
 ) {
     val canSave: Boolean get() = firstName.isNotBlank()
 }
@@ -99,6 +101,12 @@ class AddEditPersonViewModel @Inject constructor(
         form.copy(interests = form.interests.filterIndexed { i, _ -> i != index })
     }
 
+    /** Toggles whether this person may trigger check-in and birthday notifications. */
+    fun onNotificationsEnabledChange(enabled: Boolean) = _form.update { it.copy(notificationsEnabled = enabled) }
+
+    /** Toggles whether this entry is a bare birthday (hidden from the directory). */
+    fun onBirthdayOnlyChange(enabled: Boolean) = _form.update { it.copy(birthdayOnly = enabled) }
+
     /** Enables or disables a per-person check-in cadence override (off falls back to the global default). */
     fun onThresholdEnabledChange(enabled: Boolean) = _form.update {
         it.copy(checkInThreshold = if (enabled) (it.checkInThreshold ?: CheckInThreshold.Default) else null)
@@ -136,6 +144,8 @@ class AddEditPersonViewModel @Inject constructor(
         checkInThreshold = checkInThreshold,
         createdAt = createdAt,
         lastCheckInAt = lastCheckInAt,
+        notificationsEnabled = notificationsEnabled,
+        birthdayOnly = birthdayOnly,
     )
 
     private fun PersonForm.toPerson(): Person = Person(
@@ -150,5 +160,7 @@ class AddEditPersonViewModel @Inject constructor(
         lastCheckInAt = lastCheckInAt,
         checkInThreshold = checkInThreshold,
         createdAt = if (isEditing) createdAt else clock.instant(),
+        notificationsEnabled = notificationsEnabled,
+        birthdayOnly = birthdayOnly,
     )
 }

@@ -33,6 +33,7 @@ class GetAllBirthdaysUseCase @Inject constructor(
                         nextOccurrence = DateCalculations.nextBirthdayOccurrence(birthday, today),
                         daysUntil = DateCalculations.daysUntilBirthday(birthday, today),
                         turningAge = DateCalculations.ageOnNextBirthday(birthday, today),
+                        notificationsEnabled = person.notificationsEnabled,
                     )
                 }
                 .sortedBy { it.daysUntil }

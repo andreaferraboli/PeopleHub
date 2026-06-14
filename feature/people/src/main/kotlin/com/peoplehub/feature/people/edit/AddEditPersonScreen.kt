@@ -175,6 +175,20 @@ fun AddEditPersonScreen(
                 onRemoveInterest = viewModel::onRemoveInterest,
             )
 
+            SettingToggleRow(
+                title = stringResource(R.string.edit_notifications_title),
+                description = stringResource(R.string.edit_notifications_hint),
+                checked = form.notificationsEnabled,
+                onCheckedChange = viewModel::onNotificationsEnabledChange,
+            )
+
+            SettingToggleRow(
+                title = stringResource(R.string.edit_birthday_only_title),
+                description = stringResource(R.string.edit_birthday_only_hint),
+                checked = form.birthdayOnly,
+                onCheckedChange = viewModel::onBirthdayOnlyChange,
+            )
+
             ThresholdEditor(
                 threshold = form.checkInThreshold,
                 onEnabledChange = viewModel::onThresholdEnabledChange,
@@ -312,6 +326,31 @@ private fun InterestEditor(
             icon = Icons.Filled.Add,
             modifier = Modifier.padding(top = 8.dp),
         )
+    }
+}
+
+@Composable
+private fun SettingToggleRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            CapsLabel(text = title)
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
