@@ -119,8 +119,11 @@ source of truth.
   The Vault also has a manual "Check for updates". **This is the only network use in the app**;
   personal data never leaves the device.
 - **Publishing** — two options (use one):
-  - Local: `pwsh ./publish-update.ps1 -Version 1.1.1` — bumps the version, builds the signed APK,
-    tags, pushes, and `gh release create`s with the APK attached.
+  - Local (Windows): `pwsh ./publish-update.ps1 -Version 1.1.1` — bumps the version, builds the
+    signed APK, tags, pushes, and `gh release create`s with the APK attached.
+  - Local (Linux/macOS, e.g. a Debian deploy agent): `./publish-update.sh --version 1.1.1`
+    (add `--auto-confirm` for headless runs) — the POSIX/Bash counterpart with identical behaviour.
+    Needs `gh` authenticated (or `GH_TOKEN`) and a JDK 17–21 (`JAVA_HOME` or `java` on `PATH`).
   - CI: `.github/workflows/release.yml` (manual `workflow_dispatch`) builds + publishes from secrets
     `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 - **One-time setup**: create the repo and push, e.g.
