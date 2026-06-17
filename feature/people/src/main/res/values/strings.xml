@@ -48,6 +48,11 @@
     <string name="detail_turns">Turns %1$d</string>
     <string name="detail_interests">Interests &amp; tastes</string>
     <string name="detail_notes">Notes</string>
+    <string name="detail_notes_empty">No notes yet.</string>
+    <string name="detail_add_note">Add to notes</string>
+    <string name="detail_add_note_title">Add to notes</string>
+    <string name="detail_add_note_hint">Write a phrase to append…</string>
+    <string name="detail_add_note_confirm">Append</string>
     <string name="detail_history_empty_title">No check-ins yet</string>
     <string name="detail_history_empty_desc">Tap the button above the first time you see them.</string>
     <string name="detail_related_empty_title">Nothing linked yet</string>

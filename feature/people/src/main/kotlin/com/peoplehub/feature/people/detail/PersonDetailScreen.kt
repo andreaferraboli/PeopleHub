@@ -51,6 +51,7 @@ import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.CheckInStatusBadge
 import com.peoplehub.core.ui.components.EmptyView
+import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PersonAvatar
@@ -185,6 +186,7 @@ fun PersonDetailScreen(
                 data = data,
                 modifier = Modifier.padding(innerPadding),
                 onCheckIn = viewModel::onCheckIn,
+                onAppendNote = viewModel::onAppendNote,
                 onEventClick = onEventClick,
             )
         }
@@ -236,11 +238,13 @@ fun PersonDetailScreen(
 private fun PersonDetailBody(
     data: PersonDetailData,
     onCheckIn: (String?) -> Unit,
+    onAppendNote: (String) -> Unit,
     onEventClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showCheckInDialog by remember { mutableStateOf(false) }
+    var showAppendNoteDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
         DetailHero(data)
@@ -262,7 +266,7 @@ private fun PersonDetailBody(
             }
         }
         when (selectedTab) {
-            0 -> InfoTab(data, Modifier.weight(1f))
+            0 -> InfoTab(data, onAddNote = { showAppendNoteDialog = true }, Modifier.weight(1f))
             1 -> CheckInTab(data, Modifier.weight(1f))
             else -> RelatedTab(data, onEventClick, Modifier.weight(1f))
         }
@@ -276,6 +280,16 @@ private fun PersonDetailBody(
                 onCheckIn(note)
             },
             onDismiss = { showCheckInDialog = false },
+        )
+    }
+
+    if (showAppendNoteDialog) {
+        AppendNoteDialog(
+            onConfirm = { phrase ->
+                showAppendNoteDialog = false
+                onAppendNote(phrase)
+            },
+            onDismiss = { showAppendNoteDialog = false },
         )
     }
 }
@@ -317,7 +331,7 @@ private fun DetailHero(data: PersonDetailData) {
 }
 
 @Composable
-private fun InfoTab(data: PersonDetailData, modifier: Modifier = Modifier) {
+private fun InfoTab(data: PersonDetailData, onAddNote: () -> Unit, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(20.dp),
@@ -359,11 +373,22 @@ private fun InfoTab(data: PersonDetailData, modifier: Modifier = Modifier) {
                 }
             }
         }
-        if (data.person.notes.isNotBlank()) {
-            item(key = "notes") {
-                InfoPanel(label = stringResource(R.string.detail_notes)) {
+        item(key = "notes") {
+            InfoPanel(label = stringResource(R.string.detail_notes)) {
+                if (data.person.notes.isNotBlank()) {
                     Text(data.person.notes, style = MaterialTheme.typography.bodyLarge)
+                } else {
+                    Text(
+                        text = stringResource(R.string.detail_notes_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
+                GhostButton(
+                    text = stringResource(R.string.detail_add_note),
+                    onClick = onAddNote,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                )
             }
         }
     }
@@ -495,6 +520,33 @@ private fun CheckInDialog(personName: String, onConfirm: (String?) -> Unit, onDi
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(note.ifBlank { null }) }) { Text(stringResource(R.string.checkin_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+    var phrase by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.detail_add_note_title)) },
+        text = {
+            OutlinedTextField(
+                value = phrase,
+                onValueChange = { phrase = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.detail_add_note_hint)) },
+                shape = RoundedCornerShape(6.dp),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(phrase) },
+                enabled = phrase.isNotBlank(),
+            ) { Text(stringResource(R.string.detail_add_note_confirm)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }

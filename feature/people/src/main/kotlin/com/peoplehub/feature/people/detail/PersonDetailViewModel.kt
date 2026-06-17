@@ -17,6 +17,7 @@ import com.peoplehub.core.domain.usecase.GetEventsUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.domain.usecase.ObserveCheckInHistoryUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
+import com.peoplehub.core.domain.usecase.UpsertPersonUseCase
 import com.peoplehub.core.domain.util.DateCalculations
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.feature.people.ExportPersonUseCase
@@ -59,6 +60,7 @@ class PersonDetailViewModel
         getEvents: GetEventsUseCase,
         getSettings: GetSettingsUseCase,
         private val checkInPerson: CheckInPersonUseCase,
+        private val upsertPerson: UpsertPersonUseCase,
         private val deletePerson: DeletePersonUseCase,
         private val importPerson: ImportPersonUseCase,
         private val exportPerson: ExportPersonUseCase,
@@ -111,6 +113,21 @@ class PersonDetailViewModel
 
         fun onCheckIn(note: String?) {
             viewModelScope.launch { checkInPerson(personId, note) }
+        }
+
+        /**
+         * Appends [phrase] to this person's notes without opening the full edit screen. The phrase is
+         * added on a new line after any existing notes; blank input is ignored. The id never changes.
+         */
+        fun onAppendNote(phrase: String) {
+            val trimmed = phrase.trim()
+            if (trimmed.isEmpty()) return
+            viewModelScope.launch {
+                val existing = observePerson(personId).first() ?: return@launch
+                val merged =
+                    if (existing.notes.isBlank()) trimmed else "${existing.notes.trimEnd()}\n$trimmed"
+                upsertPerson(existing.copy(notes = merged))
+            }
         }
 
         fun onDelete() {
