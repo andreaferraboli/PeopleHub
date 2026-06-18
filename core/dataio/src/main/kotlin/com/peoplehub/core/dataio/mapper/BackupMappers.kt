@@ -42,6 +42,7 @@ fun PersonDto.toDomain(): Person =
         notificationsEnabled = notificationsEnabled,
         birthdayOnly = birthdayOnly,
         checkInDisabled = checkInDisabled,
+        isFamily = isFamily,
     )
 
 /** Converts a domain [Person] into its serializable [PersonDto]. */
@@ -62,6 +63,7 @@ fun Person.toDto(): PersonDto =
         notificationsEnabled = notificationsEnabled,
         birthdayOnly = birthdayOnly,
         checkInDisabled = checkInDisabled,
+        isFamily = isFamily,
     )
 
 /** Converts an [InterestDto] into the domain [Interest]. */

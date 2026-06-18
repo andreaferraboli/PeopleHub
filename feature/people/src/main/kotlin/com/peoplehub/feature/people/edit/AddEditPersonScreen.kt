@@ -199,6 +199,13 @@ fun AddEditPersonScreen(
                 onCheckedChange = viewModel::onBirthdayOnlyChange,
             )
 
+            SettingToggleRow(
+                title = stringResource(R.string.edit_family_title),
+                description = stringResource(R.string.edit_family_hint),
+                checked = form.isFamily,
+                onCheckedChange = viewModel::onIsFamilyChange,
+            )
+
             ThresholdEditor(
                 threshold = form.checkInThreshold,
                 onEnabledChange = viewModel::onThresholdEnabledChange,

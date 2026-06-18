@@ -49,6 +49,7 @@ fun PersonWithDetails.toDomain(): Person =
         notificationsEnabled = person.notificationsEnabled,
         birthdayOnly = person.birthdayOnly,
         checkInDisabled = person.checkInDisabled,
+        isFamily = person.isFamily,
     )
 
 /** Maps a domain [Person] to its [PersonEntity] row (child rows are handled separately). */
@@ -67,6 +68,7 @@ fun Person.toEntity(): PersonEntity =
         notificationsEnabled = notificationsEnabled,
         birthdayOnly = birthdayOnly,
         checkInDisabled = checkInDisabled,
+        isFamily = isFamily,
     )
 
 /** Maps the person's tags to child rows keyed by [personId]. */

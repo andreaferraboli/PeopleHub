@@ -28,6 +28,7 @@ data class PersonEntity(
     @ColumnInfo(name = "notifications_enabled", defaultValue = "0") val notificationsEnabled: Boolean = false,
     @ColumnInfo(name = "birthday_only", defaultValue = "0") val birthdayOnly: Boolean = false,
     @ColumnInfo(name = "check_in_disabled", defaultValue = "0") val checkInDisabled: Boolean = false,
+    @ColumnInfo(name = "is_family", defaultValue = "0") val isFamily: Boolean = false,
 )
 
 /**

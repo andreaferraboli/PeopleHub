@@ -60,6 +60,7 @@ data class PersonListItem(
     val nextBirthday: LocalDate? = null,
     val daysUntilBirthday: Int? = null,
     val checkInDisabled: Boolean = false,
+    val isFamily: Boolean = false,
 )
 
 private data class Controls(val query: String, val tags: Set<String>, val sort: PeopleSort)
@@ -238,6 +239,7 @@ class PeopleListViewModel
                 nextBirthday = birthday?.let { DateCalculations.nextBirthdayOccurrence(it, today) },
                 daysUntilBirthday = birthday?.let { DateCalculations.daysUntilBirthday(it, today) },
                 checkInDisabled = checkInDisabled,
+                isFamily = isFamily,
             )
         }
 

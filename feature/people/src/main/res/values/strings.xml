@@ -110,6 +110,11 @@
     <string name="edit_birthday_only_title">Birthday only</string>
     <string name="edit_birthday_only_hint">Hide from The Circle and keep only in Milestones</string>
 
+    <!-- Family member -->
+    <string name="label_family">Family</string>
+    <string name="edit_family_title">Family member</string>
+    <string name="edit_family_hint">No check-in tracking or reminders — you see them all the time</string>
+
     <!-- Birthday-only management screen -->
     <string name="birthday_only_title">Birthday only</string>
     <string name="birthday_only_subtitle">Mark entries that are just a birthday. They stay in Milestones but are hidden from The Circle.</string>

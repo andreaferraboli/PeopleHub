@@ -22,6 +22,10 @@ import java.time.LocalDate
  * @property checkInDisabled when `true` the person is excluded from check-in tracking entirely: they
  * never surface in the urgent check-ins, the widget, or the reminder worker, regardless of how long
  * it has been since the last interaction. Set in bulk via the directory's "never" action.
+ * @property isFamily when `true` the person is a family member: the "seen X days ago" frequency
+ * tracker and its reminders do not apply to them (you see them all the time), so they never surface
+ * in the urgent check-ins, the widget, or the reminder worker. Instead of a check-in badge the UI
+ * simply shows a "Family" label.
  */
 data class Person(
     val id: Long = 0L,
@@ -38,6 +42,7 @@ data class Person(
     val notificationsEnabled: Boolean = false,
     val birthdayOnly: Boolean = false,
     val checkInDisabled: Boolean = false,
+    val isFamily: Boolean = false,
 ) {
     /** Display name combining first and last name, trimmed of stray whitespace. */
     val fullName: String

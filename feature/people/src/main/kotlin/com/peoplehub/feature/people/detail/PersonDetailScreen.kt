@@ -322,11 +322,19 @@ private fun DetailHero(data: PersonDetailData) {
                     .forEach { tag -> CategoryChip(label = tag) }
             }
         }
-        CheckInStatusBadge(
-            label = RelativeTime.seenLabel(data.daysSince),
-            status = data.status,
-            modifier = Modifier.padding(top = 12.dp),
-        )
+        if (data.person.isFamily) {
+            CapsLabel(
+                text = stringResource(R.string.label_family),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        } else {
+            CheckInStatusBadge(
+                label = RelativeTime.seenLabel(data.daysSince),
+                status = data.status,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
     }
 }
 

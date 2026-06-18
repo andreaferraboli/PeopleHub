@@ -28,6 +28,7 @@ data class PersonDto(
     val notificationsEnabled: Boolean = false,
     val birthdayOnly: Boolean = false,
     val checkInDisabled: Boolean = false,
+    val isFamily: Boolean = false,
 )
 
 /** Serialization-friendly mirror of the domain `Interest` (an editable key/value pair). */

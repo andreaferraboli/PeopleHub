@@ -37,6 +37,7 @@ data class PersonForm(
     val lastCheckInAt: Instant? = null,
     val notificationsEnabled: Boolean = false,
     val birthdayOnly: Boolean = false,
+    val isFamily: Boolean = false,
 ) {
     val canSave: Boolean get() = firstName.isNotBlank()
 }
@@ -114,6 +115,9 @@ class AddEditPersonViewModel
         /** Toggles whether this entry is a bare birthday (hidden from the directory). */
         fun onBirthdayOnlyChange(enabled: Boolean) = _form.update { it.copy(birthdayOnly = enabled) }
 
+        /** Toggles whether this person is a family member (exempt from check-in tracking). */
+        fun onIsFamilyChange(enabled: Boolean) = _form.update { it.copy(isFamily = enabled) }
+
         /** Enables or disables a per-person check-in cadence override (off falls back to the global default). */
         fun onThresholdEnabledChange(enabled: Boolean) =
             _form.update {
@@ -156,6 +160,7 @@ class AddEditPersonViewModel
                 lastCheckInAt = lastCheckInAt,
                 notificationsEnabled = notificationsEnabled,
                 birthdayOnly = birthdayOnly,
+                isFamily = isFamily,
             )
 
         private fun PersonForm.toPerson(): Person =
@@ -173,5 +178,6 @@ class AddEditPersonViewModel
                 createdAt = if (isEditing) createdAt else clock.instant(),
                 notificationsEnabled = notificationsEnabled,
                 birthdayOnly = birthdayOnly,
+                isFamily = isFamily,
             )
     }

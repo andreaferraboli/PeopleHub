@@ -368,6 +368,11 @@ private fun PersonCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 when {
+                    person.isFamily ->
+                        CapsLabel(
+                            text = stringResource(R.string.label_family),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     person.checkInDisabled ->
                         CapsLabel(
                             text = stringResource(R.string.circle_checkin_off),

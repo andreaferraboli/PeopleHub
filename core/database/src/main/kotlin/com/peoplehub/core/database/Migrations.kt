@@ -16,6 +16,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - **v4** — adds `background_image_path` to `event` (an optional image rendered behind the event
  *   card) and `check_in_disabled` to `person` (excludes the person from check-in tracking entirely,
  *   defaulting to off/`0`).
+ * - **v5** — adds `is_family` to `person` (marks family members, who are exempt from the check-in
+ *   frequency tracker and its reminders, defaulting to off/`0`).
  */
 internal val MIGRATION_1_2: Migration =
     object : Migration(1, 2) {
@@ -41,5 +43,13 @@ internal val MIGRATION_3_4: Migration =
         }
     }
 
+internal val MIGRATION_4_5: Migration =
+    object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE person ADD COLUMN is_family INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
 /** All migrations registered with the database builder, in order. */
-internal val ALL_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+internal val ALL_MIGRATIONS: Array<Migration> =
+    arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)

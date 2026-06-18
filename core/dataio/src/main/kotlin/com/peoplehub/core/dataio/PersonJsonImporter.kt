@@ -99,6 +99,12 @@ class PersonJsonImporter
                         } else {
                             existing.checkInDisabled
                         },
+                    isFamily =
+                        if ("isFamily" in obj) {
+                            obj.booleanOr("isFamily", existing.isFamily)
+                        } else {
+                            existing.isFamily
+                        },
                 )
             }
 
