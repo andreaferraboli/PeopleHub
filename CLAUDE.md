@@ -130,8 +130,15 @@ source of truth.
     git-ignored `.jks` at build time and deletes it afterwards. Generate the base64 once with
     `base64 -w0 keystore/peoplehub-release.jks`. Without a key the script refuses to publish an
     unsigned APK (override with `--allow-unsigned` only for throwaway test builds).
-  - CI: `.github/workflows/release.yml` (manual `workflow_dispatch`) builds + publishes from secrets
-    `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
+  - CI (recommended, zero-touch): `.github/workflows/release.yml` runs **automatically on every push
+    to `master`**. It reads `appVersionName` from `app/build.gradle.kts` and, only if a release for
+    that `vX.Y.Z` does not already exist, builds + signs + publishes it (so non-bump pushes are
+    no-ops and there are never duplicate releases). To cut a release you just bump the version,
+    commit, and push — no local build. Needs repo secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`,
+    `KEY_ALIAS`, `KEY_PASSWORD` (set under Settings → Secrets and variables → Actions; safe even on a
+    public repo). `workflow_dispatch` is kept for manual re-runs / forcing a tag. The local
+    publish-update scripts above still work for offline builds — the "already exists" guard keeps
+    them from colliding with CI.
 - **One-time setup**: create the repo and push, e.g.
   `gh repo create andreaferraboli/PeopleHub --public --source . --push`. If the repo name/owner
   differs, update `updateOwner`/`updateRepo` in `app/build.gradle.kts`. The repo must be **public**

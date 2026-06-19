@@ -1,22 +1,37 @@
 name: Release APK
 
-# Builds and publishes a signed release APK as a GitHub Release.
+# Builds and publishes a signed release APK as a GitHub Release — automatically.
 #
-# Default trigger is manual (workflow_dispatch) so it does NOT collide with the local
-# publish-update.ps1 script. To go fully CI-driven instead, swap the trigger to the `push: tags`
-# block below and stop using the script's release step.
+# This is the CI counterpart of publish-update.{ps1,sh}: it reproduces the same flow server-side so a
+# release is cut from wherever you push, with no local build needed. On every push to master it reads
+# `appVersionName` from app/build.gradle.kts and, ONLY if a release for that version does not already
+# exist, builds + signs + publishes it. Pushes that don't bump the version are no-ops (the existing
+# release is detected and the job skips), so there are never duplicate releases.
+#
+# To release: bump `appVersionName` in app/build.gradle.kts, commit, and push to master. That's it.
+# (The local publish-update scripts still work for local/offline builds; the "already exists" guard
+# keeps the two from colliding.) workflow_dispatch is kept for manual re-runs / forcing a tag.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions): KEYSTORE_BASE64
+# (base64 of the .jks: `base64 -w0 keystore/peoplehub-release.jks`), KEYSTORE_PASSWORD, KEY_ALIAS,
+# KEY_PASSWORD. Repo secrets are NOT exposed publicly even though the repo is public.
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag (e.g. v1.1.1)"
-        required: true
-  # push:
-  #   tags:
-  #     - "v*"
+        description: "Force a release tag (e.g. v1.1.1); leave blank to derive from build.gradle.kts"
+        required: false
 
 permissions:
   contents: write
+
+# Never run two releases at once (e.g. two quick pushes); let the first finish.
+concurrency:
+  group: release-apk
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -25,18 +40,67 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve version and check if it is already released
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+            VERSION="${TAG#v}"
+          else
+            VERSION="$(sed -n 's/.*val appVersionName = "\([0-9]\+\.[0-9]\+\.[0-9]\+\)".*/\1/p' app/build.gradle.kts | head -n1)"
+            TAG="v$VERSION"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: could not resolve version from app/build.gradle.kts" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists — nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Will publish $TAG."
+          fi
+
+      - name: Verify signing secrets are present
+        if: steps.version.outputs.exists == 'false'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$KEYSTORE_BASE64" ]   && missing="$missing KEYSTORE_BASE64"
+          [ -z "$KEYSTORE_PASSWORD" ] && missing="$missing KEYSTORE_PASSWORD"
+          [ -z "$KEY_ALIAS" ]         && missing="$missing KEY_ALIAS"
+          [ -z "$KEY_PASSWORD" ]      && missing="$missing KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "ERROR: missing required repository secret(s):$missing" >&2
+            echo "Set them under Settings -> Secrets and variables -> Actions. Refusing to publish an unsigned APK." >&2
+            exit 1
+          fi
+
       - name: Set up JDK 17
+        if: steps.version.outputs.exists == 'false'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Decode signing keystore
+        if: steps.version.outputs.exists == 'false'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/app/release.keystore"
 
       - name: Build signed release APK
+        if: steps.version.outputs.exists == 'false'
         env:
           KEYSTORE_FILE: app/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -47,12 +111,15 @@ jobs:
           ./gradlew :app:assembleRelease --no-daemon
 
       - name: Stage APK
-        run: cp app/build/outputs/apk/release/app-release.apk "PeopleHub-${{ github.event.inputs.tag }}.apk"
+        if: steps.version.outputs.exists == 'false'
+        run: cp app/build/outputs/apk/release/app-release.apk "PeopleHub-${{ steps.version.outputs.version }}.apk"
 
       - name: Publish GitHub Release
+        if: steps.version.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          name: ${{ github.event.inputs.tag }}
-          files: PeopleHub-${{ github.event.inputs.tag }}.apk
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          files: PeopleHub-${{ steps.version.outputs.version }}.apk
           generate_release_notes: true
