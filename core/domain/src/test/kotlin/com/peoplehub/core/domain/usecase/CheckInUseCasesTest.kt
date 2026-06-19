@@ -42,6 +42,42 @@ class CheckInUseCasesTest {
         }
 
     @Test
+    fun `check-in records a supplied back-dated instant`() =
+        runTest {
+            val backDated = now.minus(3, ChronoUnit.DAYS)
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            coEvery { checkInRepository.recordCheckIn(any()) } returns 1L
+            val useCase = CheckInPersonUseCase(checkInRepository, peopleRepository, clock)
+
+            useCase(personId = 7L, note = "Dinner last week", at = backDated)
+
+            coVerify {
+                checkInRepository.recordCheckIn(
+                    match { it.personId == 7L && it.timestamp == backDated },
+                )
+            }
+            coVerify { peopleRepository.updateLastCheckIn(7L, backDated.toEpochMilli()) }
+        }
+
+    @Test
+    fun `back-dated check-in does not regress a more recent last-seen`() =
+        runTest {
+            val backDated = now.minus(10, ChronoUnit.DAYS)
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            coEvery { checkInRepository.recordCheckIn(any()) } returns 1L
+            coEvery { peopleRepository.getPerson(7L) } returns
+                Person(id = 7, firstName = "Recent", lastName = "Seen", lastCheckInAt = now)
+            val useCase = CheckInPersonUseCase(checkInRepository, peopleRepository, clock)
+
+            useCase(personId = 7L, at = backDated)
+
+            coVerify { checkInRepository.recordCheckIn(match { it.timestamp == backDated }) }
+            coVerify(exactly = 0) { peopleRepository.updateLastCheckIn(any(), any()) }
+        }
+
+    @Test
     fun `urgent check-ins drop fresh people and order most urgent first`() =
         runTest {
             val peopleRepository = mockk<PeopleRepository>()

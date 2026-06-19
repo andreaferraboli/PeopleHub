@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,10 +22,13 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -31,6 +36,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,7 +68,9 @@ import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.util.RelativeTime
 import com.peoplehub.feature.people.R
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 private val BirthdayFormatter = DateTimeFormatter.ofPattern("MMMM d")
@@ -237,7 +245,7 @@ fun PersonDetailScreen(
 @Composable
 private fun PersonDetailBody(
     data: PersonDetailData,
-    onCheckIn: (String?) -> Unit,
+    onCheckIn: (String?, LocalDate) -> Unit,
     onAppendNote: (String) -> Unit,
     onEventClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -275,9 +283,9 @@ private fun PersonDetailBody(
     if (showCheckInDialog) {
         CheckInDialog(
             personName = data.person.firstName,
-            onConfirm = { note ->
+            onConfirm = { note, date ->
                 showCheckInDialog = false
-                onCheckIn(note)
+                onCheckIn(note, date)
             },
             onDismiss = { showCheckInDialog = false },
         )
@@ -511,29 +519,80 @@ private fun InfoPanel(label: String, content: @Composable () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CheckInDialog(personName: String, onConfirm: (String?) -> Unit, onDismiss: () -> Unit) {
+private fun CheckInDialog(personName: String, onConfirm: (String?, LocalDate) -> Unit, onDismiss: () -> Unit) {
+    val today = remember { LocalDate.now() }
     var note by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf(today) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.checkin_dialog_title, personName)) },
         text = {
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.checkin_note_hint)) },
-                shape = RoundedCornerShape(6.dp),
-            )
+            Column {
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.checkin_note_hint)) },
+                    shape = RoundedCornerShape(6.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                GhostButton(
+                    text =
+                        if (selectedDate == today) {
+                            stringResource(R.string.checkin_date_today)
+                        } else {
+                            stringResource(R.string.checkin_date_on, selectedDate.format(CHECK_IN_DATE_FORMAT))
+                        },
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(note.ifBlank { null }) }) { Text(stringResource(R.string.checkin_confirm)) }
+            TextButton(onClick = { onConfirm(note.ifBlank { null }, selectedDate) }) {
+                Text(stringResource(R.string.checkin_confirm))
+            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
+
+    if (showDatePicker) {
+        val todayUtcMillis = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                selectableDates =
+                    object : SelectableDates {
+                        // A meeting can only have happened today or in the past.
+                        override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= todayUtcMillis
+                    },
+            )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) { Text(stringResource(R.string.action_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
+
+private val CHECK_IN_DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
 
 @Composable
 private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {

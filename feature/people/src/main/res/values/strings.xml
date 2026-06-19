@@ -86,6 +86,8 @@
     <string name="checkin_dialog_title">Log time with %1$s</string>
     <string name="checkin_note_hint">Add a note (optional)</string>
     <string name="checkin_confirm">Log it</string>
+    <string name="checkin_date_today">Date: today</string>
+    <string name="checkin_date_on">Date: %1$s</string>
 
     <!-- Add / edit person -->
     <string name="edit_title_new">New person</string>

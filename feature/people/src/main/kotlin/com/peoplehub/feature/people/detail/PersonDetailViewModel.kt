@@ -111,8 +111,14 @@ class PersonDetailViewModel
                 initialValue = UiState.Loading,
             )
 
-        fun onCheckIn(note: String?) {
-            viewModelScope.launch { checkInPerson(personId, note) }
+        /**
+         * Records a check-in for this person. [date] selects the day the meeting happened; when it is
+         * `null` or today's date the check-in is stamped with the current instant, otherwise it is
+         * back-dated to the start of the chosen day in the device time zone.
+         */
+        fun onCheckIn(note: String?, date: LocalDate? = null) {
+            val at = date?.takeIf { it != LocalDate.now(clock) }?.atStartOfDay(clock.zone)?.toInstant()
+            viewModelScope.launch { checkInPerson(personId, note, at) }
         }
 
         /**

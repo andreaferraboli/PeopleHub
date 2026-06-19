@@ -11,11 +11,14 @@ import com.peoplehub.core.domain.util.DateCalculations
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.Clock
+import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Records that a person was seen "today", creating a [CheckIn] and updating the person's
- * denormalised last-seen timestamp in a single logical action.
+ * Records that a person was seen, creating a [CheckIn] and updating the person's denormalised
+ * last-seen timestamp in a single logical action. The check-in defaults to "now" but a specific
+ * [at] instant may be supplied to back-date a meeting that happened on an earlier day. A back-dated
+ * check-in never regresses a more recent last-seen value.
  */
 class CheckInPersonUseCase
     @Inject
@@ -24,13 +27,16 @@ class CheckInPersonUseCase
         private val peopleRepository: PeopleRepository,
         private val clock: Clock,
     ) {
-        suspend operator fun invoke(personId: Long, note: String? = null): Long {
-            val now = clock.instant()
+        suspend operator fun invoke(personId: Long, note: String? = null, at: Instant? = null): Long {
+            val timestamp = at ?: clock.instant()
             val id =
                 checkInRepository.recordCheckIn(
-                    CheckIn(personId = personId, timestamp = now, note = note?.takeIf(String::isNotBlank)),
+                    CheckIn(personId = personId, timestamp = timestamp, note = note?.takeIf(String::isNotBlank)),
                 )
-            peopleRepository.updateLastCheckIn(personId, now.toEpochMilli())
+            val previous = peopleRepository.getPerson(personId)?.lastCheckInAt
+            if (previous == null || timestamp.isAfter(previous)) {
+                peopleRepository.updateLastCheckIn(personId, timestamp.toEpochMilli())
+            }
             return id
         }
     }
