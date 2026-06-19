@@ -124,6 +124,12 @@ source of truth.
   - Local (Linux/macOS, e.g. a Debian deploy agent): `./publish-update.sh --version 1.1.1`
     (add `--auto-confirm` for headless runs) — the POSIX/Bash counterpart with identical behaviour.
     Needs `gh` authenticated (or `GH_TOKEN`) and a JDK 17–21 (`JAVA_HOME` or `java` on `PATH`).
+    **Signing on a Debian agent**: the signing key is a secret and is **never** committed (the repo is
+    public). The agent stores the keystore as a base64 secret and exports
+    `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`; the script decodes it to a
+    git-ignored `.jks` at build time and deletes it afterwards. Generate the base64 once with
+    `base64 -w0 keystore/peoplehub-release.jks`. Without a key the script refuses to publish an
+    unsigned APK (override with `--allow-unsigned` only for throwaway test builds).
   - CI: `.github/workflows/release.yml` (manual `workflow_dispatch`) builds + publishes from secrets
     `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 - **One-time setup**: create the repo and push, e.g.
