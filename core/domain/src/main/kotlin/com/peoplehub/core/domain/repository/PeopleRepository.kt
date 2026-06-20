@@ -28,8 +28,11 @@ interface PeopleRepository {
     /** Inserts or updates [person] (including its tags and interests) and returns its id. */
     suspend fun upsertPerson(person: Person): Long
 
-    /** Records that the person was seen, updating the denormalised last-check-in timestamp. */
-    suspend fun updateLastCheckIn(personId: Long, lastCheckInEpochMillis: Long)
+    /**
+     * Sets the denormalised last-check-in timestamp. A non-null value records that the person was
+     * seen; a `null` value clears it (used when their most recent check-in has been deleted).
+     */
+    suspend fun updateLastCheckIn(personId: Long, lastCheckInEpochMillis: Long?)
 
     /** Enables or disables notifications for every person in [personIds] in a single statement. */
     suspend fun bulkSetNotificationsEnabled(personIds: List<Long>, enabled: Boolean)

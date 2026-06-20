@@ -2,6 +2,7 @@ package com.peoplehub.core.domain.usecase
 
 import app.cash.turbine.test
 import com.peoplehub.core.domain.model.AppSettings
+import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
@@ -75,6 +76,66 @@ class CheckInUseCasesTest {
 
             coVerify { checkInRepository.recordCheckIn(match { it.timestamp == backDated }) }
             coVerify(exactly = 0) { peopleRepository.updateLastCheckIn(any(), any()) }
+        }
+
+    @Test
+    fun `deleting check-ins re-derives the last-seen from the most recent survivor`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            val survivor = now.minus(5, ChronoUnit.DAYS)
+            coEvery { checkInRepository.latestTimestamp(7L) } returns survivor
+            val useCase = DeleteCheckInsUseCase(checkInRepository, peopleRepository)
+
+            useCase(personId = 7L, ids = listOf(1L, 2L))
+
+            coVerify { checkInRepository.deleteCheckIns(listOf(1L, 2L)) }
+            coVerify { peopleRepository.updateLastCheckIn(7L, survivor.toEpochMilli()) }
+        }
+
+    @Test
+    fun `deleting the last check-in clears the last-seen timestamp`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            coEvery { checkInRepository.latestTimestamp(7L) } returns null
+            val useCase = DeleteCheckInsUseCase(checkInRepository, peopleRepository)
+
+            useCase(personId = 7L, ids = listOf(1L))
+
+            coVerify { peopleRepository.updateLastCheckIn(7L, null) }
+        }
+
+    @Test
+    fun `deleting an empty selection is a no-op`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            val useCase = DeleteCheckInsUseCase(checkInRepository, peopleRepository)
+
+            useCase(personId = 7L, ids = emptyList())
+
+            coVerify(exactly = 0) { checkInRepository.deleteCheckIns(any()) }
+            coVerify(exactly = 0) { peopleRepository.updateLastCheckIn(any(), any()) }
+        }
+
+    @Test
+    fun `editing a check-in persists it and re-derives the last-seen`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            val edited = CheckIn(id = 3L, personId = 7L, timestamp = now.minus(1, ChronoUnit.DAYS), note = "  Lunch  ")
+            coEvery { checkInRepository.latestTimestamp(7L) } returns edited.timestamp
+            val useCase = UpdateCheckInUseCase(checkInRepository, peopleRepository)
+
+            useCase(edited)
+
+            coVerify {
+                checkInRepository.updateCheckIn(
+                    match { it.id == 3L && it.timestamp == edited.timestamp && it.note == "  Lunch  " },
+                )
+            }
+            coVerify { peopleRepository.updateLastCheckIn(7L, edited.timestamp.toEpochMilli()) }
         }
 
     @Test

@@ -12,11 +12,13 @@ import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.UpcomingBirthday
 import com.peoplehub.core.domain.usecase.CheckInPersonUseCase
+import com.peoplehub.core.domain.usecase.DeleteCheckInsUseCase
 import com.peoplehub.core.domain.usecase.DeletePersonUseCase
 import com.peoplehub.core.domain.usecase.GetEventsUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.domain.usecase.ObserveCheckInHistoryUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
+import com.peoplehub.core.domain.usecase.UpdateCheckInUseCase
 import com.peoplehub.core.domain.usecase.UpsertPersonUseCase
 import com.peoplehub.core.domain.util.DateCalculations
 import com.peoplehub.core.ui.state.UiState
@@ -60,6 +62,8 @@ class PersonDetailViewModel
         getEvents: GetEventsUseCase,
         getSettings: GetSettingsUseCase,
         private val checkInPerson: CheckInPersonUseCase,
+        private val updateCheckIn: UpdateCheckInUseCase,
+        private val deleteCheckIns: DeleteCheckInsUseCase,
         private val upsertPerson: UpsertPersonUseCase,
         private val deletePerson: DeletePersonUseCase,
         private val importPerson: ImportPersonUseCase,
@@ -119,6 +123,28 @@ class PersonDetailViewModel
         fun onCheckIn(note: String?, date: LocalDate? = null) {
             val at = date?.takeIf { it != LocalDate.now(clock) }?.atStartOfDay(clock.zone)?.toInstant()
             viewModelScope.launch { checkInPerson(personId, note, at) }
+        }
+
+        /**
+         * Edits an existing [checkIn], replacing its note and day. The time-of-day is preserved when the
+         * day is unchanged; moving it to another day stamps the start of that day in the device zone.
+         */
+        fun onEditCheckIn(checkIn: CheckIn, note: String?, date: LocalDate) {
+            val timestamp =
+                if (date == checkIn.timestamp.atZone(clock.zone).toLocalDate()) {
+                    checkIn.timestamp
+                } else {
+                    date.atStartOfDay(clock.zone).toInstant()
+                }
+            viewModelScope.launch {
+                updateCheckIn(checkIn.copy(timestamp = timestamp, note = note))
+            }
+        }
+
+        /** Deletes the check-ins identified by [ids] (one tap-to-delete or a batch selection). */
+        fun onDeleteCheckIns(ids: List<Long>) {
+            if (ids.isEmpty()) return
+            viewModelScope.launch { deleteCheckIns(personId, ids) }
         }
 
         /**

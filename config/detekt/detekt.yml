@@ -29,7 +29,7 @@ complexity:
     active: true
     functionThreshold: 8
     # Hilt view models inject one use case per action, so constructors are legitimately wide.
-    constructorThreshold: 13
+    constructorThreshold: 14
     ignoreDefaultParameters: true
     ignoreAnnotated: ['Composable']
   CyclomaticComplexMethod:

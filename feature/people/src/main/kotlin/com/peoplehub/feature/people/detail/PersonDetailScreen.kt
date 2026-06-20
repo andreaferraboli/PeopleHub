@@ -2,7 +2,9 @@ package com.peoplehub.feature.people.detail
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +25,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -194,6 +198,8 @@ fun PersonDetailScreen(
                 data = data,
                 modifier = Modifier.padding(innerPadding),
                 onCheckIn = viewModel::onCheckIn,
+                onEditCheckIn = viewModel::onEditCheckIn,
+                onDeleteCheckIns = viewModel::onDeleteCheckIns,
                 onAppendNote = viewModel::onAppendNote,
                 onEventClick = onEventClick,
             )
@@ -246,6 +252,8 @@ fun PersonDetailScreen(
 private fun PersonDetailBody(
     data: PersonDetailData,
     onCheckIn: (String?, LocalDate) -> Unit,
+    onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
+    onDeleteCheckIns: (List<Long>) -> Unit,
     onAppendNote: (String) -> Unit,
     onEventClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -275,7 +283,7 @@ private fun PersonDetailBody(
         }
         when (selectedTab) {
             0 -> InfoTab(data, onAddNote = { showAppendNoteDialog = true }, Modifier.weight(1f))
-            1 -> CheckInTab(data, Modifier.weight(1f))
+            1 -> CheckInTab(data, onEditCheckIn, onDeleteCheckIns, Modifier.weight(1f))
             else -> RelatedTab(data, onEventClick, Modifier.weight(1f))
         }
     }
@@ -411,24 +419,134 @@ private fun InfoTab(data: PersonDetailData, onAddNote: () -> Unit, modifier: Mod
 }
 
 @Composable
-private fun CheckInTab(data: PersonDetailData, modifier: Modifier = Modifier) {
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        item(key = "cadence") { CadencePanel(data) }
-        if (data.history.isEmpty()) {
-            item(key = "history-empty") {
-                Text(
-                    text = stringResource(R.string.detail_history_empty_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
+private fun CheckInTab(
+    data: PersonDetailData,
+    onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
+    onDeleteCheckIns: (List<Long>) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var selectionMode by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
+    var editing by remember { mutableStateOf<CheckIn?>(null) }
+    var pendingDelete by remember { mutableStateOf<List<Long>?>(null) }
+
+    // Selection is keyed by id; drop any ids that no longer exist (e.g. after a deletion).
+    val historyIds = data.history.map { it.id }.toSet()
+    if (selectedIds.any { it !in historyIds }) {
+        selectedIds = selectedIds intersect historyIds
+    }
+    if (selectionMode && selectedIds.isEmpty()) {
+        selectionMode = false
+    }
+
+    fun clearSelection() {
+        selectionMode = false
+        selectedIds = emptySet()
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        if (selectionMode) {
+            SelectionBar(
+                count = selectedIds.size,
+                onDelete = { if (selectedIds.isNotEmpty()) pendingDelete = selectedIds.toList() },
+                onCancel = ::clearSelection,
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item(key = "cadence") { CadencePanel(data) }
+            if (data.history.isEmpty()) {
+                item(key = "history-empty") {
+                    Text(
+                        text = stringResource(R.string.detail_history_empty_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            } else {
+                items(data.history, key = { it.id }) { checkIn ->
+                    CheckInRow(
+                        checkIn = checkIn,
+                        selectionMode = selectionMode,
+                        selected = checkIn.id in selectedIds,
+                        onClick = {
+                            if (selectionMode) {
+                                selectedIds =
+                                    if (checkIn.id in selectedIds) selectedIds - checkIn.id else selectedIds + checkIn.id
+                            } else {
+                                editing = checkIn
+                            }
+                        },
+                        onLongClick = {
+                            selectionMode = true
+                            selectedIds = selectedIds + checkIn.id
+                        },
+                    )
+                }
             }
-        } else {
-            items(data.history, key = { it.id }) { checkIn -> CheckInRow(checkIn) }
+        }
+    }
+
+    editing?.let { checkIn ->
+        CheckInEditDialog(
+            checkIn = checkIn,
+            onSave = { note, date ->
+                editing = null
+                onEditCheckIn(checkIn, note, date)
+            },
+            onDelete = {
+                editing = null
+                pendingDelete = listOf(checkIn.id)
+            },
+            onDismiss = { editing = null },
+        )
+    }
+
+    pendingDelete?.let { ids ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text(stringResource(R.string.checkin_delete_title)) },
+            text = { Text(stringResource(R.string.checkin_delete_message, ids.size)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingDelete = null
+                    clearSelection()
+                    onDeleteCheckIns(ids)
+                }) { Text(stringResource(R.string.checkin_delete_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+}
+
+@Composable
+private fun SelectionBar(count: Int, onDelete: () -> Unit, onCancel: () -> Unit) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.checkin_selected_count, count),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
+            TooltipIconButton(
+                icon = Icons.Outlined.Delete,
+                description = stringResource(R.string.checkin_delete_selected),
+                onClick = onDelete,
+            )
         }
     }
 }
@@ -459,19 +577,37 @@ private fun CadencePanel(data: PersonDetailData) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun CheckInRow(checkIn: CheckIn) {
-    GlassPanel(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            CapsLabel(text = checkIn.timestamp.formatHistory())
-            val note = checkIn.note
-            if (!note.isNullOrBlank()) {
-                Text(
-                    text = note,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
+private fun CheckInRow(
+    checkIn: CheckIn,
+    selectionMode: Boolean,
+    selected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    GlassPanel(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (selectionMode) {
+                Checkbox(checked = selected, onCheckedChange = { onClick() })
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                CapsLabel(text = checkIn.timestamp.formatHistory())
+                val note = checkIn.note
+                if (!note.isNullOrBlank()) {
+                    Text(
+                        text = note,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
             }
         }
     }
@@ -593,6 +729,96 @@ private fun CheckInDialog(personName: String, onConfirm: (String?, LocalDate) ->
 }
 
 private val CHECK_IN_DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
+
+/** Edits an existing check-in's note and day, or deletes it outright. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CheckInEditDialog(
+    checkIn: CheckIn,
+    onSave: (String?, LocalDate) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val today = remember { LocalDate.now() }
+    val initialDate = remember(checkIn.id) { checkIn.timestamp.atZone(ZoneId.systemDefault()).toLocalDate() }
+    var note by remember(checkIn.id) { mutableStateOf(checkIn.note.orEmpty()) }
+    var selectedDate by remember(checkIn.id) { mutableStateOf(initialDate) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.checkin_edit_title)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.checkin_note_hint)) },
+                    shape = RoundedCornerShape(6.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                GhostButton(
+                    text =
+                        if (selectedDate == today) {
+                            stringResource(R.string.checkin_date_today)
+                        } else {
+                            stringResource(R.string.checkin_date_on, selectedDate.format(CHECK_IN_DATE_FORMAT))
+                        },
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                TextButton(
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(R.string.checkin_delete_action),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(note.ifBlank { null }, selectedDate) }) {
+                Text(stringResource(R.string.action_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+
+    if (showDatePicker) {
+        val todayUtcMillis = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                selectableDates =
+                    object : SelectableDates {
+                        // A meeting can only have happened today or in the past.
+                        override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= todayUtcMillis
+                    },
+            )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) { Text(stringResource(R.string.action_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
 
 @Composable
 private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {

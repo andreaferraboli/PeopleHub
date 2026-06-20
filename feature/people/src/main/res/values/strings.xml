@@ -89,6 +89,15 @@
     <string name="checkin_date_today">Date: today</string>
     <string name="checkin_date_on">Date: %1$s</string>
 
+    <!-- Check-in edit / batch actions -->
+    <string name="checkin_edit_title">Edit check-in</string>
+    <string name="checkin_delete_action">Delete check-in</string>
+    <string name="checkin_selected_count">%1$d selected</string>
+    <string name="checkin_delete_selected">Delete selected</string>
+    <string name="checkin_delete_title">Delete check-ins?</string>
+    <string name="checkin_delete_message">This permanently removes %1$d check-in(s). Their last-seen time updates automatically.</string>
+    <string name="checkin_delete_confirm">Delete</string>
+
     <!-- Add / edit person -->
     <string name="edit_title_new">New person</string>
     <string name="edit_title_edit">Edit person</string>

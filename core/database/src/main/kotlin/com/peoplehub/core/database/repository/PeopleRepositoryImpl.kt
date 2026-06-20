@@ -80,7 +80,7 @@ internal class PeopleRepositoryImpl
                 id
             }
 
-        override suspend fun updateLastCheckIn(personId: Long, lastCheckInEpochMillis: Long) =
+        override suspend fun updateLastCheckIn(personId: Long, lastCheckInEpochMillis: Long?) =
             dao.updateLastCheckIn(personId, lastCheckInEpochMillis)
 
         override suspend fun bulkSetNotificationsEnabled(personIds: List<Long>, enabled: Boolean) {

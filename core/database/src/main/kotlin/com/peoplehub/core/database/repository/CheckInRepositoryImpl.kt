@@ -7,6 +7,7 @@ import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.repository.CheckInRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import javax.inject.Inject
 
 /** Room-backed [CheckInRepository]. */
@@ -16,6 +17,13 @@ internal class CheckInRepositoryImpl
         private val dao: CheckInDao,
     ) : CheckInRepository {
         override suspend fun recordCheckIn(checkIn: CheckIn): Long = dao.insert(checkIn.toEntity())
+
+        override suspend fun updateCheckIn(checkIn: CheckIn) = dao.update(checkIn.toEntity())
+
+        override suspend fun deleteCheckIns(ids: List<Long>) = dao.deleteByIds(ids)
+
+        override suspend fun latestTimestamp(personId: Long): Instant? =
+            dao.latestTimestamp(personId)?.let(Instant::ofEpochMilli)
 
         override fun observeHistory(personId: Long): Flow<List<CheckIn>> =
             dao.observeForPerson(personId).map { list -> list.map { it.toDomain() } }

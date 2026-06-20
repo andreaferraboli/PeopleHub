@@ -53,7 +53,7 @@ interface PeopleDao {
     suspend fun updatePerson(person: PersonEntity)
 
     @Query("UPDATE person SET last_check_in_epoch_millis = :epochMillis WHERE id = :personId")
-    suspend fun updateLastCheckIn(personId: Long, epochMillis: Long)
+    suspend fun updateLastCheckIn(personId: Long, epochMillis: Long?)
 
     @Query("UPDATE person SET notifications_enabled = :enabled WHERE id IN (:personIds)")
     suspend fun bulkUpdateNotifications(personIds: List<Long>, enabled: Boolean)

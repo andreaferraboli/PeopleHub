@@ -41,6 +41,52 @@ class CheckInPersonUseCase
         }
     }
 
+/**
+ * Edits an existing check-in (its day and/or note) and re-derives the person's denormalised
+ * last-seen timestamp from the remaining history, so moving the latest check-in keeps the cadence
+ * tracker in sync.
+ */
+class UpdateCheckInUseCase
+    @Inject
+    constructor(
+        private val checkInRepository: CheckInRepository,
+        private val peopleRepository: PeopleRepository,
+    ) {
+        suspend operator fun invoke(checkIn: CheckIn) {
+            checkInRepository.updateCheckIn(
+                checkIn.copy(note = checkIn.note?.takeIf(String::isNotBlank)),
+            )
+            refreshLastCheckIn(checkInRepository, peopleRepository, checkIn.personId)
+        }
+    }
+
+/**
+ * Deletes one or more of a person's check-ins and re-derives their denormalised last-seen timestamp
+ * from whatever history remains (clearing it when none is left).
+ */
+class DeleteCheckInsUseCase
+    @Inject
+    constructor(
+        private val checkInRepository: CheckInRepository,
+        private val peopleRepository: PeopleRepository,
+    ) {
+        suspend operator fun invoke(personId: Long, ids: List<Long>) {
+            if (ids.isEmpty()) return
+            checkInRepository.deleteCheckIns(ids)
+            refreshLastCheckIn(checkInRepository, peopleRepository, personId)
+        }
+    }
+
+/** Re-derives a person's denormalised last-seen timestamp from their most recent surviving check-in. */
+private suspend fun refreshLastCheckIn(
+    checkInRepository: CheckInRepository,
+    peopleRepository: PeopleRepository,
+    personId: Long,
+) {
+    val latest = checkInRepository.latestTimestamp(personId)
+    peopleRepository.updateLastCheckIn(personId, latest?.toEpochMilli())
+}
+
 /** Observes the reverse-chronological check-in history for a person. */
 class ObserveCheckInHistoryUseCase
     @Inject
