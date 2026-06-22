@@ -8,9 +8,18 @@ name: Release APK
 # exist, builds + signs + publishes it. Pushes that don't bump the version are no-ops (the existing
 # release is detected and the job skips), so there are never duplicate releases.
 #
+# SINGLE SOURCE OF TRUTH: the release tag is ALWAYS `v$appVersionName`, derived from the very source
+# the APK is built from — the workflow never accepts a free-text version. This makes it impossible to
+# publish a tag whose number disagrees with the versionCode baked into the APK (the bug that caused
+# the in-app updater to prompt forever: a tag claimed a newer version than the APK actually was, so
+# installing never satisfied the check). A post-build step additionally asserts the APK's versionName
+# equals the tag, failing the release if they ever drift.
+#
 # To release: bump `appVersionName` in app/build.gradle.kts, commit, and push to master. That's it.
 # (The local publish-update scripts still work for local/offline builds; the "already exists" guard
-# keeps the two from colliding.) workflow_dispatch is kept for manual re-runs / forcing a tag.
+# keeps the two from colliding.) workflow_dispatch is kept for manual re-runs; its `force` input
+# re-publishes the current appVersionName even if its release already exists (it deletes the old one
+# first) — useful to rebuild a release, but it can still only ever publish v$appVersionName.
 #
 # Required repository secrets (Settings -> Secrets and variables -> Actions): KEYSTORE_BASE64
 # (base64 of the .jks: `base64 -w0 keystore/peoplehub-release.jks`), KEYSTORE_PASSWORD, KEY_ALIAS,
@@ -21,9 +30,10 @@ on:
       - master
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Force a release tag (e.g. v1.1.1); leave blank to derive from build.gradle.kts"
-        required: false
+      force:
+        description: "Re-publish the current appVersionName even if its release already exists"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -44,24 +54,26 @@ jobs:
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
-          INPUT_TAG: ${{ github.event.inputs.tag }}
+          FORCE: ${{ github.event.inputs.force }}
         run: |
-          if [ -n "$INPUT_TAG" ]; then
-            TAG="$INPUT_TAG"
-            VERSION="${TAG#v}"
-          else
-            VERSION="$(sed -n 's/.*val appVersionName = "\([0-9]\+\.[0-9]\+\.[0-9]\+\)".*/\1/p' app/build.gradle.kts | head -n1)"
-            TAG="v$VERSION"
-          fi
+          # The version is ONLY ever appVersionName; the tag is derived from it. No free-text input.
+          VERSION="$(sed -n 's/.*val appVersionName = "\([0-9]\+\.[0-9]\+\.[0-9]\+\)".*/\1/p' app/build.gradle.kts | head -n1)"
           if [ -z "$VERSION" ]; then
-            echo "ERROR: could not resolve version from app/build.gradle.kts" >&2
+            echo "ERROR: could not resolve appVersionName from app/build.gradle.kts" >&2
             exit 1
           fi
+          TAG="v$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Release $TAG already exists — nothing to do."
+            if [ "$FORCE" = "true" ]; then
+              echo "Release $TAG exists; force requested — deleting it (and its tag) to re-publish."
+              gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              echo "Release $TAG already exists — nothing to do."
+            fi
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Will publish $TAG."
@@ -109,6 +121,25 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Verify APK version matches the tag
+        if: steps.version.outputs.exists == 'false'
+        env:
+          EXPECTED: ${{ steps.version.outputs.version }}
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          AAPT="$(ls "$ANDROID_SDK_ROOT"/build-tools/*/aapt 2>/dev/null | sort -V | tail -n1)"
+          if [ -z "$AAPT" ]; then
+            echo "ERROR: aapt not found under ANDROID_SDK_ROOT; cannot verify APK version." >&2
+            exit 1
+          fi
+          APK_VERSION="$("$AAPT" dump badging "$APK" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
+          echo "APK versionName=$APK_VERSION, expected=$EXPECTED"
+          if [ "$APK_VERSION" != "$EXPECTED" ]; then
+            echo "ERROR: built APK is version $APK_VERSION but the release tag is v$EXPECTED." >&2
+            echo "Refusing to publish a release whose tag disagrees with the APK (would loop the updater)." >&2
+            exit 1
+          fi
 
       - name: Stage APK
         if: steps.version.outputs.exists == 'false'

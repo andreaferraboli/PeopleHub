@@ -14,7 +14,7 @@ plugins {
 
 // The version name is the single source of truth; the integer versionCode is derived from it so the
 // in-app updater can compare the installed build against the latest GitHub release tag (X.Y.Z).
-val appVersionName = "1.5.0"
+val appVersionName = "1.6.0"
 
 fun versionCodeOf(name: String): Int {
     val parts = name.split(".").map { it.toIntOrNull() ?: 0 }

@@ -136,9 +136,12 @@ source of truth.
     no-ops and there are never duplicate releases). To cut a release you just bump the version,
     commit, and push — no local build. Needs repo secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`,
     `KEY_ALIAS`, `KEY_PASSWORD` (set under Settings → Secrets and variables → Actions; safe even on a
-    public repo). `workflow_dispatch` is kept for manual re-runs / forcing a tag. The local
-    publish-update scripts above still work for offline builds — the "already exists" guard keeps
-    them from colliding with CI.
+    public repo). The release tag is **always** `v$appVersionName` (the workflow takes no free-text
+    version), and a post-build step asserts the APK's `versionName` equals the tag — so a release can
+    never claim a version the APK isn't, which is what made the in-app updater prompt forever.
+    `workflow_dispatch` is kept for manual re-runs; its `force` input re-publishes the current
+    `appVersionName` (deleting the old release first). The local publish-update scripts above still
+    work for offline builds — the "already exists" guard keeps them from colliding with CI.
 - **One-time setup**: create the repo and push, e.g.
   `gh repo create andreaferraboli/PeopleHub --public --source . --push`. If the repo name/owner
   differs, update `updateOwner`/`updateRepo` in `app/build.gradle.kts`. The repo must be **public**
