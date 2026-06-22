@@ -12,9 +12,11 @@ plugins {
     alias(libs.plugins.junit5)
 }
 
-// The version name is the single source of truth; the integer versionCode is derived from it so the
-// in-app updater can compare the installed build against the latest GitHub release tag (X.Y.Z).
-val appVersionName = "1.6.0"
+// The version name drives the integer versionCode (derived below) so the in-app updater can compare
+// the installed build against the latest GitHub release tag (X.Y.Z). The release CI auto-increments
+// the version and injects it via APP_VERSION_NAME, so a plain push cuts a new release with no manual
+// edit here; the literal below is only the fallback used for local/offline builds.
+val appVersionName = System.getenv("APP_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.6.0"
 
 fun versionCodeOf(name: String): Int {
     val parts = name.split(".").map { it.toIntOrNull() ?: 0 }

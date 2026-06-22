@@ -1,25 +1,20 @@
 name: Release APK
 
-# Builds and publishes a signed release APK as a GitHub Release — automatically.
+# Builds and publishes a signed release APK as a GitHub Release — fully on push.
 #
-# This is the CI counterpart of publish-update.{ps1,sh}: it reproduces the same flow server-side so a
-# release is cut from wherever you push, with no local build needed. On every push to master it reads
-# `appVersionName` from app/build.gradle.kts and, ONLY if a release for that version does not already
-# exist, builds + signs + publishes it. Pushes that don't bump the version are no-ops (the existing
-# release is detected and the job skips), so there are never duplicate releases.
+# Just push to master. On every push the workflow auto-computes the NEXT version (the latest
+# published release's patch + 1), injects it into the build (APP_VERSION_NAME), and builds + signs +
+# publishes it as v<version> with the APK attached. No manual version edit anywhere — the version
+# lives in the GitHub releases history, not in a file you have to bump.
 #
-# SINGLE SOURCE OF TRUTH: the release tag is ALWAYS `v$appVersionName`, derived from the very source
-# the APK is built from — the workflow never accepts a free-text version. This makes it impossible to
-# publish a tag whose number disagrees with the versionCode baked into the APK (the bug that caused
-# the in-app updater to prompt forever: a tag claimed a newer version than the APK actually was, so
-# installing never satisfied the check). A post-build step additionally asserts the APK's versionName
-# equals the tag, failing the release if they ever drift.
+# NO TAG/APK DRIFT: the chosen version drives the build, so the APK genuinely IS that version, and a
+# post-build step asserts the APK's versionName equals the tag (failing otherwise). This is what
+# prevents the in-app updater from prompting forever (which happened when a tag claimed a version the
+# APK wasn't).
 #
-# To release: bump `appVersionName` in app/build.gradle.kts, commit, and push to master. That's it.
-# (The local publish-update scripts still work for local/offline builds; the "already exists" guard
-# keeps the two from colliding.) workflow_dispatch is kept for manual re-runs; its `force` input
-# re-publishes the current appVersionName even if its release already exists (it deletes the old one
-# first) — useful to rebuild a release, but it can still only ever publish v$appVersionName.
+# Don't want a given push to release? Put `[skip ci]` in the commit message — GitHub skips the run.
+# Need a minor/major jump (e.g. 1.6.x -> 1.7.0 or 2.0.0)? Run it manually from the Actions tab with
+# the `version` input; it is injected into the build too, so it stays drift-free.
 #
 # Required repository secrets (Settings -> Secrets and variables -> Actions): KEYSTORE_BASE64
 # (base64 of the .jks: `base64 -w0 keystore/peoplehub-release.jks`), KEYSTORE_PASSWORD, KEY_ALIAS,
@@ -30,15 +25,15 @@ on:
       - master
   workflow_dispatch:
     inputs:
-      force:
-        description: "Re-publish the current appVersionName even if its release already exists"
-        type: boolean
-        default: false
+      version:
+        description: "Force a specific version X.Y.Z (e.g. 1.7.0); leave blank to auto-increment the patch"
+        required: false
 
 permissions:
   contents: write
 
-# Never run two releases at once (e.g. two quick pushes); let the first finish.
+# Never run two releases at once (e.g. two quick pushes); let the first finish so the second
+# auto-increments from a version that already includes it.
 concurrency:
   group: release-apk
   cancel-in-progress: false
@@ -48,39 +43,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Resolve version and check if it is already released
+      - name: Compute the version to publish
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
-          FORCE: ${{ github.event.inputs.force }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          # The version is ONLY ever appVersionName; the tag is derived from it. No free-text input.
-          VERSION="$(sed -n 's/.*val appVersionName = "\([0-9]\+\.[0-9]\+\.[0-9]\+\)".*/\1/p' app/build.gradle.kts | head -n1)"
-          if [ -z "$VERSION" ]; then
-            echo "ERROR: could not resolve appVersionName from app/build.gradle.kts" >&2
-            exit 1
-          fi
-          TAG="v$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            if [ "$FORCE" = "true" ]; then
-              echo "Release $TAG exists; force requested — deleting it (and its tag) to re-publish."
-              gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-              echo "Release $TAG already exists — nothing to do."
+          if [ -n "$INPUT_VERSION" ]; then
+            # Manual jump: trust the input but validate it (it drives the build, so no drift).
+            VERSION="${INPUT_VERSION#v}"
+            if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "ERROR: manual version must be X.Y.Z (got '$INPUT_VERSION')" >&2
+              exit 1
             fi
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Will publish $TAG."
+            # Auto path: next = highest published release's patch + 1.
+            LATEST="$(gh release list --repo "$GITHUB_REPOSITORY" --json tagName --jq '.[].tagName' 2>/dev/null \
+              | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)"
+            if [ -z "$LATEST" ]; then
+              # No releases yet: seed from the file's fallback version.
+              LATEST="$(sed -n 's/.*\"\([0-9]\+\.[0-9]\+\.[0-9]\+\)\".*/\1/p' app/build.gradle.kts | head -n1)"
+              VERSION="${LATEST:-1.0.0}"
+            else
+              MAJOR="${LATEST%%.*}"
+              REST="${LATEST#*.}"
+              MINOR="${REST%%.*}"
+              PATCH="${REST##*.}"
+              VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+            fi
           fi
+          TAG="v$VERSION"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "ERROR: release $TAG already exists — pick a higher version" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Releasing $TAG"
 
       - name: Verify signing secrets are present
-        if: steps.version.outputs.exists == 'false'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -99,21 +102,19 @@ jobs:
           fi
 
       - name: Set up JDK 17
-        if: steps.version.outputs.exists == 'false'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Decode signing keystore
-        if: steps.version.outputs.exists == 'false'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/app/release.keystore"
 
       - name: Build signed release APK
-        if: steps.version.outputs.exists == 'false'
         env:
+          APP_VERSION_NAME: ${{ steps.version.outputs.version }}
           KEYSTORE_FILE: app/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -123,7 +124,6 @@ jobs:
           ./gradlew :app:assembleRelease --no-daemon
 
       - name: Verify APK version matches the tag
-        if: steps.version.outputs.exists == 'false'
         env:
           EXPECTED: ${{ steps.version.outputs.version }}
         run: |
@@ -142,12 +142,10 @@ jobs:
           fi
 
       - name: Stage APK
-        if: steps.version.outputs.exists == 'false'
         run: cp app/build/outputs/apk/release/app-release.apk "PeopleHub-${{ steps.version.outputs.version }}.apk"
 
       - name: Publish GitHub Release
-        if: steps.version.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}

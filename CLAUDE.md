@@ -109,9 +109,11 @@ export JAVA_HOME='/c/Program Files/Android/Android Studio/jbr'   # Git Bash on W
 The app self-updates from **GitHub Releases** — no Firestore/Firebase. The Release is the single
 source of truth.
 
-- **Version scheme**: `app/build.gradle.kts` defines `appVersionName` ("X.Y.Z") and derives
-  `versionCode = major*10000 + minor*100 + patch`. `UPDATE_OWNER`/`UPDATE_REPO` are exposed as
-  `BuildConfig` fields.
+- **Version scheme**: `versionCode = major*10000 + minor*100 + patch`, derived from the version name.
+  The release CI owns the version: it auto-increments the patch from the latest GitHub release and
+  injects it via the `APP_VERSION_NAME` env var, so you never edit a number to ship. The literal
+  `appVersionName` in `app/build.gradle.kts` is only the fallback for local/offline builds.
+  `UPDATE_OWNER`/`UPDATE_REPO` are exposed as `BuildConfig` fields.
 - **In-app updater** (`app/.../update/`): on launch `UpdatePrompt` silently GETs
   `api.github.com/repos/<owner>/<repo>/releases/latest`, parses the tag + the `.apk` asset, and if
   its derived versionCode exceeds the installed one shows a dialog. `ApkInstaller` downloads to the
@@ -130,18 +132,18 @@ source of truth.
     git-ignored `.jks` at build time and deletes it afterwards. Generate the base64 once with
     `base64 -w0 keystore/peoplehub-release.jks`. Without a key the script refuses to publish an
     unsigned APK (override with `--allow-unsigned` only for throwaway test builds).
-  - CI (recommended, zero-touch): `.github/workflows/release.yml` runs **automatically on every push
-    to `master`**. It reads `appVersionName` from `app/build.gradle.kts` and, only if a release for
-    that `vX.Y.Z` does not already exist, builds + signs + publishes it (so non-bump pushes are
-    no-ops and there are never duplicate releases). To cut a release you just bump the version,
-    commit, and push — no local build. Needs repo secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`,
-    `KEY_ALIAS`, `KEY_PASSWORD` (set under Settings → Secrets and variables → Actions; safe even on a
-    public repo). The release tag is **always** `v$appVersionName` (the workflow takes no free-text
-    version), and a post-build step asserts the APK's `versionName` equals the tag — so a release can
-    never claim a version the APK isn't, which is what made the in-app updater prompt forever.
-    `workflow_dispatch` is kept for manual re-runs; its `force` input re-publishes the current
-    `appVersionName` (deleting the old release first). The local publish-update scripts above still
-    work for offline builds — the "already exists" guard keeps them from colliding with CI.
+  - CI (recommended, push-only): `.github/workflows/release.yml` runs **automatically on every push
+    to `master`** and does everything — no version edit, no local build. It auto-computes the next
+    version (latest published release's patch + 1), injects it via `APP_VERSION_NAME`, then builds +
+    signs + publishes `v<version>` with the APK. Because the version drives the build, the APK genuinely
+    *is* that version, and a post-build step asserts the APK's `versionName` equals the tag — so a
+    release can never claim a version the APK isn't (the bug that made the in-app updater prompt
+    forever). Put `[skip ci]` in a commit message to skip releasing that push. For a minor/major jump
+    (e.g. 1.6.x → 1.7.0), run the workflow manually from the Actions tab with the `version` input (it
+    is injected too, so it stays drift-free). Needs repo secrets `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`,
+    `KEY_ALIAS`, `KEY_PASSWORD` (Settings → Secrets and variables → Actions; safe even on a public
+    repo). Pinned actions: `checkout@v7`, `setup-java@v5`, `action-gh-release@v3`. The local
+    publish-update scripts above still work for offline builds.
 - **One-time setup**: create the repo and push, e.g.
   `gh repo create andreaferraboli/PeopleHub --public --source . --push`. If the repo name/owner
   differs, update `updateOwner`/`updateRepo` in `app/build.gradle.kts`. The repo must be **public**
