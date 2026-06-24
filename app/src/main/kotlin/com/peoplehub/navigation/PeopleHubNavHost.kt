@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.peoplehub.dashboard.DashboardScreen
+import com.peoplehub.feature.birthdays.navigation.AddBirthdaysRoute
 import com.peoplehub.feature.birthdays.navigation.BirthdaysRoute
 import com.peoplehub.feature.birthdays.navigation.birthdaysSection
 import com.peoplehub.feature.events.navigation.AddEditEventRoute
@@ -52,6 +53,7 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
 
         birthdaysSection(
             onPersonClick = { navController.navigate(PersonDetailRoute(it)) },
+            onAddBirthdays = { navController.navigate(AddBirthdaysRoute) },
             onBack = { navController.popBackStack() },
         )
 

@@ -35,6 +35,22 @@
     <string name="action_back">Indietro</string>
     <string name="action_cancel">Annulla</string>
     <string name="action_more">Altre opzioni</string>
+    <string name="action_save">Salva</string>
+    <string name="action_confirm">Conferma</string>
+    <string name="action_done">Fatto</string>
+
+    <!-- Day birthdays dialog -->
+    <string name="birthday_day_count">%1$d compleanni</string>
+    <string name="birthday_day_more">+%1$d</string>
+
+    <!-- Add birthdays (bulk birthday-only) -->
+    <string name="birthdays_add">Aggiungi compleanni</string>
+    <string name="birthdays_add_title">Aggiungi compleanni</string>
+    <string name="birthdays_add_subtitle">Aggiungi velocemente persone di cui vuoi ricordare solo il compleanno — bastano un nome e una data.</string>
+    <string name="add_birthday_name">Nome</string>
+    <string name="add_birthday_pick_date">Scegli una data</string>
+    <string name="add_birthday_add_another">Aggiungi un altro</string>
+    <string name="add_birthday_remove">Rimuovi</string>
 
     <!-- Import / export -->
     <string name="import_csv">Importa CSV</string>

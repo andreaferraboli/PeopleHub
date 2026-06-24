@@ -35,6 +35,22 @@
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_more">More options</string>
+    <string name="action_save">Save</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_done">Done</string>
+
+    <!-- Day birthdays dialog -->
+    <string name="birthday_day_count">%1$d birthdays</string>
+    <string name="birthday_day_more">+%1$d</string>
+
+    <!-- Add birthdays (bulk birthday-only) -->
+    <string name="birthdays_add">Add birthdays</string>
+    <string name="birthdays_add_title">Add birthdays</string>
+    <string name="birthdays_add_subtitle">Quickly add people you only want to remember the birthday of — just a name and a date.</string>
+    <string name="add_birthday_name">Name</string>
+    <string name="add_birthday_pick_date">Pick a date</string>
+    <string name="add_birthday_add_another">Add another</string>
+    <string name="add_birthday_remove">Remove</string>
 
     <!-- Import / export -->
     <string name="import_csv">Import CSV</string>

@@ -27,12 +27,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ViewList
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarViewMonth
 import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +44,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +67,7 @@ import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.DayCountDisplay
 import com.peoplehub.core.ui.components.EmptyView
 import com.peoplehub.core.ui.components.ErrorView
+import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.LoadingView
 import com.peoplehub.core.ui.components.PeopleHubTopBar
@@ -73,12 +77,16 @@ import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
 private const val DAYS_IN_WEEK = 7
 private const val MONTHS_PER_ROW = 4
 private const val MONTHS_IN_YEAR = 12
+
+/** Localized "month day" title (e.g. "October 3") for the per-day birthday dialog. */
+private val DayTitleFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM d")
 
 /**
  * Stateful entry point for the birthdays ("Milestones") screen. Wires the [BirthdaysViewModel] to
@@ -89,6 +97,7 @@ private const val MONTHS_IN_YEAR = 12
 @Composable
 fun BirthdaysScreen(
     onPersonClick: (Long) -> Unit,
+    onAddBirthdays: () -> Unit,
     onBack: () -> Unit,
     viewModel: BirthdaysViewModel = hiltViewModel(),
 ) {
@@ -204,6 +213,7 @@ fun BirthdaysScreen(
             today = LocalDate.now(),
             contentPadding = innerPadding,
             onPersonClick = onPersonClick,
+            onAddBirthdays = onAddBirthdays,
             onPreviousMonth = viewModel::onPreviousMonth,
             onNextMonth = viewModel::onNextMonth,
         )
@@ -219,9 +229,13 @@ private fun BirthdaysContent(
     today: LocalDate,
     contentPadding: PaddingValues,
     onPersonClick: (Long) -> Unit,
+    onAddBirthdays: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
+    // Birthdays of the calendar day the user tapped; non-empty while the day dialog is shown.
+    var selectedDay by remember { mutableStateOf<List<UpcomingBirthday>>(emptyList()) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding =
@@ -233,7 +247,7 @@ private fun BirthdaysContent(
             ),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        item(key = "header") { BirthdaysHeader() }
+        item(key = "header") { BirthdaysHeader(onAddBirthdays = onAddBirthdays) }
 
         when (state) {
             UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
@@ -254,10 +268,21 @@ private fun BirthdaysContent(
                     visibleMonth = visibleMonth,
                     today = today,
                     onPersonClick = onPersonClick,
-                    onPreviousMonth = onPreviousMonth,
-                    onNextMonth = onNextMonth,
+                    onDaySelected = { selectedDay = it },
+                    onMonthChange = { target -> if (target.isBefore(visibleMonth)) onPreviousMonth() else onNextMonth() },
                 )
         }
+    }
+
+    if (selectedDay.isNotEmpty()) {
+        BirthdayDayDialog(
+            birthdays = selectedDay,
+            onPersonClick = { personId ->
+                selectedDay = emptyList()
+                onPersonClick(personId)
+            },
+            onDismiss = { selectedDay = emptyList() },
+        )
     }
 }
 
@@ -267,8 +292,8 @@ private fun LazyListScope.birthdaysBody(
     visibleMonth: YearMonth,
     today: LocalDate,
     onPersonClick: (Long) -> Unit,
-    onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit,
+    onDaySelected: (List<UpcomingBirthday>) -> Unit,
+    onMonthChange: (YearMonth) -> Unit,
 ) {
     when (viewMode) {
         BirthdayViewMode.YEAR ->
@@ -281,9 +306,9 @@ private fun LazyListScope.birthdaysBody(
                     month = visibleMonth,
                     byMonthDay = data.byMonthDay,
                     today = today,
-                    onPreviousMonth = onPreviousMonth,
-                    onNextMonth = onNextMonth,
-                    onDayClick = onPersonClick,
+                    onPreviousMonth = { onMonthChange(visibleMonth.minusMonths(1)) },
+                    onNextMonth = { onMonthChange(visibleMonth.plusMonths(1)) },
+                    onDaySelected = onDaySelected,
                 )
             }
         BirthdayViewMode.LIST ->
@@ -294,7 +319,7 @@ private fun LazyListScope.birthdaysBody(
 }
 
 @Composable
-private fun BirthdaysHeader() {
+private fun BirthdaysHeader(onAddBirthdays: () -> Unit) {
     Column {
         Text(
             text = stringResource(R.string.birthdays_title),
@@ -306,6 +331,12 @@ private fun BirthdaysHeader() {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
+        )
+        GhostButton(
+            text = stringResource(R.string.birthdays_add),
+            onClick = onAddBirthdays,
+            icon = Icons.Filled.Add,
+            modifier = Modifier.padding(top = 12.dp),
         )
     }
 }
@@ -451,7 +482,7 @@ private fun MonthCalendar(
     today: LocalDate,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onDayClick: (Long) -> Unit,
+    onDaySelected: (List<UpcomingBirthday>) -> Unit,
 ) {
     GlassPanel(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -459,7 +490,7 @@ private fun MonthCalendar(
             Spacer(Modifier.height(12.dp))
             WeekdayHeaderRow()
             Spacer(Modifier.height(8.dp))
-            MonthDayGrid(month = month, byMonthDay = byMonthDay, today = today, onDayClick = onDayClick)
+            MonthDayGrid(month = month, byMonthDay = byMonthDay, today = today, onDaySelected = onDaySelected)
         }
     }
 }
@@ -523,7 +554,7 @@ private fun MonthDayGrid(
     month: YearMonth,
     byMonthDay: Map<Int, List<UpcomingBirthday>>,
     today: LocalDate,
-    onDayClick: (Long) -> Unit,
+    onDaySelected: (List<UpcomingBirthday>) -> Unit,
 ) {
     val firstDayOffset = (month.atDay(1).dayOfWeek.value % DAYS_IN_WEEK)
     val cells = firstDayOffset + month.lengthOfMonth()
@@ -543,7 +574,7 @@ private fun MonthDayGrid(
                                     today.year == month.year &&
                                         today.monthValue == month.monthValue &&
                                         today.dayOfMonth == day,
-                                onDayClick = onDayClick,
+                                onDaySelected = onDaySelected,
                             )
                         }
                     }
@@ -553,34 +584,42 @@ private fun MonthDayGrid(
     }
 }
 
+/**
+ * One calendar day. A day with birthdays gets a gold ring; a day with **more than one** birthday is
+ * additionally filled gold and carries a small count badge so multi-birthday days stand out at a
+ * glance. Tapping any day that has birthdays surfaces them through [onDaySelected].
+ */
 @Composable
 private fun DayCell(
     day: Int,
     birthdays: List<UpcomingBirthday>,
     isToday: Boolean,
-    onDayClick: (Long) -> Unit,
+    onDaySelected: (List<UpcomingBirthday>) -> Unit,
 ) {
     val hasBirthday = birthdays.isNotEmpty()
+    val hasMultiple = birthdays.size > 1
     val cellModifier =
         Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .clip(CircleShape)
             .then(
-                if (hasBirthday) {
-                    Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                } else {
-                    Modifier
-                },
-            ).then(
-                if (isToday) {
+                if (hasMultiple) {
+                    Modifier.background(MaterialTheme.colorScheme.primary)
+                } else if (isToday) {
                     Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 } else {
                     Modifier
                 },
             ).then(
                 if (hasBirthday) {
-                    Modifier.clickable { onDayClick(birthdays.first().personId) }
+                    Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                } else {
+                    Modifier
+                },
+            ).then(
+                if (hasBirthday) {
+                    Modifier.clickable { onDaySelected(birthdays) }
                 } else {
                     Modifier
                 },
@@ -589,8 +628,104 @@ private fun DayCell(
         Text(
             text = day.toString(),
             style = MaterialTheme.typography.bodyMedium,
-            color = if (hasBirthday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            color =
+                when {
+                    hasMultiple -> MaterialTheme.colorScheme.onPrimary
+                    hasBirthday -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
         )
+        if (hasMultiple) {
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onPrimary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = birthdays.size.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A bottom-anchored dialog listing every birthday that falls on the tapped calendar day. Each row is
+ * tappable and opens that person via [onPersonClick]; [onDismiss] closes the dialog.
+ */
+@Composable
+private fun BirthdayDayDialog(
+    birthdays: List<UpcomingBirthday>,
+    onPersonClick: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val dayDate = birthdays.first().birthday
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column {
+                Text(
+                    text = dayDate.format(DayTitleFormatter),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(R.string.birthday_day_count, birthdays.size),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                birthdays.forEach { birthday ->
+                    DayDialogPerson(birthday = birthday, onClick = { onPersonClick(birthday.personId) })
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) }
+        },
+    )
+}
+
+@Composable
+private fun DayDialogPerson(birthday: UpcomingBirthday, onClick: () -> Unit) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick)
+                .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PersonAvatar(
+            initials = birthday.fullName.toInitials(),
+            photoPath = birthday.photoPath,
+            size = 44.dp,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = birthday.fullName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            birthday.turningAge?.let { age ->
+                Text(
+                    text = stringResource(R.string.birthday_turns, age),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -726,6 +861,7 @@ private fun BirthdaysListPreview() {
             today = LocalDate.of(2026, 10, 3),
             contentPadding = PaddingValues(0.dp),
             onPersonClick = {},
+            onAddBirthdays = {},
             onPreviousMonth = {},
             onNextMonth = {},
         )
@@ -753,6 +889,7 @@ private fun BirthdaysMonthPreview() {
             today = LocalDate.of(2026, 10, 3),
             contentPadding = PaddingValues(0.dp),
             onPersonClick = {},
+            onAddBirthdays = {},
             onPreviousMonth = {},
             onNextMonth = {},
         )
