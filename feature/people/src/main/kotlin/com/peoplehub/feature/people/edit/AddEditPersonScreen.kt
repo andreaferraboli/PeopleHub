@@ -93,15 +93,25 @@ fun AddEditPersonScreen(
     }
 
     val scope = rememberCoroutineScope()
+    var cropUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val photoLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
+            if (uri != null) cropUri = uri
+        }
+
+    cropUri?.let { uri ->
+        PhotoCropDialog(
+            sourceUri = uri,
+            onCancel = { cropUri = null },
+            onCropped = { bitmap ->
+                cropUri = null
                 scope.launch {
-                    val path = PhotoStorage.savePhoto(context, uri)
+                    val path = PhotoStorage.saveBitmap(context, bitmap)
                     if (path != null) viewModel.onPhotoChange(path)
                 }
-            }
-        }
+            },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -216,7 +226,8 @@ fun AddEditPersonScreen(
                 value = form.notes,
                 onValueChange = viewModel::onNotesChange,
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
+                minLines = 4,
+                maxLines = 20,
                 label = { Text(stringResource(R.string.edit_notes)) },
                 shape = RoundedCornerShape(6.dp),
             )

@@ -113,6 +113,12 @@
     <string name="edit_interest_add">Add interest</string>
     <string name="edit_notes">Notes</string>
 
+    <!-- Photo crop -->
+    <string name="crop_title">Frame the photo</string>
+    <string name="crop_hint">Drag to move, pinch to zoom in on the part you want.</string>
+    <string name="crop_confirm">Use photo</string>
+    <string name="crop_load_failed">Couldn\'t load that image.</string>
+
     <!-- Per-person notification opt-in -->
     <string name="edit_notifications_title">Notifications</string>
     <string name="edit_notifications_hint">Receive check-in and birthday reminders for this person</string>

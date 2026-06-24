@@ -46,6 +46,7 @@ import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.io.readTextRobust
 
 private val JSON_TYPES = arrayOf("application/json", "text/plain", "application/octet-stream")
 private val CSV_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")
@@ -53,13 +54,7 @@ private val CSV_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text
 /** A documented field in an import format. */
 private data class FieldDoc(val name: String, val type: String, val required: Boolean, val description: String)
 
-private fun readText(context: Context, uri: Uri): String? =
-    runCatching {
-        context.contentResolver
-            .openInputStream(uri)
-            ?.bufferedReader()
-            ?.use { it.readText() }
-    }.getOrNull()
+private fun readText(context: Context, uri: Uri): String? = readTextRobust(context, uri)
 
 /** In-app reference documenting every import format, with one-tap import + a result banner. */
 @OptIn(ExperimentalMaterial3Api::class)

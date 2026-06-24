@@ -97,6 +97,12 @@
     <string name="edit_interest_add">Aggiungi interesse</string>
     <string name="edit_notes">Note</string>
 
+    <!-- Photo crop -->
+    <string name="crop_title">Inquadra la foto</string>
+    <string name="crop_hint">Trascina per spostare, pizzica per ingrandire la zona che vuoi.</string>
+    <string name="crop_confirm">Usa foto</string>
+    <string name="crop_load_failed">Impossibile caricare l\'immagine.</string>
+
     <!-- Per-person notification opt-in -->
     <string name="edit_notifications_title">Notifiche</string>
     <string name="edit_notifications_hint">Ricevi promemoria di check-in e compleanno per questa persona</string>

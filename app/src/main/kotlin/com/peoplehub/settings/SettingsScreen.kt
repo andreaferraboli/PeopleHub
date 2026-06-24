@@ -51,6 +51,7 @@ import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.io.readTextRobust
 import com.peoplehub.update.AvailableUpdate
 import com.peoplehub.update.UpdateUiState
 import com.peoplehub.update.UpdateViewModel
@@ -89,7 +90,7 @@ fun SettingsScreen(
             if (uri != null) {
                 scope.launch {
                     val content = viewModel.buildBackupJson()
-                    context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray(Charsets.UTF_8)) }
                 }
             }
         }
@@ -101,7 +102,7 @@ fun SettingsScreen(
             if (uri != null) {
                 scope.launch {
                     val content = viewModel.buildBirthdaysCsv()
-                    context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray(Charsets.UTF_8)) }
                 }
             }
         }
@@ -109,13 +110,7 @@ fun SettingsScreen(
     val importLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null) {
-                val json =
-                    runCatching {
-                        context.contentResolver
-                            .openInputStream(uri)
-                            ?.bufferedReader()
-                            ?.use { it.readText() }
-                    }.getOrNull()
+                val json = readTextRobust(context, uri)
                 if (json != null) pendingImportJson = json
             }
         }

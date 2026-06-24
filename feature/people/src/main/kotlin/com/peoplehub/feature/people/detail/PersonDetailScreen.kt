@@ -831,6 +831,8 @@ private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit)
                 value = phrase,
                 onValueChange = { phrase = it },
                 modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 12,
                 placeholder = { Text(stringResource(R.string.detail_add_note_hint)) },
                 shape = RoundedCornerShape(6.dp),
             )
