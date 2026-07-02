@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -100,6 +101,7 @@ private val BirthdayCardFormatter: DateTimeFormatter = DateTimeFormatter.ofPatte
 fun PeopleListScreen(
     onPersonClick: (Long) -> Unit,
     onAddPerson: () -> Unit,
+    onRecordMeetup: () -> Unit,
     viewModel: PeopleListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -149,8 +151,14 @@ fun PeopleListScreen(
                 PeopleHubTopBar(
                     title = stringResource(R.string.brand_wordmark),
                     centered = true,
+                    showLogo = true,
                     scrollBehavior = scrollBehavior,
                     actions = {
+                        TooltipIconButton(
+                            icon = Icons.Outlined.Groups,
+                            description = stringResource(R.string.group_meetup_title),
+                            onClick = onRecordMeetup,
+                        )
                         SortMenu(current = state.sort, onSortChange = viewModel::onSortChange)
                         TooltipIconButton(
                             icon = Icons.Outlined.FileDownload,

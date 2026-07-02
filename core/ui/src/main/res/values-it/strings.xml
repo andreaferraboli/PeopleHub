@@ -9,7 +9,7 @@
     <!-- Frequency tracker labels -->
     <string name="ui_seen_today">Visto oggi</string>
     <string name="ui_seen_days_ago">Visto %1$d giorni fa</string>
-    <string name="ui_never_seen">Mai fatto check-in</string>
+    <string name="ui_never_seen">Mai visto</string>
 
     <!-- Day-count labels -->
     <string name="ui_days_ago">giorni fa</string>

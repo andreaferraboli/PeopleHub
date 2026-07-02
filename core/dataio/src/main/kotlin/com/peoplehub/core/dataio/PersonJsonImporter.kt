@@ -3,6 +3,7 @@ package com.peoplehub.core.dataio
 import com.peoplehub.core.dataio.dto.InterestDto
 import com.peoplehub.core.dataio.dto.PersonDto
 import com.peoplehub.core.dataio.mapper.toDomain
+import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.Interest
 import com.peoplehub.core.domain.model.Person
@@ -52,6 +53,20 @@ class PersonJsonImporter
                 require(dto.lastName.isNotBlank()) { "Person lastName must not be blank" }
                 dto.toDomain().copy(id = 0L)
             }
+
+        /**
+         * Extracts the meetup history embedded in a person [json] document (the `checkIns` array), with
+         * every id reset to `0` so the caller can reassign them to a freshly-inserted person. Returns an
+         * empty list for older files that carry no history. Never throws — a malformed document yields
+         * an empty history, matching [parse]'s own failure handling upstream.
+         */
+        fun parseCheckIns(json: String): List<CheckIn> =
+            runCatching {
+                this.json
+                    .decodeFromString<PersonDto>(json)
+                    .checkIns
+                    .map { it.toDomain().copy(id = 0L) }
+            }.getOrDefault(emptyList())
 
         /**
          * Merges [json] onto an [existing] person. Only keys actually present in the document are

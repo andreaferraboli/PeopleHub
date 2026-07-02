@@ -19,11 +19,12 @@
     <!-- Dashboard / Reflect -->
     <string name="dashboard_welcome">Bentornato</string>
     <string name="dashboard_subtitle">Una panoramica curata della tua rete e dei momenti in arrivo.</string>
+    <string name="group_meetup_title">Registra un\'uscita</string>
     <string name="dashboard_vitality">Vitalità della rete</string>
     <string name="dashboard_active">Connessioni attive</string>
     <string name="dashboard_birthdays">Compleanni in arrivo</string>
     <string name="dashboard_attention">Richiedono attenzione</string>
-    <string name="dashboard_urgent_title">Check-in urgenti</string>
+    <string name="dashboard_urgent_title">Uscite in ritardo</string>
     <string name="dashboard_milestones">Ricorrenze</string>
     <string name="dashboard_pinned">Evento fissato</string>
     <string name="milestone_birthday">Compleanno</string>
@@ -43,7 +44,7 @@
     <string name="vault_import_all">Importa backup</string>
     <string name="vault_export_birthdays">Esporta compleanni (CSV)</string>
     <string name="vault_share_birthdays">Condividi compleanni</string>
-    <string name="vault_threshold_title">Soglie dei check-in</string>
+    <string name="vault_threshold_title">Soglie delle uscite</string>
     <string name="vault_threshold_desc">Numero di giorni predefinito prima che qualcuno richieda attenzione.</string>
     <string name="vault_threshold_warning">Avviso dopo (giorni)</string>
     <string name="vault_threshold_critical">Critico dopo (giorni)</string>
@@ -79,9 +80,9 @@
     <!-- Vault: danger zone -->
     <string name="vault_danger_title">Zona pericolosa</string>
     <string name="vault_delete_all">Elimina tutte le persone</string>
-    <string name="vault_delete_all_desc">Rimuove ogni persona e i relativi check-in. Gli eventi vengono mantenuti ma diventano scollegati. L\'operazione non può essere annullata.</string>
+    <string name="vault_delete_all_desc">Rimuove ogni persona e le relative uscite. Gli eventi vengono mantenuti ma diventano scollegati. L\'operazione non può essere annullata.</string>
     <string name="vault_delete_all_confirm_title">Eliminare tutte le persone?</string>
-    <string name="vault_delete_all_confirm_message">Questa operazione rimuove definitivamente tutte le persone che hai aggiunto, insieme ai loro check-in. Non può essere annullata.</string>
+    <string name="vault_delete_all_confirm_message">Questa operazione rimuove definitivamente tutte le persone che hai aggiunto, insieme alle loro uscite. Non può essere annullata.</string>
 
     <!-- Vault: import guide entry -->
     <string name="vault_guide_title">Come importare</string>
@@ -120,6 +121,6 @@
     <string name="ig_person_import">Scegli profilo JSON</string>
 
     <string name="ig_backup_title">Backup completo · JSON</string>
-    <string name="ig_backup_desc">L\'istantanea completa — persone, check-in ed eventi. Dopo aver scelto il file, seleziona Unisci per aggiungere solo i nuovi record o Sostituisci per sovrascrivere tutto.</string>
+    <string name="ig_backup_desc">L\'istantanea completa — persone, uscite ed eventi. Dopo aver scelto il file, seleziona Unisci per aggiungere solo i nuovi record o Sostituisci per sovrascrivere tutto.</string>
     <string name="ig_backup_import">Scegli file di backup</string>
 </resources>

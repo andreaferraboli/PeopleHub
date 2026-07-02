@@ -74,6 +74,7 @@ fun EventsListScreen(
             PeopleHubTopBar(
                 title = stringResource(R.string.brand_wordmark),
                 centered = true,
+                showLogo = true,
                 scrollBehavior = scrollBehavior,
             )
         },

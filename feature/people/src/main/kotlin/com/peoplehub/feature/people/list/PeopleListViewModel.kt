@@ -81,6 +81,9 @@ class PeopleListViewModel
         private val selectedTags = MutableStateFlow<Set<String>>(emptySet())
         private val sort = MutableStateFlow(PeopleSort.NAME_ASC)
         private val importPreview = MutableStateFlow<Person?>(null)
+
+        /** The raw JSON behind [importPreview], kept so confirming also restores the meetup history. */
+        private var pendingImportJson: String? = null
         private val importMessage = MutableStateFlow<String?>(null)
         private val selectedIds = MutableStateFlow<Set<Long>>(emptySet())
 
@@ -148,17 +151,22 @@ class PeopleListViewModel
         /** Parses a selected JSON document and, on success, raises a confirmation preview. */
         fun onImportFileLoaded(json: String) {
             importPerson.preview(json).fold(
-                onSuccess = { importPreview.value = it },
+                onSuccess = {
+                    pendingImportJson = json
+                    importPreview.value = it
+                },
                 onFailure = { importMessage.value = it.message ?: "Invalid file" },
             )
         }
 
         fun onConfirmImport() {
             val candidate = importPreview.value ?: return
+            val json = pendingImportJson
             importPreview.value = null
+            pendingImportJson = null
             viewModelScope.launch {
                 importMessage.value =
-                    importPerson.confirm(candidate).fold(
+                    importPerson.confirm(candidate, json).fold(
                         onSuccess = { "Imported ${it.fullName}" },
                         onFailure = { it.message ?: "Import failed" },
                     )
@@ -166,6 +174,7 @@ class PeopleListViewModel
         }
 
         fun onDismissImport() {
+            pendingImportJson = null
             importPreview.value = null
         }
 

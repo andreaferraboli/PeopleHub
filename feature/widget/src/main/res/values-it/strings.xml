@@ -2,13 +2,13 @@
 <resources>
     <!-- Widget labels (shown in the launcher's widget picker) -->
     <string name="widget_birthdays_label">PeopleHub · Compleanni</string>
-    <string name="widget_checkins_label">PeopleHub · Check-in</string>
+    <string name="widget_checkins_label">PeopleHub · Uscite</string>
     <string name="widget_event_label">PeopleHub · Evento fissato</string>
 
     <!-- Widget content -->
     <string name="widget_birthdays_title">Compleanni in arrivo</string>
     <string name="widget_birthdays_empty">Nessun compleanno a breve</string>
-    <string name="widget_checkins_title">Check-in urgenti</string>
+    <string name="widget_checkins_title">Uscite in ritardo</string>
     <string name="widget_checkins_empty">Tutto in pari ✨</string>
     <string name="widget_event_title">Evento fissato</string>
     <string name="widget_event_empty">Fissa un evento per vederlo qui</string>

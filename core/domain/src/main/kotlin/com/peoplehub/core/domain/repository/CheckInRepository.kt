@@ -11,6 +11,9 @@ interface CheckInRepository {
     /** Records a new check-in and returns its id. */
     suspend fun recordCheckIn(checkIn: CheckIn): Long
 
+    /** Records several check-ins at once — used for multi-day and multi-person meetups. */
+    suspend fun recordCheckIns(checkIns: List<CheckIn>)
+
     /** Updates an existing check-in (its timestamp and/or note). */
     suspend fun updateCheckIn(checkIn: CheckIn)
 

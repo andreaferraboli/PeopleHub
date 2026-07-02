@@ -16,6 +16,7 @@ import com.peoplehub.feature.people.navigation.AddEditPersonRoute
 import com.peoplehub.feature.people.navigation.BirthdayOnlyRoute
 import com.peoplehub.feature.people.navigation.PeopleListRoute
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
+import com.peoplehub.feature.people.navigation.RecordMeetupRoute
 import com.peoplehub.feature.people.navigation.peopleSection
 import com.peoplehub.importguide.ImportGuideScreen
 import com.peoplehub.settings.LanguageScreen
@@ -32,6 +33,7 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
                 onSeeAllPeople = { navController.navigate(PeopleListRoute) },
                 onSeeAllBirthdays = { navController.navigate(BirthdaysRoute) },
                 onAddPerson = { navController.navigate(AddEditPersonRoute()) },
+                onRecordMeetup = { navController.navigate(RecordMeetupRoute) },
             )
         }
 
@@ -40,6 +42,7 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
             onAddPerson = { navController.navigate(AddEditPersonRoute()) },
             onEditPerson = { navController.navigate(AddEditPersonRoute(it)) },
             onEventClick = { navController.navigate(EventDetailRoute(it)) },
+            onRecordMeetup = { navController.navigate(RecordMeetupRoute) },
             onBack = { navController.popBackStack() },
         )
 

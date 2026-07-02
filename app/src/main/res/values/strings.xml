@@ -19,11 +19,12 @@
     <!-- Dashboard / Reflect -->
     <string name="dashboard_welcome">Welcome back</string>
     <string name="dashboard_subtitle">A curated overview of your network and upcoming moments.</string>
+    <string name="group_meetup_title">Record a meetup</string>
     <string name="dashboard_vitality">Network vitality</string>
     <string name="dashboard_active">Active connections</string>
     <string name="dashboard_birthdays">Upcoming birthdays</string>
     <string name="dashboard_attention">Need attention</string>
-    <string name="dashboard_urgent_title">Urgent check-ins</string>
+    <string name="dashboard_urgent_title">Overdue meetups</string>
     <string name="dashboard_milestones">Milestones</string>
     <string name="dashboard_pinned">Pinned event</string>
     <string name="milestone_birthday">Birthday</string>
@@ -43,7 +44,7 @@
     <string name="vault_import_all">Import backup</string>
     <string name="vault_export_birthdays">Export birthdays (CSV)</string>
     <string name="vault_share_birthdays">Share birthdays</string>
-    <string name="vault_threshold_title">Check-in thresholds</string>
+    <string name="vault_threshold_title">Meetup thresholds</string>
     <string name="vault_threshold_desc">Default number of days before someone needs attention.</string>
     <string name="vault_threshold_warning">Warning after (days)</string>
     <string name="vault_threshold_critical">Critical after (days)</string>
@@ -79,9 +80,9 @@
     <!-- Vault: danger zone -->
     <string name="vault_danger_title">Danger zone</string>
     <string name="vault_delete_all">Delete all people</string>
-    <string name="vault_delete_all_desc">Remove every person and their check-ins. Events are kept but become unlinked. This cannot be undone.</string>
+    <string name="vault_delete_all_desc">Remove every person and their meetups. Events are kept but become unlinked. This cannot be undone.</string>
     <string name="vault_delete_all_confirm_title">Delete all people?</string>
-    <string name="vault_delete_all_confirm_message">This permanently removes everyone you\'ve added, along with their check-ins. This cannot be undone.</string>
+    <string name="vault_delete_all_confirm_message">This permanently removes everyone you\'ve added, along with their meetups. This cannot be undone.</string>
 
     <!-- Vault: import guide entry -->
     <string name="vault_guide_title">How to import</string>
@@ -120,6 +121,6 @@
     <string name="ig_person_import">Choose JSON profile</string>
 
     <string name="ig_backup_title">Full backup · JSON</string>
-    <string name="ig_backup_desc">The complete snapshot — people, check-ins and events. After choosing the file, pick Merge to add only new records or Replace to overwrite everything.</string>
+    <string name="ig_backup_desc">The complete snapshot — people, meetups and events. After choosing the file, pick Merge to add only new records or Replace to overwrite everything.</string>
     <string name="ig_backup_import">Choose backup file</string>
 </resources>

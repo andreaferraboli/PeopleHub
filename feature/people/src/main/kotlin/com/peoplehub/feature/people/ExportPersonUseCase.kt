@@ -1,6 +1,7 @@
 package com.peoplehub.feature.people
 
 import com.peoplehub.core.dataio.PersonJsonExporter
+import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Person
 import javax.inject.Inject
 
@@ -13,6 +14,7 @@ class ExportPersonUseCase
     constructor(
         private val exporter: PersonJsonExporter,
     ) {
-        /** Encodes [person] to a pretty-printed JSON document. */
-        operator fun invoke(person: Person): String = exporter.encode(person)
+        /** Encodes [person] and their full meetup [history] to a pretty-printed JSON document. */
+        operator fun invoke(person: Person, history: List<CheckIn> = emptyList()): String =
+            exporter.encode(person, history)
     }

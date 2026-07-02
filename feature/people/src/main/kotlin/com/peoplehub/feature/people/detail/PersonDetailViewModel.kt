@@ -18,6 +18,7 @@ import com.peoplehub.core.domain.usecase.GetEventsUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.domain.usecase.ObserveCheckInHistoryUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
+import com.peoplehub.core.domain.usecase.RecordMeetupUseCase
 import com.peoplehub.core.domain.usecase.UpdateCheckInUseCase
 import com.peoplehub.core.domain.usecase.UpsertPersonUseCase
 import com.peoplehub.core.domain.util.DateCalculations
@@ -62,6 +63,7 @@ class PersonDetailViewModel
         getEvents: GetEventsUseCase,
         getSettings: GetSettingsUseCase,
         private val checkInPerson: CheckInPersonUseCase,
+        private val recordMeetup: RecordMeetupUseCase,
         private val updateCheckIn: UpdateCheckInUseCase,
         private val deleteCheckIns: DeleteCheckInsUseCase,
         private val upsertPerson: UpsertPersonUseCase,
@@ -116,13 +118,21 @@ class PersonDetailViewModel
             )
 
         /**
-         * Records a check-in for this person. [date] selects the day the meeting happened; when it is
-         * `null` or today's date the check-in is stamped with the current instant, otherwise it is
-         * back-dated to the start of the chosen day in the device time zone.
+         * Records a meetup for this person over the inclusive day range [startDate]..[endDate]. A
+         * single day (start == end) is stamped with the current instant when it is today (otherwise
+         * back-dated to the start of that day), preserving the original quick "I saw them" behaviour.
+         * A range (e.g. a weekend away) records one meetup per day in one action.
          */
-        fun onCheckIn(note: String?, date: LocalDate? = null) {
-            val at = date?.takeIf { it != LocalDate.now(clock) }?.atStartOfDay(clock.zone)?.toInstant()
-            viewModelScope.launch { checkInPerson(personId, note, at) }
+        fun onCheckIn(note: String?, startDate: LocalDate, endDate: LocalDate) {
+            if (startDate == endDate) {
+                val at = startDate.takeIf { it != LocalDate.now(clock) }?.atStartOfDay(clock.zone)?.toInstant()
+                viewModelScope.launch { checkInPerson(personId, note, at) }
+                return
+            }
+            val start = minOf(startDate, endDate)
+            val end = maxOf(startDate, endDate)
+            val days = generateSequence(start) { it.plusDays(1) }.takeWhile { !it.isAfter(end) }.toList()
+            viewModelScope.launch { recordMeetup(listOf(personId), days, note) }
         }
 
         /**
@@ -195,8 +205,11 @@ class PersonDetailViewModel
             importMessageSignal.value = null
         }
 
-        /** Serializes [person] to the importable JSON person schema, ready to be written to a file. */
-        fun exportJson(person: Person): String = exportPerson(person)
+        /**
+         * Serializes [person] together with their full meetup [history] to the importable JSON person
+         * schema, ready to be written to a file — so every recorded date is preserved, not just the last.
+         */
+        fun exportJson(person: Person, history: List<CheckIn>): String = exportPerson(person, history)
 
         /** Reports the outcome of an export to the user via the shared snackbar channel. */
         fun onExported(success: Boolean, name: String) {

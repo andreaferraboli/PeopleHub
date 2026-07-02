@@ -36,7 +36,7 @@ class CheckInReminderWorker
                     notifier.showCheckInReminder(
                         personId = urgency.person.id,
                         name = urgency.person.firstName,
-                        days = urgency.daysSince?.toInt() ?: 0,
+                        days = urgency.daysSince?.toInt(),
                         lastSeenText = urgency.person.lastCheckInAt?.let(::formatLastSeen),
                     )
                 }

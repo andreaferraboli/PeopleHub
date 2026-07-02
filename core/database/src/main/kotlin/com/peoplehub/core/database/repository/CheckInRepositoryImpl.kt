@@ -18,6 +18,9 @@ internal class CheckInRepositoryImpl
     ) : CheckInRepository {
         override suspend fun recordCheckIn(checkIn: CheckIn): Long = dao.insert(checkIn.toEntity())
 
+        override suspend fun recordCheckIns(checkIns: List<CheckIn>) =
+            dao.insertAll(checkIns.map { it.toEntity() })
+
         override suspend fun updateCheckIn(checkIn: CheckIn) = dao.update(checkIn.toEntity())
 
         override suspend fun deleteCheckIns(ids: List<Long>) = dao.deleteByIds(ids)

@@ -24,7 +24,7 @@
 
     <!-- Sort options -->
     <string name="sort_name">Name A–Z</string>
-    <string name="sort_last_checkin">Last check-in</string>
+    <string name="sort_last_checkin">Last seen</string>
     <string name="sort_birthday">Upcoming birthday</string>
 
     <!-- Upcoming-birthday card line -->
@@ -39,10 +39,10 @@
     <string name="detail_edit">Edit</string>
     <string name="detail_delete">Delete</string>
     <string name="detail_delete_title">Delete person?</string>
-    <string name="detail_delete_message">This permanently removes them and all of their check-ins.</string>
+    <string name="detail_delete_message">This permanently removes them and all of their meetups.</string>
     <string name="detail_seen_today_button">I saw %1$s today</string>
     <string name="tab_info">Info</string>
-    <string name="tab_checkin">Check-in</string>
+    <string name="tab_checkin">Meetups</string>
     <string name="tab_related">Related</string>
     <string name="detail_birthday">Birthday</string>
     <string name="detail_turns">Turns %1$d</string>
@@ -53,7 +53,7 @@
     <string name="detail_add_note_title">Add to notes</string>
     <string name="detail_add_note_hint">Write a phrase to append…</string>
     <string name="detail_add_note_confirm">Append</string>
-    <string name="detail_history_empty_title">No check-ins yet</string>
+    <string name="detail_history_empty_title">No meetups yet</string>
     <string name="detail_history_empty_desc">Tap the button above the first time you see them.</string>
     <string name="detail_related_empty_title">Nothing linked yet</string>
     <string name="detail_related_empty_desc">Events linked to this person will appear here.</string>
@@ -62,7 +62,7 @@
     <string name="detail_export_json">Export profile</string>
 
     <!-- Multi-select bulk actions -->
-    <string name="circle_checkin_off">Check-in off</string>
+    <string name="circle_checkin_off">Tracking off</string>
     <string name="circle_selected_count">%1$d selected</string>
     <string name="circle_selection_clear">Clear selection</string>
     <string name="circle_bulk_more">More actions</string>
@@ -70,10 +70,10 @@
     <string name="circle_bulk_notifications_off">Disable notifications</string>
     <string name="circle_bulk_birthday_only_on">Mark as birthday only</string>
     <string name="circle_bulk_birthday_only_off">Restore to The Circle</string>
-    <string name="circle_bulk_custom_checkin">Custom check-in…</string>
-    <string name="circle_bulk_disable_checkin">Disable check-in (never)</string>
+    <string name="circle_bulk_custom_checkin">Custom cadence…</string>
+    <string name="circle_bulk_disable_checkin">Stop tracking (never)</string>
     <string name="circle_bulk_select_all">Select all</string>
-    <string name="circle_custom_checkin_title">Custom check-in cadence</string>
+    <string name="circle_custom_checkin_title">Custom meetup cadence</string>
     <string name="circle_custom_checkin_hint">Apply this cadence to the selected people.</string>
 
     <!-- Update an existing profile from JSON -->
@@ -82,20 +82,23 @@
     <string name="detail_import_json_message">Update %1$s from the selected file? Fields present in the file overwrite the current values; anything missing is kept. The profile id never changes.</string>
     <string name="detail_import_json_confirm">Update</string>
 
-    <!-- Check-in dialog -->
-    <string name="checkin_dialog_title">Log time with %1$s</string>
+    <!-- Meetup dialog -->
+    <string name="checkin_dialog_title">Log a meetup with %1$s</string>
     <string name="checkin_note_hint">Add a note (optional)</string>
     <string name="checkin_confirm">Log it</string>
     <string name="checkin_date_today">Date: today</string>
     <string name="checkin_date_on">Date: %1$s</string>
+    <string name="checkin_multiday_toggle">Spanned several days</string>
+    <string name="checkin_date_from">From: %1$s</string>
+    <string name="checkin_date_to">To: %1$s</string>
 
-    <!-- Check-in edit / batch actions -->
-    <string name="checkin_edit_title">Edit check-in</string>
-    <string name="checkin_delete_action">Delete check-in</string>
+    <!-- Meetup edit / batch actions -->
+    <string name="checkin_edit_title">Edit meetup</string>
+    <string name="checkin_delete_action">Delete meetup</string>
     <string name="checkin_selected_count">%1$d selected</string>
     <string name="checkin_delete_selected">Delete selected</string>
-    <string name="checkin_delete_title">Delete check-ins?</string>
-    <string name="checkin_delete_message">This permanently removes %1$d check-in(s). Their last-seen time updates automatically.</string>
+    <string name="checkin_delete_title">Delete meetups?</string>
+    <string name="checkin_delete_message">This permanently removes %1$d meetup(s). Their last-seen time updates automatically.</string>
     <string name="checkin_delete_confirm">Delete</string>
 
     <!-- Add / edit person -->
@@ -121,7 +124,7 @@
 
     <!-- Per-person notification opt-in -->
     <string name="edit_notifications_title">Notifications</string>
-    <string name="edit_notifications_hint">Receive check-in and birthday reminders for this person</string>
+    <string name="edit_notifications_hint">Receive meetup and birthday reminders for this person</string>
 
     <!-- Birthday-only entry -->
     <string name="edit_birthday_only_title">Birthday only</string>
@@ -130,7 +133,7 @@
     <!-- Family member -->
     <string name="label_family">Family</string>
     <string name="edit_family_title">Family member</string>
-    <string name="edit_family_hint">No check-in tracking or reminders — you see them all the time</string>
+    <string name="edit_family_hint">No meetup tracking or reminders — you see them all the time</string>
 
     <!-- Birthday-only management screen -->
     <string name="birthday_only_title">Birthday only</string>
@@ -138,8 +141,8 @@
     <string name="birthday_only_empty_title">No birthdays yet</string>
     <string name="birthday_only_empty_desc">People with a birthday will appear here.</string>
 
-    <!-- Per-person check-in cadence override -->
-    <string name="edit_threshold_title">Check-in cadence</string>
+    <!-- Per-person meetup cadence override -->
+    <string name="edit_threshold_title">Meetup cadence</string>
     <string name="edit_threshold_hint">Use a custom cadence for this person</string>
     <string name="edit_threshold_warning">Warning after (days)</string>
     <string name="edit_threshold_critical">Critical after (days)</string>
@@ -148,8 +151,16 @@
     <string name="cd_threshold_increase_critical">Increase critical days</string>
     <string name="cd_threshold_decrease_critical">Decrease critical days</string>
 
+    <!-- Group meetup ("record an outing") -->
+    <string name="group_meetup_title">Record a meetup</string>
+    <string name="group_meetup_when">When</string>
+    <string name="group_meetup_search">Search people…</string>
+    <string name="group_meetup_empty">No one to pick yet. Add people to your circle first.</string>
+    <string name="group_meetup_save">Select who you saw</string>
+    <string name="group_meetup_save_count">Record for %1$d people</string>
+
     <!-- Detail: effective cadence -->
-    <string name="detail_cadence">Check-in cadence</string>
+    <string name="detail_cadence">Meetup cadence</string>
     <string name="detail_cadence_value">Warns after %1$d days · critical after %2$d</string>
     <string name="detail_cadence_custom">Custom</string>
     <string name="detail_cadence_default">Default</string>

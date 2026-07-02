@@ -29,6 +29,11 @@ data class PersonDto(
     val birthdayOnly: Boolean = false,
     val checkInDisabled: Boolean = false,
     val isFamily: Boolean = false,
+    /**
+     * The person's full meetup history, so a single-profile export/import round-trips every recorded
+     * date and not just the denormalised [lastCheckInEpochMillis]. Empty in older files.
+     */
+    val checkIns: List<CheckInDto> = emptyList(),
 )
 
 /** Serialization-friendly mirror of the domain `Interest` (an editable key/value pair). */

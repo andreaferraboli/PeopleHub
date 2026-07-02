@@ -138,18 +138,18 @@ fun PersonDetailScreen(
             }
         }
 
-    val exportPerson = (state as? UiState.Success)?.data?.person
+    val exportData = (state as? UiState.Success)?.data
     val exportLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-            val person = exportPerson
-            if (uri != null && person != null) {
+            val data = exportData
+            if (uri != null && data != null) {
                 val written =
                     runCatching {
                         context.contentResolver.openOutputStream(uri)?.use { output ->
-                            output.write(viewModel.exportJson(person).toByteArray())
+                            output.write(viewModel.exportJson(data.person, data.history).toByteArray())
                         }
                     }.isSuccess
-                viewModel.onExported(written, person.fullName)
+                viewModel.onExported(written, data.person.fullName)
             }
         }
 
@@ -251,7 +251,7 @@ fun PersonDetailScreen(
 @Composable
 private fun PersonDetailBody(
     data: PersonDetailData,
-    onCheckIn: (String?, LocalDate) -> Unit,
+    onCheckIn: (String?, LocalDate, LocalDate) -> Unit,
     onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
     onDeleteCheckIns: (List<Long>) -> Unit,
     onAppendNote: (String) -> Unit,
@@ -291,9 +291,9 @@ private fun PersonDetailBody(
     if (showCheckInDialog) {
         CheckInDialog(
             personName = data.person.firstName,
-            onConfirm = { note, date ->
+            onConfirm = { note, start, end ->
                 showCheckInDialog = false
-                onCheckIn(note, date)
+                onCheckIn(note, start, end)
             },
             onDismiss = { showCheckInDialog = false },
         )
@@ -657,11 +657,18 @@ private fun InfoPanel(label: String, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CheckInDialog(personName: String, onConfirm: (String?, LocalDate) -> Unit, onDismiss: () -> Unit) {
+private fun CheckInDialog(
+    personName: String,
+    onConfirm: (String?, LocalDate, LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
     val today = remember { LocalDate.now() }
     var note by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf(today) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var startDate by remember { mutableStateOf(today) }
+    var endDate by remember { mutableStateOf(today) }
+    var multiDay by remember { mutableStateOf(false) }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -676,20 +683,56 @@ private fun CheckInDialog(personName: String, onConfirm: (String?, LocalDate) ->
                     shape = RoundedCornerShape(6.dp),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                multiDay = !multiDay
+                                if (!multiDay) endDate = startDate
+                            },
+                ) {
+                    Checkbox(
+                        checked = multiDay,
+                        onCheckedChange = {
+                            multiDay = it
+                            if (!it) endDate = startDate
+                        },
+                    )
+                    Text(
+                        text = stringResource(R.string.checkin_multiday_toggle),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
                 GhostButton(
                     text =
-                        if (selectedDate == today) {
-                            stringResource(R.string.checkin_date_today)
-                        } else {
-                            stringResource(R.string.checkin_date_on, selectedDate.format(CHECK_IN_DATE_FORMAT))
+                        when {
+                            multiDay ->
+                                stringResource(R.string.checkin_date_from, startDate.format(CHECK_IN_DATE_FORMAT))
+                            startDate == today -> stringResource(R.string.checkin_date_today)
+                            else ->
+                                stringResource(R.string.checkin_date_on, startDate.format(CHECK_IN_DATE_FORMAT))
                         },
-                    onClick = { showDatePicker = true },
+                    onClick = { showStartPicker = true },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (multiDay) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    GhostButton(
+                        text = stringResource(R.string.checkin_date_to, endDate.format(CHECK_IN_DATE_FORMAT)),
+                        onClick = { showEndPicker = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(note.ifBlank { null }, selectedDate) }) {
+            TextButton(onClick = {
+                val end = if (multiDay) endDate else startDate
+                onConfirm(note.ifBlank { null }, startDate, end)
+            }) {
                 Text(stringResource(R.string.checkin_confirm))
             }
         },
@@ -698,33 +741,67 @@ private fun CheckInDialog(personName: String, onConfirm: (String?, LocalDate) ->
         },
     )
 
-    if (showDatePicker) {
-        val todayUtcMillis = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        val datePickerState =
-            rememberDatePickerState(
-                initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
-                selectableDates =
-                    object : SelectableDates {
-                        // A meeting can only have happened today or in the past.
-                        override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= todayUtcMillis
-                    },
-            )
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                    }
-                    showDatePicker = false
-                }) { Text(stringResource(R.string.action_confirm)) }
+    if (showStartPicker) {
+        PastDatePickerDialog(
+            initialDate = startDate,
+            minDate = null,
+            onPicked = { picked ->
+                startDate = picked
+                if (endDate.isBefore(picked)) endDate = picked
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.action_cancel)) }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
+            onDismiss = { showStartPicker = false },
+        )
+    }
+    if (showEndPicker) {
+        PastDatePickerDialog(
+            initialDate = endDate,
+            minDate = startDate,
+            onPicked = { endDate = it },
+            onDismiss = { showEndPicker = false },
+        )
+    }
+}
+
+/**
+ * A [DatePickerDialog] restricted to today or earlier (a meeting can only have already happened),
+ * optionally floored at [minDate] so an end date can't precede its start.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PastDatePickerDialog(
+    initialDate: LocalDate,
+    minDate: LocalDate?,
+    onPicked: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val today = remember { LocalDate.now() }
+    val todayUtcMillis =
+        remember(today) { today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }
+    val minUtcMillis = minDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis = initialDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+            selectableDates =
+                object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                        utcTimeMillis <= todayUtcMillis && (minUtcMillis == null || utcTimeMillis >= minUtcMillis)
+                },
+        )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    onPicked(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+                }
+                onDismiss()
+            }) { Text(stringResource(R.string.action_confirm)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
 

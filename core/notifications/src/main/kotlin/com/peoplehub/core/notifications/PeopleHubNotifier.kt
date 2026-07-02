@@ -47,12 +47,22 @@ class PeopleHubNotifier
             manager.createNotificationChannels(listOf(checkIn, birthday))
         }
 
-        /** "You haven't seen [name] in [days] days", deep-linking to their profile. */
-        fun showCheckInReminder(personId: Long, name: String, days: Int, lastSeenText: String?) {
+        /**
+         * "You haven't seen [name] in [days] days", deep-linking to their profile. When [days] is
+         * `null` the person has never been seen, so a day-less "in a while" title is used instead of
+         * the misleading "in 0 days".
+         */
+        fun showCheckInReminder(personId: Long, name: String, days: Int?, lastSeenText: String?) {
             val id = NotificationIds.checkIn(personId)
+            val title =
+                if (days == null) {
+                    context.getString(R.string.notif_checkin_title_never, name)
+                } else {
+                    context.getString(R.string.notif_checkin_title, name, days)
+                }
             val builder =
                 baseBuilder(NotificationChannels.CHECK_IN)
-                    .setContentTitle(context.getString(R.string.notif_checkin_title, name, days))
+                    .setContentTitle(title)
                     .setContentIntent(personPendingIntent(personId, id))
             if (lastSeenText != null) {
                 builder.setContentText(context.getString(R.string.notif_checkin_body, lastSeenText))

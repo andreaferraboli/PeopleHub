@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 /**
@@ -38,6 +39,45 @@ class CheckInPersonUseCase
                 peopleRepository.updateLastCheckIn(personId, timestamp.toEpochMilli())
             }
             return id
+        }
+    }
+
+/**
+ * Records a single meetup that may span several days and/or involve several people at once — the
+ * "record an outing" flow. Every combination of [personIds] and [days] becomes one [CheckIn] (a
+ * weekend away with someone yields three rows; an outing with four friends on one day yields four),
+ * so each person independently keeps the full history and the denormalised last-seen timestamp is
+ * re-derived per attendee. Each day is anchored at noon in the clock's zone so the calendar-day math
+ * is stable regardless of the exact hour.
+ */
+class RecordMeetupUseCase
+    @Inject
+    constructor(
+        private val checkInRepository: CheckInRepository,
+        private val peopleRepository: PeopleRepository,
+        private val clock: Clock,
+    ) {
+        suspend operator fun invoke(personIds: List<Long>, days: List<LocalDate>, note: String? = null) {
+            if (personIds.isEmpty() || days.isEmpty()) return
+            val cleanNote = note?.takeIf(String::isNotBlank)
+            val checkIns =
+                personIds.distinct().flatMap { personId ->
+                    days.distinct().map { day ->
+                        CheckIn(
+                            personId = personId,
+                            timestamp = day.atTime(NOON_HOUR, 0).atZone(clock.zone).toInstant(),
+                            note = cleanNote,
+                        )
+                    }
+                }
+            checkInRepository.recordCheckIns(checkIns)
+            personIds.distinct().forEach { personId ->
+                refreshLastCheckIn(checkInRepository, peopleRepository, personId)
+            }
+        }
+
+        private companion object {
+            const val NOON_HOUR = 12
         }
     }
 

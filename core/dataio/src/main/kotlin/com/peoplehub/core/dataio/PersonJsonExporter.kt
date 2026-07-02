@@ -1,6 +1,7 @@
 package com.peoplehub.core.dataio
 
 import com.peoplehub.core.dataio.mapper.toDto
+import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Person
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -22,6 +23,10 @@ class PersonJsonExporter
                 encodeDefaults = true
             }
 
-        /** Encodes [person] to a pretty-printed JSON document. */
-        fun encode(person: Person): String = json.encodeToString(person.toDto())
+        /**
+         * Encodes [person] together with their full meetup [history] to a pretty-printed JSON
+         * document, so every recorded date round-trips and not just the last one.
+         */
+        fun encode(person: Person, history: List<CheckIn> = emptyList()): String =
+            json.encodeToString(person.toDto().copy(checkIns = history.map { it.toDto() }))
     }
