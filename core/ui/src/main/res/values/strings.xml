@@ -18,4 +18,11 @@
     <string name="ui_today">Today</string>
     <string name="ui_tomorrow">Tomorrow</string>
     <string name="ui_yesterday">Yesterday</string>
+
+    <!-- Photo crop dialog (shared by people photos and event backgrounds) -->
+    <string name="crop_title">Frame the photo</string>
+    <string name="crop_hint">Drag to move, pinch to zoom in on the part you want.</string>
+    <string name="crop_confirm">Use photo</string>
+    <string name="crop_cancel">Cancel</string>
+    <string name="crop_load_failed">Couldn\'t load that image.</string>
 </resources>

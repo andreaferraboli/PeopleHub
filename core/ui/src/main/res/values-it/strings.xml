@@ -18,4 +18,11 @@
     <string name="ui_today">Oggi</string>
     <string name="ui_tomorrow">Domani</string>
     <string name="ui_yesterday">Ieri</string>
+
+    <!-- Photo crop dialog (shared by people photos and event backgrounds) -->
+    <string name="crop_title">Inquadra la foto</string>
+    <string name="crop_hint">Trascina per spostare, pizzica per ingrandire la zona che vuoi.</string>
+    <string name="crop_confirm">Usa foto</string>
+    <string name="crop_cancel">Annulla</string>
+    <string name="crop_load_failed">Impossibile caricare l\'immagine.</string>
 </resources>

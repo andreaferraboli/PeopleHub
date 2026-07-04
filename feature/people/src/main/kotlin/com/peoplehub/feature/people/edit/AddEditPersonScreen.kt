@@ -57,6 +57,7 @@ import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GoldDivider
 import com.peoplehub.core.ui.components.PersonAvatar
+import com.peoplehub.core.ui.components.PhotoCropDialog
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.feature.people.R

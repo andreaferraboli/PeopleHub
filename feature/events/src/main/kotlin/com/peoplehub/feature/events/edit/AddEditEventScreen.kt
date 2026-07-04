@@ -69,6 +69,7 @@ import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
+import com.peoplehub.core.ui.components.PhotoCropDialog
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.feature.events.R
@@ -81,6 +82,9 @@ import java.time.format.DateTimeFormatter
 
 private val DateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy")
 private val TimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+/** Wide banner ratio for event card backgrounds, matching how they render on cards and detail. */
+private const val EVENT_BACKGROUND_ASPECT_RATIO = 16f / 9f
 
 /** Add or edit an event. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,15 +102,26 @@ fun AddEditEventScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var cropUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val imageLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) {
+            if (uri != null) cropUri = uri
+        }
+
+    cropUri?.let { uri ->
+        PhotoCropDialog(
+            sourceUri = uri,
+            aspectRatio = EVENT_BACKGROUND_ASPECT_RATIO,
+            onCancel = { cropUri = null },
+            onCropped = { bitmap ->
+                cropUri = null
                 scope.launch {
-                    val path = EventImageStorage.saveImage(context, uri)
+                    val path = EventImageStorage.saveBitmap(context, bitmap)
                     if (path != null) viewModel.onBackgroundImageChange(path)
                 }
-            }
-        }
+            },
+        )
+    }
 
     LaunchedEffect(saved) {
         if (saved) onBack()

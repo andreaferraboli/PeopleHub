@@ -1,4 +1,4 @@
-package com.peoplehub.feature.people.edit
+package com.peoplehub.core.ui.components
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -39,40 +40,44 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.peoplehub.core.ui.components.GhostButton
-import com.peoplehub.core.ui.components.PrimaryGoldButton
-import com.peoplehub.feature.people.R
+import com.peoplehub.core.ui.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 private const val MAX_ZOOM = 8f
-private const val OUTPUT_SIZE = 1024
+private const val OUTPUT_LONGEST = 1024
 private const val LOAD_MAX_DIM = 2048
 
 /**
- * A square crop dialog letting the user pan and pinch-zoom a freshly picked image to frame the part
- * they want before it becomes a person's photo. The on-screen preview and the produced bitmap share
- * the same transform, so the result is exactly what the user sees inside the frame.
+ * A crop dialog letting the user pan and pinch-zoom a freshly picked image to frame the part they
+ * want before it becomes a stored photo. The on-screen preview and the produced bitmap share the
+ * same transform, so the result is exactly what the user sees inside the frame.
+ *
+ * [aspectRatio] is the frame's width / height: `1f` gives a square crop (person avatars), a value
+ * like `16f / 9f` gives a wide banner crop (event backgrounds). The output bitmap keeps that ratio
+ * with its longest side capped at 1024 px.
  */
 @Composable
-internal fun PhotoCropDialog(
+fun PhotoCropDialog(
     sourceUri: Uri,
     onCancel: () -> Unit,
     onCropped: (Bitmap) -> Unit,
+    aspectRatio: Float = 1f,
 ) {
     val context = LocalContext.current
     var bitmap by remember(sourceUri) { mutableStateOf<Bitmap?>(null) }
     var loadFailed by remember(sourceUri) { mutableStateOf(false) }
 
-    androidx.compose.runtime.LaunchedEffect(sourceUri) {
+    LaunchedEffect(sourceUri) {
         val loaded = loadOrientedBitmap(context, sourceUri)
         if (loaded == null) loadFailed = true else bitmap = loaded
     }
 
-    // Transform state, relative to the cover-fit baseline: zoom == 1 fills the square frame.
-    // `pan` is stored as a fraction of the frame side so it is independent of the on-screen size
-    // and maps identically onto the larger output bitmap.
+    // Transform state, relative to the cover-fit baseline: zoom == 1 fills the frame.
+    // `pan` is stored as a fraction of the frame side (x of width, y of height) so it is independent
+    // of the on-screen size and maps identically onto the larger output bitmap.
     var zoom by remember(sourceUri) { mutableFloatStateOf(1f) }
     var pan by remember(sourceUri) { mutableStateOf(Offset.Zero) }
 
@@ -105,30 +110,31 @@ internal fun PhotoCropDialog(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f)
+                            .aspectRatio(aspectRatio)
                             .clipToBounds(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    val boxPx = constraints.maxWidth.toFloat()
+                    val boxW = constraints.maxWidth.toFloat()
+                    val boxH = constraints.maxHeight.toFloat()
                     when {
                         current != null ->
                             Canvas(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .aspectRatio(1f)
-                                        .pointerInput(current, boxPx) {
+                                        .aspectRatio(aspectRatio)
+                                        .pointerInput(current, boxW, boxH) {
                                             detectTransformGestures { _, panChange, zoomChange, _ ->
                                                 zoom = (zoom * zoomChange).coerceIn(1f, MAX_ZOOM)
-                                                val moved = pan + Offset(panChange.x / boxPx, panChange.y / boxPx)
-                                                pan = clampPan(moved, current, zoom)
+                                                val moved = pan + Offset(panChange.x / boxW, panChange.y / boxH)
+                                                pan = clampPan(moved, current, boxW, boxH, zoom)
                                             }
                                         },
                             ) {
                                 drawIntoCanvas { canvas ->
                                     canvas.nativeCanvas.drawBitmap(
                                         current,
-                                        previewMatrix(current, boxPx, zoom, pan),
+                                        previewMatrix(current, boxW, boxH, zoom, pan),
                                         FilterPaint,
                                     )
                                 }
@@ -150,7 +156,7 @@ internal fun PhotoCropDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     GhostButton(
-                        text = stringResource(R.string.action_cancel),
+                        text = stringResource(R.string.crop_cancel),
                         onClick = onCancel,
                         modifier = Modifier.weight(1f),
                     )
@@ -158,7 +164,7 @@ internal fun PhotoCropDialog(
                         text = stringResource(R.string.crop_confirm),
                         onClick = {
                             val src = bitmap ?: return@PrimaryGoldButton
-                            onCropped(cropBitmap(src, zoom, pan))
+                            onCropped(cropBitmap(src, aspectRatio, zoom, pan))
                         },
                         enabled = bitmap != null,
                         modifier = Modifier.weight(1f),
@@ -171,38 +177,43 @@ internal fun PhotoCropDialog(
 
 private val FilterPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 
-/** Cover-fit scale: the smallest factor that makes [bitmap] fully cover a [boxPx]-sided square. */
-private fun coverScale(bitmap: Bitmap, boxPx: Float): Float =
-    max(boxPx / bitmap.width, boxPx / bitmap.height)
+/** Cover-fit scale: the smallest factor that makes [bitmap] fully cover a [boxW]x[boxH] frame. */
+private fun coverScale(bitmap: Bitmap, boxW: Float, boxH: Float): Float =
+    max(boxW / bitmap.width, boxH / bitmap.height)
 
 /**
- * Maps a source pixel onto a [boxPx]-sided square, applying cover-fit, zoom and pan. [pan] is a
- * fraction of the square side, so the same value works for both the preview and the output bitmap.
+ * Maps a source pixel onto a [boxW]x[boxH] frame, applying cover-fit, zoom and pan. [pan] is a
+ * fraction of the frame side (x of width, y of height), so the same value works for both the preview
+ * and the output bitmap.
  */
-private fun previewMatrix(bitmap: Bitmap, boxPx: Float, zoom: Float, pan: Offset): Matrix {
-    val eff = coverScale(bitmap, boxPx) * zoom
+private fun previewMatrix(bitmap: Bitmap, boxW: Float, boxH: Float, zoom: Float, pan: Offset): Matrix {
+    val eff = coverScale(bitmap, boxW, boxH) * zoom
     return Matrix().apply {
         postScale(eff, eff)
         postTranslate(
-            -bitmap.width / 2f * eff + boxPx / 2f + pan.x * boxPx,
-            -bitmap.height / 2f * eff + boxPx / 2f + pan.y * boxPx,
+            -bitmap.width / 2f * eff + boxW / 2f + pan.x * boxW,
+            -bitmap.height / 2f * eff + boxH / 2f + pan.y * boxH,
         )
     }
 }
 
-/** Keeps the framed image fully covering the square so no empty edges can be cropped in. */
-private fun clampPan(pan: Offset, bitmap: Bitmap, zoom: Float): Offset {
-    // eff / boxPx == coverScale(box)/box * zoom, which is independent of the box side.
-    val effOverBox = max(1f / bitmap.width, 1f / bitmap.height) * zoom
-    val maxX = max(0f, bitmap.width * effOverBox / 2f - 0.5f)
-    val maxY = max(0f, bitmap.height * effOverBox / 2f - 0.5f)
+/** Keeps the framed image fully covering the frame so no empty edges can be cropped in. */
+private fun clampPan(pan: Offset, bitmap: Bitmap, boxW: Float, boxH: Float, zoom: Float): Offset {
+    val eff = coverScale(bitmap, boxW, boxH) * zoom
+    val maxX = max(0f, (bitmap.width * eff / boxW - 1f) / 2f)
+    val maxY = max(0f, (bitmap.height * eff / boxH - 1f) / 2f)
     return Offset(pan.x.coerceIn(-maxX, maxX), pan.y.coerceIn(-maxY, maxY))
 }
 
-/** Renders the framed region to a square [OUTPUT_SIZE] bitmap, matching the preview exactly. */
-private fun cropBitmap(bitmap: Bitmap, zoom: Float, pan: Offset): Bitmap {
-    val result = Bitmap.createBitmap(OUTPUT_SIZE, OUTPUT_SIZE, Bitmap.Config.ARGB_8888)
-    val matrix = previewMatrix(bitmap, OUTPUT_SIZE.toFloat(), zoom, pan)
+/**
+ * Renders the framed region to an output bitmap of the given [aspectRatio] (longest side capped at
+ * [OUTPUT_LONGEST]), matching the preview exactly.
+ */
+private fun cropBitmap(bitmap: Bitmap, aspectRatio: Float, zoom: Float, pan: Offset): Bitmap {
+    val outW = if (aspectRatio >= 1f) OUTPUT_LONGEST else (OUTPUT_LONGEST * aspectRatio).roundToInt()
+    val outH = if (aspectRatio >= 1f) (OUTPUT_LONGEST / aspectRatio).roundToInt() else OUTPUT_LONGEST
+    val result = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
+    val matrix = previewMatrix(bitmap, outW.toFloat(), outH.toFloat(), zoom, pan)
     android.graphics.Canvas(result).drawBitmap(bitmap, matrix, FilterPaint)
     return result
 }
