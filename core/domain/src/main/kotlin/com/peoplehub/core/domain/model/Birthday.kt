@@ -24,10 +24,12 @@ data class UpcomingBirthday(
 
 /**
  * How far ahead of a birthday a reminder fires. Multiple offsets can be active independently.
+ * [SAME_DAY] is the "happy birthday" notification on the day itself.
  *
  * @property daysBefore number of days before the birthday the reminder should trigger.
  */
 enum class ReminderOffset(val daysBefore: Int) {
+    SAME_DAY(0),
     ONE_DAY(1),
     THREE_DAYS(3),
     ONE_WEEK(7),

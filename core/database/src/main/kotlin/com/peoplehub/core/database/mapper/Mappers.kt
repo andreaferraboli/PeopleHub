@@ -8,6 +8,7 @@ import com.peoplehub.core.database.entity.PersonTagEntity
 import com.peoplehub.core.database.entity.PersonWithDetails
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInThreshold
+import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.domain.model.Interest
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
@@ -106,6 +107,8 @@ fun EventEntity.toDomain(): PersonEvent =
         description = description,
         category = category,
         backgroundImagePath = backgroundImagePath,
+        backgroundSourcePath = backgroundSourcePath,
+        backgroundCrop = CropTransform(zoom = backgroundZoom, panX = backgroundPanX, panY = backgroundPanY),
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )
@@ -119,6 +122,10 @@ fun PersonEvent.toEntity(): EventEntity =
         description = description,
         category = category,
         backgroundImagePath = backgroundImagePath,
+        backgroundSourcePath = backgroundSourcePath,
+        backgroundZoom = backgroundCrop.zoom,
+        backgroundPanX = backgroundCrop.panX,
+        backgroundPanY = backgroundCrop.panY,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )

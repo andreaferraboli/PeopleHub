@@ -742,7 +742,7 @@ private fun CheckInDialog(
     )
 
     if (showStartPicker) {
-        PastDatePickerDialog(
+        MeetupDatePickerDialog(
             initialDate = startDate,
             minDate = null,
             onPicked = { picked ->
@@ -753,7 +753,7 @@ private fun CheckInDialog(
         )
     }
     if (showEndPicker) {
-        PastDatePickerDialog(
+        MeetupDatePickerDialog(
             initialDate = endDate,
             minDate = startDate,
             onPicked = { endDate = it },
@@ -763,20 +763,17 @@ private fun CheckInDialog(
 }
 
 /**
- * A [DatePickerDialog] restricted to today or earlier (a meeting can only have already happened),
- * optionally floored at [minDate] so an end date can't precede its start.
+ * A [DatePickerDialog] for a meetup day, optionally floored at [minDate] so an end date can't
+ * precede its start. Future days are selectable so a planned outing can be recorded ahead of time.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PastDatePickerDialog(
+private fun MeetupDatePickerDialog(
     initialDate: LocalDate,
     minDate: LocalDate?,
     onPicked: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val today = remember { LocalDate.now() }
-    val todayUtcMillis =
-        remember(today) { today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }
     val minUtcMillis = minDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
     val datePickerState =
         rememberDatePickerState(
@@ -784,7 +781,7 @@ private fun PastDatePickerDialog(
             selectableDates =
                 object : SelectableDates {
                     override fun isSelectableDate(utcTimeMillis: Long): Boolean =
-                        utcTimeMillis <= todayUtcMillis && (minUtcMillis == null || utcTimeMillis >= minUtcMillis)
+                        minUtcMillis == null || utcTimeMillis >= minUtcMillis
                 },
         )
     DatePickerDialog(
@@ -868,15 +865,9 @@ private fun CheckInEditDialog(
     )
 
     if (showDatePicker) {
-        val todayUtcMillis = today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         val datePickerState =
             rememberDatePickerState(
                 initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
-                selectableDates =
-                    object : SelectableDates {
-                        // A meeting can only have happened today or in the past.
-                        override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= todayUtcMillis
-                    },
             )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },

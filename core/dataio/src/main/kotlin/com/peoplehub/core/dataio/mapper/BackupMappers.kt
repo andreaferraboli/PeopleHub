@@ -8,6 +8,7 @@ import com.peoplehub.core.dataio.dto.PersonDto
 import com.peoplehub.core.domain.model.BackupData
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInThreshold
+import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.domain.model.Interest
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
@@ -104,6 +105,8 @@ fun EventDto.toDomain(): PersonEvent =
         description = description,
         category = category,
         backgroundImagePath = backgroundImagePath,
+        backgroundSourcePath = backgroundSourcePath,
+        backgroundCrop = CropTransform(zoom = backgroundZoom, panX = backgroundPanX, panY = backgroundPanY),
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )
@@ -117,6 +120,10 @@ fun PersonEvent.toDto(): EventDto =
         description = description,
         category = category,
         backgroundImagePath = backgroundImagePath,
+        backgroundSourcePath = backgroundSourcePath,
+        backgroundZoom = backgroundCrop.zoom,
+        backgroundPanX = backgroundCrop.panX,
+        backgroundPanY = backgroundCrop.panY,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
     )

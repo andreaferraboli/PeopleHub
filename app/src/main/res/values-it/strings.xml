@@ -49,6 +49,7 @@
     <string name="vault_threshold_warning">Avviso dopo (giorni)</string>
     <string name="vault_threshold_critical">Critico dopo (giorni)</string>
     <string name="vault_reminders_title">Promemoria compleanni</string>
+    <string name="vault_reminder_same_day">Il giorno stesso</string>
     <string name="vault_reminder_1d">1 giorno prima</string>
     <string name="vault_reminder_3d">3 giorni prima</string>
     <string name="vault_reminder_7d">7 giorni prima</string>

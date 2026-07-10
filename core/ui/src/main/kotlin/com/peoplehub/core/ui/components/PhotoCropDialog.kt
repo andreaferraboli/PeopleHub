@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.ui.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -51,20 +52,26 @@ private const val OUTPUT_LONGEST = 1024
 private const val LOAD_MAX_DIM = 2048
 
 /**
- * A crop dialog letting the user pan and pinch-zoom a freshly picked image to frame the part they
- * want before it becomes a stored photo. The on-screen preview and the produced bitmap share the
- * same transform, so the result is exactly what the user sees inside the frame.
+ * A crop dialog letting the user pan and pinch-zoom an image to frame the part they want before it
+ * becomes a stored photo. The on-screen preview and the produced bitmap share the same transform, so
+ * the result is exactly what the user sees inside the frame.
  *
  * [aspectRatio] is the frame's width / height: `1f` gives a square crop (person avatars), a value
  * like `16f / 9f` gives a wide banner crop (event backgrounds). The output bitmap keeps that ratio
  * with its longest side capped at 1024 px.
+ *
+ * Pass [initialCrop] to reopen a previously saved framing of the same [sourceUri] — the dialog
+ * starts exactly where the user left it, so a background can be repositioned rather than re-framed
+ * from scratch. [onCropped] hands back both the rendered bitmap and the transform that produced it,
+ * so callers can persist the latter alongside the image.
  */
 @Composable
 fun PhotoCropDialog(
     sourceUri: Uri,
     onCancel: () -> Unit,
-    onCropped: (Bitmap) -> Unit,
+    onCropped: (Bitmap, CropTransform) -> Unit,
     aspectRatio: Float = 1f,
+    initialCrop: CropTransform = CropTransform.Default,
 ) {
     val context = LocalContext.current
     var bitmap by remember(sourceUri) { mutableStateOf<Bitmap?>(null) }
@@ -78,8 +85,8 @@ fun PhotoCropDialog(
     // Transform state, relative to the cover-fit baseline: zoom == 1 fills the frame.
     // `pan` is stored as a fraction of the frame side (x of width, y of height) so it is independent
     // of the on-screen size and maps identically onto the larger output bitmap.
-    var zoom by remember(sourceUri) { mutableFloatStateOf(1f) }
-    var pan by remember(sourceUri) { mutableStateOf(Offset.Zero) }
+    var zoom by remember(sourceUri) { mutableFloatStateOf(initialCrop.zoom.coerceIn(1f, MAX_ZOOM)) }
+    var pan by remember(sourceUri) { mutableStateOf(Offset(initialCrop.panX, initialCrop.panY)) }
 
     Dialog(
         onDismissRequest = onCancel,
@@ -164,7 +171,10 @@ fun PhotoCropDialog(
                         text = stringResource(R.string.crop_confirm),
                         onClick = {
                             val src = bitmap ?: return@PrimaryGoldButton
-                            onCropped(cropBitmap(src, aspectRatio, zoom, pan))
+                            onCropped(
+                                cropBitmap(src, aspectRatio, zoom, pan),
+                                CropTransform(zoom = zoom, panX = pan.x, panY = pan.y),
+                            )
                         },
                         enabled = bitmap != null,
                         modifier = Modifier.weight(1f),

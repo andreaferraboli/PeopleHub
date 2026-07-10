@@ -49,6 +49,7 @@
     <string name="vault_threshold_warning">Warning after (days)</string>
     <string name="vault_threshold_critical">Critical after (days)</string>
     <string name="vault_reminders_title">Birthday reminders</string>
+    <string name="vault_reminder_same_day">On the day</string>
     <string name="vault_reminder_1d">1 day before</string>
     <string name="vault_reminder_3d">3 days before</string>
     <string name="vault_reminder_7d">7 days before</string>

@@ -1,8 +1,10 @@
 package com.peoplehub.feature.widget
 
+import com.peoplehub.core.domain.usecase.GetEventsUseCase
 import com.peoplehub.core.domain.usecase.GetPinnedEventUseCase
 import com.peoplehub.core.domain.usecase.GetUpcomingBirthdaysUseCase
 import com.peoplehub.core.domain.usecase.GetUrgentCheckInsUseCase
+import com.peoplehub.core.domain.usecase.ObserveEventUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -20,6 +22,12 @@ interface WidgetEntryPoint {
     fun getUrgentCheckIns(): GetUrgentCheckInsUseCase
 
     fun getPinnedEvent(): GetPinnedEventUseCase
+
+    /** Backs the widget configuration screen's event list. */
+    fun getEvents(): GetEventsUseCase
+
+    /** Reads the single event a configured widget instance is bound to. */
+    fun observeEvent(): ObserveEventUseCase
 
     fun clock(): Clock
 }

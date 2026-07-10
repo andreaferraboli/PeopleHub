@@ -56,5 +56,6 @@
     <string name="event_field_background">Sfondo della card</string>
     <string name="event_background_add">Scegli un\'immagine</string>
     <string name="event_background_remove">Rimuovi immagine</string>
+    <string name="event_background_reposition">Riposiziona e zooma</string>
     <string name="event_background_existing">Riusa un\'immagine esistente</string>
 </resources>

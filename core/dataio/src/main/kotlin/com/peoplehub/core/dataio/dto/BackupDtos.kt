@@ -62,6 +62,10 @@ data class EventDto(
     val description: String? = null,
     val category: String? = null,
     val backgroundImagePath: String? = null,
+    val backgroundSourcePath: String? = null,
+    val backgroundZoom: Float = 1f,
+    val backgroundPanX: Float = 0f,
+    val backgroundPanY: Float = 0f,
     val personId: Long? = null,
     val pinnedToWidget: Boolean = false,
 )

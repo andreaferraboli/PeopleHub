@@ -10,6 +10,7 @@ import com.peoplehub.core.domain.usecase.ObserveEventUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
 import com.peoplehub.core.domain.usecase.SetEventPinnedUseCase
 import com.peoplehub.core.domain.util.DateCalculations
+import com.peoplehub.core.domain.widget.WidgetRefresher
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.feature.events.navigation.EventDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,6 +46,7 @@ class EventDetailViewModel
         observePerson: ObservePersonUseCase,
         private val setEventPinned: SetEventPinnedUseCase,
         private val deleteEvent: DeleteEventUseCase,
+        private val widgetRefresher: WidgetRefresher,
         private val clock: Clock,
     ) : ViewModel() {
         private val eventId: Long = savedStateHandle.toRoute<EventDetailRoute>().eventId
@@ -85,12 +87,17 @@ class EventDetailViewModel
                 )
 
         fun onTogglePin(pinned: Boolean) {
-            viewModelScope.launch { setEventPinned(eventId, pinned) }
+            viewModelScope.launch {
+                setEventPinned(eventId, pinned)
+                widgetRefresher.refresh()
+            }
         }
 
         fun onDelete() {
             viewModelScope.launch {
                 deleteEvent(eventId)
+                // A widget bound to this event must stop showing it.
+                widgetRefresher.refresh()
                 closedSignal.value = true
             }
         }

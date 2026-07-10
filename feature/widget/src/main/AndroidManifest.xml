@@ -37,6 +37,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/pinned_event_widget_info" />
         </receiver>
+
+        <!-- Launched by the host when an event widget is added or reconfigured, so it must be exported. -->
+        <activity
+            android:name=".EventWidgetConfigActivity"
+            android:exported="true"
+            android:label="@string/widget_event_config_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

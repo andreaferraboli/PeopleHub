@@ -487,6 +487,7 @@ private fun ImportStrategyDialog(onReplace: () -> Unit, onMerge: () -> Unit, onD
 @Composable
 private fun reminderLabel(offset: ReminderOffset): String =
     when (offset) {
+        ReminderOffset.SAME_DAY -> stringResource(R.string.vault_reminder_same_day)
         ReminderOffset.ONE_DAY -> stringResource(R.string.vault_reminder_1d)
         ReminderOffset.THREE_DAYS -> stringResource(R.string.vault_reminder_3d)
         ReminderOffset.ONE_WEEK -> stringResource(R.string.vault_reminder_7d)

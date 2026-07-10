@@ -207,7 +207,7 @@ private fun MeetupDetailsCard(
     }
 
     if (showStartPicker) {
-        PastDatePickerDialog(
+        MeetupDatePickerDialog(
             initialDate = form.startDate,
             minDate = null,
             onPicked = onStartDate,
@@ -215,7 +215,7 @@ private fun MeetupDetailsCard(
         )
     }
     if (showEndPicker) {
-        PastDatePickerDialog(
+        MeetupDatePickerDialog(
             initialDate = form.endDate,
             minDate = form.startDate,
             onPicked = onEndDate,
@@ -242,18 +242,15 @@ private fun PersonPickRow(person: SelectablePerson, onToggle: () -> Unit) {
     }
 }
 
-/** A [DatePickerDialog] restricted to today or earlier, optionally floored at [minDate]. */
+/** A [DatePickerDialog] for a meetup day, optionally floored at [minDate]. Future days are allowed. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PastDatePickerDialog(
+private fun MeetupDatePickerDialog(
     initialDate: LocalDate,
     minDate: LocalDate?,
     onPicked: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val today = remember { LocalDate.now() }
-    val todayUtcMillis =
-        remember(today) { today.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }
     val minUtcMillis = minDate?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()
     val datePickerState =
         rememberDatePickerState(
@@ -261,7 +258,7 @@ private fun PastDatePickerDialog(
             selectableDates =
                 object : SelectableDates {
                     override fun isSelectableDate(utcTimeMillis: Long): Boolean =
-                        utcTimeMillis <= todayUtcMillis && (minUtcMillis == null || utcTimeMillis >= minUtcMillis)
+                        minUtcMillis == null || utcTimeMillis >= minUtcMillis
                 },
         )
     DatePickerDialog(

@@ -40,7 +40,7 @@ device. All data lives in a local Room database and DataStore.
 :feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import
 :feature:birthdays    Year/Month/List calendar views, CSV/JSON import + export
 :feature:events       Events list with filters, detail, add/edit, pin-to-widget
-:feature:widget       Three Glance widgets (birthdays, urgent check-ins, pinned event) + updater
+:feature:widget       Three Glance widgets (birthdays, urgent check-ins, event) + config activity + updater
 ```
 
 Dependency direction: `feature:* -> core:domain, core:ui (+ dataio where needed)`;
@@ -85,7 +85,14 @@ state views.
   `BirthdayAlarmReceiver`, which enqueues a one-off `BirthdayReminderWorker` and re-arms tomorrow's
   alarm. `BootReceiver` re-schedules everything after a reboot.
 - **Widgets**: `WidgetUpdateWorker` refreshes all Glance widgets every 6 hours; `updateWidgetsNow()`
-  triggers an immediate refresh after a check-in.
+  triggers an immediate refresh after a check-in. Feature modules request that refresh through the
+  `WidgetRefresher` fun-interface in `core:domain` (bound in the app's `CoreModule`), because
+  `:feature:events` cannot depend on `:feature:widget`.
+- **Event widget**: each placed instance stores its own `event_id` in Glance state, chosen in
+  `EventWidgetConfigActivity` (declared `android:configure` + `reconfigurable`), so several event
+  widgets can coexist. Instances placed before per-instance selection existed have no stored id and
+  fall back to the app's pinned event. The widget renders the event's background photo — the scrim
+  gradient is baked into the bitmap because Glance has no gradient brush.
 
 WorkManager uses the Hilt worker factory (the default initializer is disabled in the manifest and
 `PeopleHubApplication` implements `Configuration.Provider`).
@@ -162,6 +169,7 @@ source of truth.
 ## Known simplifications
 
 - Profile photos are picked with the permission-less Photo Picker and copied into internal storage;
-  camera capture (which would need a `FileProvider`) is not wired up.
+  camera capture (which would need a `FileProvider`) is not wired up. Person photos can't be
+  re-cropped after the fact (event backgrounds can — they keep their original alongside the crop).
 - Birthday reminder offsets are configured globally (Settings); per-person reminder overrides are
   not persisted (the schema models a single global set).

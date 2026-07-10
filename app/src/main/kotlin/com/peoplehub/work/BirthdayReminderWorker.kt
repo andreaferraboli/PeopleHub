@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.peoplehub.core.domain.model.ReminderOffset
 import com.peoplehub.core.domain.usecase.GetAllBirthdaysUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.notifications.PeopleHubNotifier
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.first
 /**
  * Evaluates today's birthday reminders: a "happy birthday" notification for birthdays that land
  * today, and an advance reminder for any birthday whose distance matches an enabled reminder offset.
+ * Both are opt-in — the same-day greeting only fires when [ReminderOffset.SAME_DAY] is enabled.
  * Triggered by the daily birthday alarm.
  */
 @HiltWorker
@@ -35,12 +37,12 @@ class BirthdayReminderWorker
                     .toSet()
             getAllBirthdays()
                 .first()
-                .filter { it.notificationsEnabled }
+                .filter { it.notificationsEnabled && it.daysUntil in enabledOffsets }
                 .forEach { birthday ->
-                    when {
-                        birthday.daysUntil == 0 -> notifier.showBirthdayToday(birthday.personId, birthday.fullName)
-                        birthday.daysUntil in enabledOffsets ->
-                            notifier.showBirthdayUpcoming(birthday.personId, birthday.fullName, birthday.daysUntil)
+                    if (birthday.daysUntil == ReminderOffset.SAME_DAY.daysBefore) {
+                        notifier.showBirthdayToday(birthday.personId, birthday.fullName)
+                    } else {
+                        notifier.showBirthdayUpcoming(birthday.personId, birthday.fullName, birthday.daysUntil)
                     }
                 }
             return Result.success()

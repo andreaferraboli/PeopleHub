@@ -104,7 +104,7 @@ fun AddEditPersonScreen(
         PhotoCropDialog(
             sourceUri = uri,
             onCancel = { cropUri = null },
-            onCropped = { bitmap ->
+            onCropped = { bitmap, _ ->
                 cropUri = null
                 scope.launch {
                     val path = PhotoStorage.saveBitmap(context, bitmap)

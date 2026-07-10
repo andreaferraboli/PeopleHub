@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.usecase.AddEventUseCase
@@ -11,6 +12,7 @@ import com.peoplehub.core.domain.usecase.GetPeopleUseCase
 import com.peoplehub.core.domain.usecase.ObserveEventBackgroundImagesUseCase
 import com.peoplehub.core.domain.usecase.ObserveEventCategoriesUseCase
 import com.peoplehub.core.domain.usecase.ObserveEventUseCase
+import com.peoplehub.core.domain.widget.WidgetRefresher
 import com.peoplehub.feature.events.navigation.AddEditEventRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,10 +41,19 @@ data class EventForm(
     val description: String = "",
     val category: String = "",
     val backgroundImagePath: String? = null,
+    val backgroundSourcePath: String? = null,
+    val backgroundCrop: CropTransform = CropTransform.Default,
     val personId: Long? = null,
     val pinnedToWidget: Boolean = false,
 ) {
     val canSave: Boolean get() = title.isNotBlank()
+
+    /**
+     * The image the crop editor should reopen: the untouched original when we still have it, else the
+     * cropped file itself (backgrounds saved before sources were kept, or reused from another event).
+     * Repositioning such a background can only zoom further into what was already cropped.
+     */
+    val backgroundCropSource: String? get() = backgroundSourcePath ?: backgroundImagePath
 }
 
 /** Backs the add/edit event screen, seeding the form when editing and persisting via the use case. */
@@ -56,6 +67,7 @@ class AddEditEventViewModel
         observeCategories: ObserveEventCategoriesUseCase,
         observeBackgroundImages: ObserveEventBackgroundImagesUseCase,
         private val addEvent: AddEventUseCase,
+        private val widgetRefresher: WidgetRefresher,
         private val clock: Clock,
     ) : ViewModel() {
         private val eventId: Long = savedStateHandle.toRoute<AddEditEventRoute>().eventId
@@ -116,7 +128,29 @@ class AddEditEventViewModel
 
         fun onCategoryChange(value: String) = _form.update { it.copy(category = value) }
 
-        fun onBackgroundImageChange(path: String?) = _form.update { it.copy(backgroundImagePath = path) }
+        /**
+         * Adopts a background that was not produced by this screen's crop editor: an image reused from
+         * another event, or `null` to clear it. The source and framing are reset because we no longer
+         * know which original [path] was cropped from.
+         */
+        fun onBackgroundImageChange(path: String?) =
+            _form.update {
+                it.copy(
+                    backgroundImagePath = path,
+                    backgroundSourcePath = null,
+                    backgroundCrop = CropTransform.Default,
+                )
+            }
+
+        /** Records a freshly cropped background together with the original and the framing used. */
+        fun onBackgroundCropped(imagePath: String, sourcePath: String?, crop: CropTransform) =
+            _form.update {
+                it.copy(
+                    backgroundImagePath = imagePath,
+                    backgroundSourcePath = sourcePath,
+                    backgroundCrop = crop,
+                )
+            }
 
         fun onPersonChange(value: Long?) = _form.update { it.copy(personId = value) }
 
@@ -133,7 +167,11 @@ class AddEditEventViewModel
             val form = _form.value
             viewModelScope.launch {
                 addEvent(form.toEvent()).fold(
-                    onSuccess = { _saved.value = true },
+                    onSuccess = {
+                        // A widget may already be showing this event's title or photo.
+                        widgetRefresher.refresh()
+                        _saved.value = true
+                    },
                     onFailure = { _error.value = it.message ?: "Could not save" },
                 )
             }
@@ -151,6 +189,8 @@ class AddEditEventViewModel
                 description = description.orEmpty(),
                 category = category.orEmpty(),
                 backgroundImagePath = backgroundImagePath,
+                backgroundSourcePath = backgroundSourcePath,
+                backgroundCrop = backgroundCrop,
                 personId = personId,
                 pinnedToWidget = pinnedToWidget,
             )
@@ -163,6 +203,8 @@ class AddEditEventViewModel
                 description = description.ifBlank { null },
                 category = category.ifBlank { null },
                 backgroundImagePath = backgroundImagePath,
+                backgroundSourcePath = backgroundSourcePath,
+                backgroundCrop = backgroundCrop,
                 personId = personId,
                 pinnedToWidget = pinnedToWidget,
             )

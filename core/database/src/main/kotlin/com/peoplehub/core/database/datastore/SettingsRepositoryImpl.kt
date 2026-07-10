@@ -24,11 +24,7 @@ internal class SettingsRepositoryImpl
             dataStore.data.map { prefs ->
                 val warning = prefs[Keys.WARNING_DAYS] ?: CheckInThreshold.Default.warningDays
                 val critical = prefs[Keys.CRITICAL_DAYS] ?: CheckInThreshold.Default.criticalDays
-                val offsets =
-                    prefs[Keys.REMINDER_OFFSETS]
-                        ?.mapNotNull { name -> runCatching { ReminderOffset.valueOf(name) }.getOrNull() }
-                        ?.toSet()
-                        ?: AppSettings().birthdayReminderOffsets
+                val offsets = readOffsets(prefs)
                 AppSettings(
                     defaultCheckInThreshold = CheckInThreshold(warning, critical),
                     birthdayReminderOffsets = offsets,
@@ -46,9 +42,26 @@ internal class SettingsRepositoryImpl
 
         override suspend fun setBirthdayReminderOffsets(offsets: Set<ReminderOffset>) {
             dataStore.edit { prefs ->
-                prefs[Keys.REMINDER_OFFSETS] = offsets.map { it.name }.toSet()
+                prefs[Keys.REMINDER_OFFSETS_V2] = offsets.map { it.name }.toSet()
             }
         }
+
+        /**
+         * Reads the enabled reminder offsets, migrating the pre-`SAME_DAY` v1 set on the fly.
+         *
+         * Before `SAME_DAY` existed the same-day greeting fired unconditionally, so a v1 set is
+         * upgraded by adding it — otherwise upgrading users would silently stop being reminded on the
+         * birthday itself. Writes always go to the v2 key, so a user who then unticks "on the day"
+         * keeps that choice.
+         */
+        private fun readOffsets(prefs: Preferences): Set<ReminderOffset> {
+            prefs[Keys.REMINDER_OFFSETS_V2]?.let { return it.toOffsets() }
+            prefs[Keys.REMINDER_OFFSETS]?.let { return it.toOffsets() + ReminderOffset.SAME_DAY }
+            return AppSettings().birthdayReminderOffsets
+        }
+
+        private fun Set<String>.toOffsets(): Set<ReminderOffset> =
+            mapNotNull { name -> runCatching { ReminderOffset.valueOf(name) }.getOrNull() }.toSet()
 
         override suspend fun setUseExactAlarms(enabled: Boolean) {
             dataStore.edit { prefs -> prefs[Keys.USE_EXACT_ALARMS] = enabled }
@@ -61,7 +74,10 @@ internal class SettingsRepositoryImpl
         private object Keys {
             val WARNING_DAYS = intPreferencesKey("warning_days")
             val CRITICAL_DAYS = intPreferencesKey("critical_days")
+
+            /** Legacy (pre-`SAME_DAY`) set, read-only — see `readOffsets`. */
             val REMINDER_OFFSETS = stringSetPreferencesKey("reminder_offsets")
+            val REMINDER_OFFSETS_V2 = stringSetPreferencesKey("reminder_offsets_v2")
             val USE_EXACT_ALARMS = booleanPreferencesKey("use_exact_alarms")
             val DAILY_REMINDER_HOUR = intPreferencesKey("daily_reminder_hour")
         }

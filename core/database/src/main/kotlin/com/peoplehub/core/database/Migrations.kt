@@ -18,6 +18,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *   defaulting to off/`0`).
  * - **v5** — adds `is_family` to `person` (marks family members, who are exempt from the check-in
  *   frequency tracker and its reminders, defaulting to off/`0`).
+ * - **v6** — adds `background_source_path` plus the `background_zoom` / `background_pan_x` /
+ *   `background_pan_y` crop transform to `event`, so an event's background framing can be adjusted
+ *   later from the untouched original. Existing rows keep a null source and the identity transform.
  */
 internal val MIGRATION_1_2: Migration =
     object : Migration(1, 2) {
@@ -50,6 +53,16 @@ internal val MIGRATION_4_5: Migration =
         }
     }
 
+internal val MIGRATION_5_6: Migration =
+    object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE event ADD COLUMN background_source_path TEXT")
+            db.execSQL("ALTER TABLE event ADD COLUMN background_zoom REAL NOT NULL DEFAULT 1.0")
+            db.execSQL("ALTER TABLE event ADD COLUMN background_pan_x REAL NOT NULL DEFAULT 0.0")
+            db.execSQL("ALTER TABLE event ADD COLUMN background_pan_y REAL NOT NULL DEFAULT 0.0")
+        }
+    }
+
 /** All migrations registered with the database builder, in order. */
 internal val ALL_MIGRATIONS: Array<Migration> =
-    arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+    arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)

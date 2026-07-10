@@ -1,5 +1,6 @@
 package com.peoplehub.feature.events.edit
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
+import androidx.compose.material.icons.outlined.Crop
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -65,6 +67,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.GhostButton
@@ -86,6 +89,17 @@ private val TimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 /** Wide banner ratio for event card backgrounds, matching how they render on cards and detail. */
 private const val EVENT_BACKGROUND_ASPECT_RATIO = 16f / 9f
 
+/**
+ * A pending crop: the image to frame, where its original lives (so it can be re-framed later), and
+ * the framing to open with — [CropTransform.Default] for a fresh pick, the saved one when
+ * repositioning.
+ */
+private data class CropRequest(
+    val uri: Uri,
+    val sourcePath: String?,
+    val initialCrop: CropTransform,
+)
+
 /** Add or edit an event. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,22 +116,34 @@ fun AddEditEventScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var cropUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var cropRequest by remember { mutableStateOf<CropRequest?>(null) }
     val imageLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            if (uri != null) cropUri = uri
+            if (uri == null) return@rememberLauncherForActivityResult
+            // Copy the pick into internal storage first: the picker's read grant is short-lived, but the
+            // original has to outlive it so the framing can be adjusted again later.
+            scope.launch {
+                val sourcePath = EventImageStorage.saveSource(context, uri)
+                cropRequest =
+                    CropRequest(
+                        uri = sourcePath?.let { Uri.fromFile(File(it)) } ?: uri,
+                        sourcePath = sourcePath,
+                        initialCrop = CropTransform.Default,
+                    )
+            }
         }
 
-    cropUri?.let { uri ->
+    cropRequest?.let { request ->
         PhotoCropDialog(
-            sourceUri = uri,
+            sourceUri = request.uri,
             aspectRatio = EVENT_BACKGROUND_ASPECT_RATIO,
-            onCancel = { cropUri = null },
-            onCropped = { bitmap ->
-                cropUri = null
+            initialCrop = request.initialCrop,
+            onCancel = { cropRequest = null },
+            onCropped = { bitmap, crop ->
+                cropRequest = null
                 scope.launch {
                     val path = EventImageStorage.saveBitmap(context, bitmap)
-                    if (path != null) viewModel.onBackgroundImageChange(path)
+                    if (path != null) viewModel.onBackgroundCropped(path, request.sourcePath, crop)
                 }
             },
         )
@@ -217,6 +243,22 @@ fun AddEditEventScreen(
                     imageLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                     )
+                },
+                onReposition = {
+                    val source = form.backgroundCropSource ?: return@BackgroundImageSection
+                    cropRequest =
+                        CropRequest(
+                            uri = Uri.fromFile(File(source)),
+                            sourcePath = form.backgroundSourcePath,
+                            // Only the stored original was framed by that transform; a cropped stand-in
+                            // starts fresh, otherwise we'd re-apply the zoom on top of itself.
+                            initialCrop =
+                                if (form.backgroundSourcePath != null) {
+                                    form.backgroundCrop
+                                } else {
+                                    CropTransform.Default
+                                },
+                        )
                 },
                 onSelectExisting = viewModel::onBackgroundImageChange,
                 onRemove = { viewModel.onBackgroundImageChange(null) },
@@ -375,6 +417,7 @@ private fun BackgroundImageSection(
     selectedPath: String?,
     suggestions: List<String>,
     onPickNew: () -> Unit,
+    onReposition: () -> Unit,
     onSelectExisting: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
@@ -391,7 +434,8 @@ private fun BackgroundImageSection(
                         Modifier
                             .fillMaxWidth()
                             .height(140.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(onClick = onReposition),
                 )
                 TooltipIconButton(
                     icon = Icons.Outlined.Delete,
@@ -401,6 +445,13 @@ private fun BackgroundImageSection(
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
+            Spacer(Modifier.height(8.dp))
+            GhostButton(
+                text = stringResource(R.string.event_background_reposition),
+                onClick = onReposition,
+                icon = Icons.Outlined.Crop,
+                modifier = Modifier.fillMaxWidth(),
+            )
             Spacer(Modifier.height(8.dp))
         }
         GhostButton(

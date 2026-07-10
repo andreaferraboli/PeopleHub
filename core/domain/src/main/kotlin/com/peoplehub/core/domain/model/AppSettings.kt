@@ -11,7 +11,8 @@ package com.peoplehub.core.domain.model
  */
 data class AppSettings(
     val defaultCheckInThreshold: CheckInThreshold = CheckInThreshold.Default,
-    val birthdayReminderOffsets: Set<ReminderOffset> = setOf(ReminderOffset.ONE_DAY, ReminderOffset.ONE_WEEK),
+    val birthdayReminderOffsets: Set<ReminderOffset> =
+        setOf(ReminderOffset.SAME_DAY, ReminderOffset.ONE_DAY, ReminderOffset.ONE_WEEK),
     val useExactAlarms: Boolean = true,
     val dailyReminderHour: Int = DEFAULT_REMINDER_HOUR,
 ) {

@@ -140,6 +140,10 @@ class ObserveCheckInHistoryUseCase
  * Observes people whose check-in recency has reached at least the warning threshold, ordered by
  * urgency (never-seen and most-overdue first). Drives the home "urgent check-ins" section and the
  * check-in widget.
+ *
+ * People who are not part of the cadence tracker never appear: birthday-only entries (bare
+ * birthdays, filtered out at the query), family members (seen all the time) and anyone with
+ * check-ins explicitly disabled.
  */
 class GetUrgentCheckInsUseCase
     @Inject
@@ -150,12 +154,12 @@ class GetUrgentCheckInsUseCase
     ) {
         operator fun invoke(): Flow<List<CheckInUrgency>> =
             combine(
-                peopleRepository.observePeople(PeopleFilter()),
+                peopleRepository.observePeople(PeopleFilter(includeBirthdayOnly = false)),
                 settingsRepository.settings,
             ) { people, settings ->
                 val now = clock.instant()
                 people
-                    .filter { !it.checkInDisabled && !it.isFamily }
+                    .filter { !it.checkInDisabled && !it.isFamily && !it.birthdayOnly }
                     .map { person ->
                         val threshold = person.checkInThreshold ?: settings.defaultCheckInThreshold
                         val daysSince = person.lastCheckInAt?.let { DateCalculations.daysSince(it, now) }

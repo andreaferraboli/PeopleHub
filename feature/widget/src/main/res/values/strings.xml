@@ -3,7 +3,7 @@
     <!-- Widget labels (shown in the launcher's widget picker) -->
     <string name="widget_birthdays_label">PeopleHub · Birthdays</string>
     <string name="widget_checkins_label">PeopleHub · Meetups</string>
-    <string name="widget_event_label">PeopleHub · Pinned event</string>
+    <string name="widget_event_label">PeopleHub · Event</string>
 
     <!-- Widget content -->
     <string name="widget_birthdays_title">Upcoming birthdays</string>
@@ -11,7 +11,12 @@
     <string name="widget_checkins_title">Overdue meetups</string>
     <string name="widget_checkins_empty">All caught up ✨</string>
     <string name="widget_event_title">Pinned event</string>
-    <string name="widget_event_empty">Pin an event to see it here</string>
+    <string name="widget_event_empty">Choose an event to see it here</string>
+    <string name="widget_event_config_title">Choose an event</string>
+    <string name="widget_event_config_empty">No events yet</string>
+    <string name="widget_event_in">In</string>
+    <string name="widget_event_days">Days</string>
+    <string name="widget_event_days_ago">Days ago</string>
 
     <string name="widget_today">Today</string>
     <string name="widget_tomorrow">Tomorrow</string>

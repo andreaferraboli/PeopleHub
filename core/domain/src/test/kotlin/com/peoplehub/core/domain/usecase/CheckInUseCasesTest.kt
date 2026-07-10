@@ -3,6 +3,7 @@ package com.peoplehub.core.domain.usecase
 import app.cash.turbine.test
 import com.peoplehub.core.domain.model.AppSettings
 import com.peoplehub.core.domain.model.CheckIn
+import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
@@ -157,5 +158,46 @@ class CheckInUseCasesTest {
                 assertEquals(listOf(4L, 3L, 2L), urgent.map { it.person.id })
                 awaitComplete()
             }
+        }
+
+    @Test
+    fun `urgent check-ins exclude family, birthday-only and check-in-disabled people`() =
+        runTest {
+            val peopleRepository = mockk<PeopleRepository>()
+            val settingsRepository = mockk<SettingsRepository>()
+            val longAgo = now.minus(90, ChronoUnit.DAYS)
+            val tracked = Person(id = 1, firstName = "Tracked", lastName = "One", lastCheckInAt = longAgo)
+            val family = Person(id = 2, firstName = "Fam", lastName = "Ily", lastCheckInAt = longAgo, isFamily = true)
+            val birthdayOnly =
+                Person(id = 3, firstName = "Cake", lastName = "Only", lastCheckInAt = longAgo, birthdayOnly = true)
+            val disabled =
+                Person(id = 4, firstName = "Off", lastName = "Track", lastCheckInAt = longAgo, checkInDisabled = true)
+            every { peopleRepository.observePeople(any()) } returns
+                flowOf(listOf(tracked, family, birthdayOnly, disabled))
+            every { settingsRepository.settings } returns flowOf(AppSettings())
+
+            val useCase = GetUrgentCheckInsUseCase(peopleRepository, settingsRepository, clock)
+
+            useCase().test {
+                assertEquals(listOf(1L), awaitItem().map { it.person.id })
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `urgent check-ins query excludes birthday-only entries at the source`() =
+        runTest {
+            val peopleRepository = mockk<PeopleRepository>()
+            val settingsRepository = mockk<SettingsRepository>()
+            val filters = mutableListOf<PeopleFilter>()
+            every { peopleRepository.observePeople(capture(filters)) } returns flowOf(emptyList())
+            every { settingsRepository.settings } returns flowOf(AppSettings())
+
+            GetUrgentCheckInsUseCase(peopleRepository, settingsRepository, clock)().test {
+                awaitItem()
+                awaitComplete()
+            }
+
+            assertEquals(false, filters.single().includeBirthdayOnly)
         }
 }

@@ -9,6 +9,7 @@ import com.peoplehub.core.domain.usecase.GetEventsUseCase
 import com.peoplehub.core.domain.usecase.ObserveEventCategoriesUseCase
 import com.peoplehub.core.domain.usecase.SetEventPinnedUseCase
 import com.peoplehub.core.domain.util.DateCalculations
+import com.peoplehub.core.domain.widget.WidgetRefresher
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.state.toListUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -59,6 +60,7 @@ class EventsListViewModel
         getEvents: GetEventsUseCase,
         observeCategories: ObserveEventCategoriesUseCase,
         private val setEventPinned: SetEventPinnedUseCase,
+        private val widgetRefresher: WidgetRefresher,
         private val clock: Clock,
     ) : ViewModel() {
         private val timeFilter = MutableStateFlow(EventTimeFilter.ALL)
@@ -104,7 +106,10 @@ class EventsListViewModel
         fun onCategoryChange(value: String?) = category.update { current -> if (current == value) null else value }
 
         fun onTogglePin(eventId: Long, pinned: Boolean) {
-            viewModelScope.launch { setEventPinned(eventId, pinned) }
+            viewModelScope.launch {
+                setEventPinned(eventId, pinned)
+                widgetRefresher.refresh()
+            }
         }
 
         private fun PersonEvent.toListItem(): EventListItem {

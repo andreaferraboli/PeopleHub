@@ -29,6 +29,10 @@ data class EventEntity(
     @ColumnInfo(name = "description") val description: String?,
     @ColumnInfo(name = "category") val category: String?,
     @ColumnInfo(name = "background_image_path") val backgroundImagePath: String?,
+    @ColumnInfo(name = "background_source_path") val backgroundSourcePath: String? = null,
+    @ColumnInfo(name = "background_zoom", defaultValue = "1.0") val backgroundZoom: Float = 1f,
+    @ColumnInfo(name = "background_pan_x", defaultValue = "0.0") val backgroundPanX: Float = 0f,
+    @ColumnInfo(name = "background_pan_y", defaultValue = "0.0") val backgroundPanY: Float = 0f,
     @ColumnInfo(name = "person_id") val personId: Long?,
     @ColumnInfo(name = "pinned_to_widget") val pinnedToWidget: Boolean,
 )
