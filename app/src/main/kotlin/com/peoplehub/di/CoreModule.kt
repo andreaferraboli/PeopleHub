@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.time.Clock
 import javax.inject.Singleton
+import kotlin.random.Random
 
 /** Application-wide bindings that don't belong to a specific data source. */
 @Module
@@ -29,4 +30,12 @@ object CoreModule {
     @Provides
     @Singleton
     fun provideClock(): Clock = Clock.systemDefaultZone()
+
+    /**
+     * The randomness source behind the deliberately-irregular reminder cadence. Injecting it (rather
+     * than calling [kotlin.random.Random] directly) keeps the jitter logic deterministic in tests.
+     */
+    @Provides
+    @Singleton
+    fun provideRandom(): Random = Random.Default
 }

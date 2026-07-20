@@ -45,6 +45,8 @@ fun NavGraphBuilder.peopleSection(
     onEditPerson: (Long) -> Unit,
     onEventClick: (Long) -> Unit,
     onRecordMeetup: () -> Unit,
+    onAddReminder: (Long) -> Unit,
+    onEditReminder: (Long) -> Unit,
     onBack: () -> Unit,
 ) {
     composable<PeopleListRoute> {
@@ -64,6 +66,8 @@ fun NavGraphBuilder.peopleSection(
             onBack = onBack,
             onEdit = onEditPerson,
             onEventClick = onEventClick,
+            onAddReminder = onAddReminder,
+            onEditReminder = onEditReminder,
         )
     }
     composable<AddEditPersonRoute> {

@@ -44,7 +44,14 @@ class PeopleHubNotifier
                     NotificationManager.IMPORTANCE_HIGH,
                 ).apply { description = context.getString(R.string.channel_birthday_desc) }
 
-            manager.createNotificationChannels(listOf(checkIn, birthday))
+            val relationship =
+                NotificationChannel(
+                    NotificationChannels.RELATIONSHIP,
+                    context.getString(R.string.channel_reminder_name),
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply { description = context.getString(R.string.channel_reminder_desc) }
+
+            manager.createNotificationChannels(listOf(checkIn, birthday, relationship))
         }
 
         /**
@@ -95,6 +102,30 @@ class PeopleHubNotifier
             post(id, builder)
         }
 
+        /**
+         * "[name]: [title]" (e.g. "Marco: Bring flowers") with the reminder's [note] as the body,
+         * deep-linking to the person and offering a "Done" action that reschedules the reminder from
+         * now without opening the app.
+         */
+        fun showRelationshipReminder(reminderId: Long, personId: Long, name: String, title: String, note: String?) {
+            val id = NotificationIds.reminder(reminderId)
+            val builder =
+                baseBuilder(NotificationChannels.RELATIONSHIP)
+                    .setContentTitle(context.getString(R.string.notif_reminder_title, name, title))
+                    .setContentIntent(personPendingIntent(personId, id))
+                    .addAction(
+                        0,
+                        context.getString(R.string.notif_action_reminder_done),
+                        reminderDonePendingIntent(reminderId, id),
+                    )
+            if (!note.isNullOrBlank()) {
+                builder
+                    .setContentText(note)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(note))
+            }
+            post(id, builder)
+        }
+
         /** Cancels a previously posted notification. */
         fun cancel(notificationId: Int) = manager.cancel(notificationId)
 
@@ -119,6 +150,16 @@ class PeopleHubNotifier
                 Intent(NotificationActions.ACTION_MARK_SEEN).apply {
                     `package` = context.packageName
                     putExtra(NotificationActions.EXTRA_PERSON_ID, personId)
+                    putExtra(NotificationActions.EXTRA_NOTIFICATION_ID, notificationId)
+                }
+            return PendingIntent.getBroadcast(context, notificationId + ACTION_REQUEST_OFFSET, intent, PENDING_FLAGS)
+        }
+
+        private fun reminderDonePendingIntent(reminderId: Long, notificationId: Int): PendingIntent {
+            val intent =
+                Intent(NotificationActions.ACTION_REMINDER_DONE).apply {
+                    `package` = context.packageName
+                    putExtra(NotificationActions.EXTRA_REMINDER_ID, reminderId)
                     putExtra(NotificationActions.EXTRA_NOTIFICATION_ID, notificationId)
                 }
             return PendingIntent.getBroadcast(context, notificationId + ACTION_REQUEST_OFFSET, intent, PENDING_FLAGS)

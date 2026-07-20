@@ -129,6 +129,7 @@ dependencies {
     implementation(projects.feature.people)
     implementation(projects.feature.birthdays)
     implementation(projects.feature.events)
+    implementation(projects.feature.reminders)
     implementation(projects.feature.widget)
 
     // Compose

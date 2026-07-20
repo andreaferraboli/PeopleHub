@@ -41,3 +41,16 @@ data class EventFilter(
     val category: String? = null,
     val personId: Long? = null,
 )
+
+/**
+ * Combined query for the reminders screens.
+ *
+ * @property personId restrict to a single person's reminders, or `null` for all people.
+ * @property category restrict to one relationship category, or `null` for all.
+ * @property onlyEnabled when `true`, drop reminders the user has paused.
+ */
+data class ReminderFilter(
+    val personId: Long? = null,
+    val category: ReminderCategory? = null,
+    val onlyEnabled: Boolean = false,
+)

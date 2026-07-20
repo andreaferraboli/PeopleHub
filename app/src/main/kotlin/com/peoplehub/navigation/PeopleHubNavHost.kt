@@ -18,6 +18,9 @@ import com.peoplehub.feature.people.navigation.PeopleListRoute
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
 import com.peoplehub.feature.people.navigation.RecordMeetupRoute
 import com.peoplehub.feature.people.navigation.peopleSection
+import com.peoplehub.feature.reminders.navigation.AddEditReminderRoute
+import com.peoplehub.feature.reminders.navigation.ReminderScienceRoute
+import com.peoplehub.feature.reminders.navigation.remindersSection
 import com.peoplehub.importguide.ImportGuideScreen
 import com.peoplehub.settings.LanguageScreen
 import com.peoplehub.settings.SettingsScreen
@@ -43,6 +46,8 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
             onEditPerson = { navController.navigate(AddEditPersonRoute(it)) },
             onEventClick = { navController.navigate(EventDetailRoute(it)) },
             onRecordMeetup = { navController.navigate(RecordMeetupRoute) },
+            onAddReminder = { personId -> navController.navigate(AddEditReminderRoute(personId = personId)) },
+            onEditReminder = { navController.navigate(AddEditReminderRoute(reminderId = it)) },
             onBack = { navController.popBackStack() },
         )
 
@@ -50,6 +55,14 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
             onEventClick = { navController.navigate(EventDetailRoute(it)) },
             onAddEvent = { navController.navigate(AddEditEventRoute()) },
             onEditEvent = { navController.navigate(AddEditEventRoute(it)) },
+            onPersonClick = { navController.navigate(PersonDetailRoute(it)) },
+            onBack = { navController.popBackStack() },
+        )
+
+        remindersSection(
+            onAddReminder = { navController.navigate(AddEditReminderRoute()) },
+            onEditReminder = { navController.navigate(AddEditReminderRoute(reminderId = it)) },
+            onOpenScience = { navController.navigate(ReminderScienceRoute) },
             onPersonClick = { navController.navigate(PersonDetailRoute(it)) },
             onBack = { navController.popBackStack() },
         )

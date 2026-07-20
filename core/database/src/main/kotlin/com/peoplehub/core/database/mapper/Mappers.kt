@@ -1,17 +1,22 @@
 package com.peoplehub.core.database.mapper
 
+import com.peoplehub.core.database.dao.DueReminderRow
 import com.peoplehub.core.database.entity.CheckInEntity
 import com.peoplehub.core.database.entity.EventEntity
 import com.peoplehub.core.database.entity.InterestEntity
 import com.peoplehub.core.database.entity.PersonEntity
 import com.peoplehub.core.database.entity.PersonTagEntity
 import com.peoplehub.core.database.entity.PersonWithDetails
+import com.peoplehub.core.database.entity.ReminderEntity
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.CropTransform
+import com.peoplehub.core.domain.model.DueReminder
 import com.peoplehub.core.domain.model.Interest
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
+import com.peoplehub.core.domain.model.Reminder
+import com.peoplehub.core.domain.model.ReminderCategory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -128,4 +133,52 @@ fun PersonEvent.toEntity(): EventEntity =
         backgroundPanY = backgroundCrop.panY,
         personId = personId,
         pinnedToWidget = pinnedToWidget,
+    )
+
+/** Parses a stored category name, falling back to [ReminderCategory.CUSTOM] for unknown values. */
+private fun String.toReminderCategory(): ReminderCategory =
+    runCatching { ReminderCategory.valueOf(this) }.getOrDefault(ReminderCategory.CUSTOM)
+
+/** Maps a [ReminderEntity] to its domain model. */
+fun ReminderEntity.toDomain(): Reminder =
+    Reminder(
+        id = id,
+        personId = personId,
+        title = title,
+        note = note,
+        category = category.toReminderCategory(),
+        targetIntervalDays = targetIntervalDays,
+        jitterPercent = jitterPercent,
+        enabled = enabled,
+        lastFiredAt = lastFiredEpochMillis?.let(Instant::ofEpochMilli),
+        nextFireAt = Instant.ofEpochMilli(nextFireEpochMillis),
+        createdAt = Instant.ofEpochMilli(createdEpochMillis),
+        presetKey = presetKey,
+    )
+
+/** Maps a domain [Reminder] to its entity row. */
+fun Reminder.toEntity(): ReminderEntity =
+    ReminderEntity(
+        id = id,
+        personId = personId,
+        title = title,
+        note = note,
+        category = category.name,
+        targetIntervalDays = targetIntervalDays,
+        jitterPercent = jitterPercent,
+        enabled = enabled,
+        lastFiredEpochMillis = lastFiredAt?.toEpochMilli(),
+        nextFireEpochMillis = nextFireAt.toEpochMilli(),
+        createdEpochMillis = createdAt.toEpochMilli(),
+        presetKey = presetKey,
+    )
+
+/** Maps a joined due-reminder row to its domain model, building the person's display name. */
+fun DueReminderRow.toDomain(): DueReminder =
+    DueReminder(
+        reminderId = id,
+        personId = personId,
+        personName = "$firstName $lastName".trim(),
+        title = title,
+        note = note,
     )

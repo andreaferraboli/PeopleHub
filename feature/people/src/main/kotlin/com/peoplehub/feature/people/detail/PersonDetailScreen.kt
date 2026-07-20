@@ -57,6 +57,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.PersonEvent
+import com.peoplehub.core.domain.model.Reminder
+import com.peoplehub.core.domain.util.DateCalculations
 import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.CheckInStatusBadge
@@ -102,6 +104,8 @@ fun PersonDetailScreen(
     onBack: () -> Unit,
     onEdit: (Long) -> Unit,
     onEventClick: (Long) -> Unit,
+    onAddReminder: (Long) -> Unit,
+    onEditReminder: (Long) -> Unit,
     viewModel: PersonDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -202,6 +206,8 @@ fun PersonDetailScreen(
                 onDeleteCheckIns = viewModel::onDeleteCheckIns,
                 onAppendNote = viewModel::onAppendNote,
                 onEventClick = onEventClick,
+                onAddReminder = onAddReminder,
+                onEditReminder = onEditReminder,
             )
         }
     }
@@ -256,6 +262,8 @@ private fun PersonDetailBody(
     onDeleteCheckIns: (List<Long>) -> Unit,
     onAppendNote: (String) -> Unit,
     onEventClick: (Long) -> Unit,
+    onAddReminder: (Long) -> Unit,
+    onEditReminder: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -284,7 +292,14 @@ private fun PersonDetailBody(
         when (selectedTab) {
             0 -> InfoTab(data, onAddNote = { showAppendNoteDialog = true }, Modifier.weight(1f))
             1 -> CheckInTab(data, onEditCheckIn, onDeleteCheckIns, Modifier.weight(1f))
-            else -> RelatedTab(data, onEventClick, Modifier.weight(1f))
+            2 -> RelatedTab(data, onEventClick, Modifier.weight(1f))
+            else ->
+                RemindersTab(
+                    data = data,
+                    onAddReminder = { onAddReminder(data.person.id) },
+                    onEditReminder = onEditReminder,
+                    modifier = Modifier.weight(1f),
+                )
         }
     }
 
@@ -645,6 +660,65 @@ private fun RelatedEventRow(event: PersonEvent, onEventClick: (Long) -> Unit) {
 }
 
 @Composable
+private fun RemindersTab(
+    data: PersonDetailData,
+    onAddReminder: () -> Unit,
+    onEditReminder: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item(key = "add-reminder") {
+            GhostButton(
+                text = stringResource(R.string.detail_reminders_add),
+                onClick = onAddReminder,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (data.reminders.isEmpty()) {
+            item(key = "reminders-empty") {
+                Text(
+                    text = stringResource(R.string.detail_reminders_empty_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        } else {
+            items(data.reminders, key = { it.id }) { reminder -> ReminderRow(reminder, onEditReminder) }
+        }
+    }
+}
+
+@Composable
+private fun ReminderRow(reminder: Reminder, onEditReminder: (Long) -> Unit) {
+    val nextDate = reminder.nextFireAt.atZone(ZoneId.systemDefault()).toLocalDate()
+    val days = DateCalculations.signedDaysFromToday(nextDate, LocalDate.now())
+    GlassPanel(modifier = Modifier.fillMaxWidth().clickable { onEditReminder(reminder.id) }) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = reminder.title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            reminder.note?.takeIf { it.isNotBlank() }?.let { note ->
+                Text(text = note, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            val schedule =
+                when {
+                    !reminder.enabled -> stringResource(R.string.detail_reminder_paused)
+                    days <= 0L -> stringResource(R.string.detail_reminder_due)
+                    else -> stringResource(R.string.detail_reminder_in_days, days.toInt())
+                }
+            CapsLabel(text = schedule)
+        }
+    }
+}
+
+@Composable
 private fun InfoPanel(label: String, content: @Composable () -> Unit) {
     GlassPanel(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -917,4 +991,5 @@ private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit)
     )
 }
 
-private fun detailTabs(): List<Int> = listOf(R.string.tab_info, R.string.tab_checkin, R.string.tab_related)
+private fun detailTabs(): List<Int> =
+    listOf(R.string.tab_info, R.string.tab_checkin, R.string.tab_related, R.string.tab_reminders)

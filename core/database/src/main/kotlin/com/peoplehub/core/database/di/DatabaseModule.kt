@@ -11,6 +11,7 @@ import com.peoplehub.core.database.PeopleHubDatabase
 import com.peoplehub.core.database.dao.CheckInDao
 import com.peoplehub.core.database.dao.EventDao
 import com.peoplehub.core.database.dao.PeopleDao
+import com.peoplehub.core.database.dao.ReminderDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,6 +42,9 @@ internal object DatabaseModule {
 
     @Provides
     fun provideEventDao(database: PeopleHubDatabase): EventDao = database.eventDao()
+
+    @Provides
+    fun provideReminderDao(database: PeopleHubDatabase): ReminderDao = database.reminderDao()
 
     @Provides
     @Singleton

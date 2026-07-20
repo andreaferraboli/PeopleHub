@@ -66,6 +66,11 @@
             android:name=".receiver.MarkSeenReceiver"
             android:exported="false" />
 
+        <!-- Handles the "Done" action on a relationship reminder -->
+        <receiver
+            android:name=".receiver.ReminderDoneReceiver"
+            android:exported="false" />
+
         <!-- Shares the downloaded update APK with the package installer -->
         <provider
             android:name="androidx.core.content.FileProvider"

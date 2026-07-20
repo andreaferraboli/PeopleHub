@@ -17,6 +17,7 @@ import javax.inject.Singleton
 /**
  * Centralises scheduling of all recurring background work:
  * - a daily check-in reminder sweep (around 09:00),
+ * - a daily relationship-reminder sweep (around 09:00),
  * - a periodic widget refresh (every 6 hours),
  * - the daily exact birthday alarm (delegated to [BirthdayAlarmScheduler]).
  */
@@ -37,6 +38,13 @@ class PeopleHubWorkScheduler
                     .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(false).build())
                     .build()
             workManager.enqueueUniquePeriodicWork(CHECK_IN_WORK, ExistingPeriodicWorkPolicy.KEEP, checkInRequest)
+
+            val reminderRequest =
+                PeriodicWorkRequestBuilder<RelationshipReminderWorker>(1, TimeUnit.DAYS)
+                    .setInitialDelay(initialDelayToHourMillis(DAILY_HOUR), TimeUnit.MILLISECONDS)
+                    .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(false).build())
+                    .build()
+            workManager.enqueueUniquePeriodicWork(REMINDER_WORK, ExistingPeriodicWorkPolicy.KEEP, reminderRequest)
 
             val widgetRequest = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(WIDGET_INTERVAL_HOURS, TimeUnit.HOURS).build()
             workManager.enqueueUniquePeriodicWork(WIDGET_WORK, ExistingPeriodicWorkPolicy.KEEP, widgetRequest)
@@ -63,6 +71,7 @@ class PeopleHubWorkScheduler
 
         private companion object {
             const val CHECK_IN_WORK = "check_in_daily"
+            const val REMINDER_WORK = "relationship_reminders_daily"
             const val WIDGET_WORK = "widget_update_periodic"
             const val DAILY_HOUR = 9
             const val WIDGET_INTERVAL_HOURS = 6L

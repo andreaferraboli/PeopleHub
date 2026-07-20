@@ -44,6 +44,7 @@
     <string name="tab_info">Info</string>
     <string name="tab_checkin">Meetups</string>
     <string name="tab_related">Related</string>
+    <string name="tab_reminders">Reminders</string>
     <string name="detail_birthday">Birthday</string>
     <string name="detail_turns">Turns %1$d</string>
     <string name="detail_interests">Interests &amp; tastes</string>
@@ -57,6 +58,11 @@
     <string name="detail_history_empty_desc">Tap the button above the first time you see them.</string>
     <string name="detail_related_empty_title">Nothing linked yet</string>
     <string name="detail_related_empty_desc">Events linked to this person will appear here.</string>
+    <string name="detail_reminders_add">Add a reminder</string>
+    <string name="detail_reminders_empty_desc">Set a recurring nudge to do something for this person, like bringing flowers, on a cadence that never feels mechanical.</string>
+    <string name="detail_reminder_in_days">In %1$d days</string>
+    <string name="detail_reminder_due">Due now</string>
+    <string name="detail_reminder_paused">Paused</string>
 
     <!-- Export a single profile to JSON -->
     <string name="detail_export_json">Export profile</string>

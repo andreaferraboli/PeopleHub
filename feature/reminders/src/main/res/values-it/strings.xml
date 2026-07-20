@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand / shared -->
+    <string name="brand_wordmark">PeopleHub</string>
+    <string name="action_back">Indietro</string>
+    <string name="action_save">Salva</string>
+
+    <!-- Reminders list -->
+    <string name="reminders_title">Promemoria</string>
+    <string name="reminders_subtitle">Piccoli gesti per le persone a cui tieni, con una cadenza che non sembra mai meccanica.</string>
+    <string name="reminders_add">Aggiungi promemoria</string>
+    <string name="reminders_why">Perché una cadenza irregolare?</string>
+    <string name="reminders_empty_title">Ancora nessun promemoria</string>
+    <string name="reminders_empty_desc">Aggiungi un promemoria per ricordarti i piccoli gesti, come portare i fiori o chiamare per sentirvi.</string>
+
+    <!-- Reminder card -->
+    <string name="reminder_due">In scadenza</string>
+    <string name="reminder_days">giorni</string>
+    <string name="reminder_in">tra</string>
+    <string name="reminder_delete">Elimina promemoria</string>
+
+    <!-- Categories -->
+    <string name="reminder_filter_all">Tutti</string>
+    <string name="reminder_category_love">Amore</string>
+    <string name="reminder_category_friendship">Amicizia</string>
+    <string name="reminder_category_family">Famiglia</string>
+    <string name="reminder_category_custom">Personalizzato</string>
+
+    <!-- Add / edit reminder -->
+    <string name="edit_reminder_title_new">Nuovo promemoria</string>
+    <string name="edit_reminder_title_edit">Modifica promemoria</string>
+    <string name="reminder_choose_preset">Parti da un preset</string>
+    <string name="reminder_field_person">Persona</string>
+    <string name="reminder_person_hint">Scegli una persona</string>
+    <string name="reminder_field_title">Cosa fare (es. Portare i fiori)</string>
+    <string name="reminder_field_note">Nota (facoltativa)</string>
+    <string name="reminder_field_category">Categoria</string>
+    <string name="reminder_cadence_label">Cadenza</string>
+    <string name="reminder_interval_value">Circa ogni %1$d giorni</string>
+    <string name="reminder_jitter_value">Variazione: %1$d%%</string>
+    <string name="reminder_window_explain">Arriva ogni %1$d–%2$d giorni, variando ogni volta, mai con un ritmo fisso.</string>
+    <string name="reminder_presets_title">Scegli un preset</string>
+
+    <!-- Presets: Amore -->
+    <string name="preset_love_new_activity_name">Provate qualcosa di nuovo insieme</string>
+    <string name="preset_love_new_activity_desc">Un\'attività condivisa nuova e un po\' sfidante. La novità rinnova intimità e passione.</string>
+    <string name="preset_love_state_of_union_name">Confronto \"State of the Union\"</string>
+    <string name="preset_love_state_of_union_desc">Un confronto sereno sulla settimana, aprendo con ciò che apprezzate l\'uno dell\'altro.</string>
+    <string name="preset_love_love_maps_name">Aggiorna le mappe dell\'amore</string>
+    <string name="preset_love_love_maps_desc">Chiedi delle sue preoccupazioni, speranze e piccole novità, per non allontanarvi.</string>
+
+    <!-- Presets: Amicizia -->
+    <string name="preset_friend_face_time_name">Tempo insieme non strutturato</string>
+    <string name="preset_friend_face_time_desc">Organizza tempo faccia a faccia informale. Le ore condivise trasformano un conoscente in un amico intimo.</string>
+    <string name="preset_friend_ask_advice_name">Chiedi un suo consiglio</string>
+    <string name="preset_friend_ask_advice_desc">Chiedi il suo parere su una decisione vera. Essere interpellati fa sentire stimati e coinvolti.</string>
+
+    <!-- Presets: Famiglia -->
+    <string name="preset_family_parents_call_name">Chiama i tuoi genitori</string>
+    <string name="preset_family_parents_call_desc">Una chiamata regolare da adulto a adulto tiene caldo il legame senza ricadere nei vecchi schemi.</string>
+    <string name="preset_family_siblings_name">Senti un fratello o una sorella</string>
+    <string name="preset_family_siblings_desc">Un messaggio o una chiamata leggera e allegra. Senza contatto attivo il legame scivola nell\'apatia.</string>
+    <string name="preset_family_grandparents_name">Supporto reciproco con i nonni</string>
+    <string name="preset_family_grandparents_desc">Offri e chiedi aiuto, così si sentono utili e non solo accuditi.</string>
+
+    <!-- Science / why screen -->
+    <string name="science_title">Perché una cadenza irregolare</string>
+    <string name="science_intro_title">Perché servono i promemoria</string>
+    <string name="science_intro_body">Le relazioni non si reggono per inerzia. Sono soggette a una costante entropia emotiva e richiedono una manutenzione attiva e intenzionale: piccoli gesti di attenzione regolari. La ricerca associa i legami sociali deboli a rischi per la salute paragonabili a noti fattori clinici, quindi coltivare i tuoi legami più stretti è tra le cose a maggior impatto che puoi fare.</string>
+    <string name="science_why_title">Perché non una cadenza fissa</string>
+    <string name="science_why_body">Un gesto che arriva puntuale come un orologio viene percepito come automatico. Il cervello si assuefà alle ricompense prevedibili, e un promemoria che scatta sempre allo stesso ritmo inizia a sembrare un dovere più che un gesto di cura autentico. La novità e un pizzico di imprevedibilità mantengono lo stesso gesto spontaneo, ed è proprio questo a renderlo autentico.</string>
+    <string name="science_how_title">Come lo fa questa app</string>
+    <string name="science_how_body">Imposti una cadenza indicativa, ad esempio \"circa ogni due settimane\". Ogni volta che un promemoria scatta, l\'app estrae il successivo a caso da una finestra attorno al tuo obiettivo, così \"ogni due settimane\" può diventare 12, 15 o 17 giorni. Il ritmo non si assesta mai in uno schema, e l\'intervallo si misura da quando hai agito l\'ultima volta, così non va in deriva né si accumula.</string>
+    <string name="science_refs_title">Da dove viene</string>
+    <string name="science_refs_body">I preset si basano su solide ricerche sulle relazioni: i rituali di connessione e le \"mappe dell\'amore\" di Gottman, il modello di auto-espansione di Aron (la novità rinnova l\'intimità), gli studi di Gable sul celebrare le buone notizie, e le scoperte di Hall e Dunbar su come tempo e contatto sostengono l\'amicizia.</string>
+    <string name="science_disclaimer">Solo a scopo informativo; non sostituisce un parere professionale.</string>
+</resources>

@@ -10,11 +10,13 @@ import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.EventFilter
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
+import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.UpcomingBirthday
 import com.peoplehub.core.domain.usecase.CheckInPersonUseCase
 import com.peoplehub.core.domain.usecase.DeleteCheckInsUseCase
 import com.peoplehub.core.domain.usecase.DeletePersonUseCase
 import com.peoplehub.core.domain.usecase.GetEventsUseCase
+import com.peoplehub.core.domain.usecase.GetPersonRemindersUseCase
 import com.peoplehub.core.domain.usecase.GetSettingsUseCase
 import com.peoplehub.core.domain.usecase.ObserveCheckInHistoryUseCase
 import com.peoplehub.core.domain.usecase.ObservePersonUseCase
@@ -51,6 +53,7 @@ data class PersonDetailData(
     val nextBirthday: UpcomingBirthday?,
     val history: List<CheckIn>,
     val relatedEvents: List<PersonEvent>,
+    val reminders: List<Reminder>,
 )
 
 @HiltViewModel
@@ -61,6 +64,7 @@ class PersonDetailViewModel
         private val observePerson: ObservePersonUseCase,
         observeHistory: ObserveCheckInHistoryUseCase,
         getEvents: GetEventsUseCase,
+        getPersonReminders: GetPersonRemindersUseCase,
         getSettings: GetSettingsUseCase,
         private val checkInPerson: CheckInPersonUseCase,
         private val recordMeetup: RecordMeetupUseCase,
@@ -89,8 +93,9 @@ class PersonDetailViewModel
                 observePerson(personId),
                 observeHistory(personId),
                 getEvents(EventFilter(personId = personId)),
+                getPersonReminders(personId),
                 getSettings(),
-            ) { person, history, events, settings ->
+            ) { person, history, events, reminders, settings ->
                 if (person == null) {
                     UiState.Error("Person not found")
                 } else {
@@ -106,6 +111,7 @@ class PersonDetailViewModel
                             nextBirthday = person.birthday?.let { birthdayOf(person, it) },
                             history = history,
                             relatedEvents = events,
+                            reminders = reminders,
                         ),
                     )
                 }

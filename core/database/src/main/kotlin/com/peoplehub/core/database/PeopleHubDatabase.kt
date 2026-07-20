@@ -5,12 +5,14 @@ import androidx.room.RoomDatabase
 import com.peoplehub.core.database.dao.CheckInDao
 import com.peoplehub.core.database.dao.EventDao
 import com.peoplehub.core.database.dao.PeopleDao
+import com.peoplehub.core.database.dao.ReminderDao
 import com.peoplehub.core.database.entity.CheckInEntity
 import com.peoplehub.core.database.entity.EventEntity
 import com.peoplehub.core.database.entity.InterestEntity
 import com.peoplehub.core.database.entity.PersonEntity
 import com.peoplehub.core.database.entity.PersonFtsEntity
 import com.peoplehub.core.database.entity.PersonTagEntity
+import com.peoplehub.core.database.entity.ReminderEntity
 
 /**
  * The single Room database for PeopleHub. Foreign keys are enabled in the DI builder so cascading
@@ -24,6 +26,7 @@ import com.peoplehub.core.database.entity.PersonTagEntity
         PersonFtsEntity::class,
         CheckInEntity::class,
         EventEntity::class,
+        ReminderEntity::class,
     ],
     version = PeopleHubDatabase.VERSION,
     exportSchema = true,
@@ -35,8 +38,10 @@ abstract class PeopleHubDatabase : RoomDatabase() {
 
     abstract fun eventDao(): EventDao
 
+    abstract fun reminderDao(): ReminderDao
+
     companion object {
-        const val VERSION: Int = 6
+        const val VERSION: Int = 7
         const val NAME: String = "peoplehub.db"
     }
 }

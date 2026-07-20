@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand / shared -->
+    <string name="brand_wordmark">PeopleHub</string>
+    <string name="action_back">Back</string>
+    <string name="action_save">Save</string>
+
+    <!-- Reminders list -->
+    <string name="reminders_title">Reminders</string>
+    <string name="reminders_subtitle">Little gestures for the people you care about, on a cadence that never feels mechanical.</string>
+    <string name="reminders_add">Add reminder</string>
+    <string name="reminders_why">Why irregular cadence?</string>
+    <string name="reminders_empty_title">No reminders yet</string>
+    <string name="reminders_empty_desc">Add a reminder to nudge yourself to do the little things, like bringing flowers or calling to catch up.</string>
+
+    <!-- Reminder card -->
+    <string name="reminder_due">Due now</string>
+    <string name="reminder_days">days</string>
+    <string name="reminder_in">in</string>
+    <string name="reminder_delete">Delete reminder</string>
+
+    <!-- Categories -->
+    <string name="reminder_filter_all">All</string>
+    <string name="reminder_category_love">Love</string>
+    <string name="reminder_category_friendship">Friendship</string>
+    <string name="reminder_category_family">Family</string>
+    <string name="reminder_category_custom">Custom</string>
+
+    <!-- Add / edit reminder -->
+    <string name="edit_reminder_title_new">New reminder</string>
+    <string name="edit_reminder_title_edit">Edit reminder</string>
+    <string name="reminder_choose_preset">Start from a preset</string>
+    <string name="reminder_field_person">Person</string>
+    <string name="reminder_person_hint">Choose a person</string>
+    <string name="reminder_field_title">What to do (e.g. Bring flowers)</string>
+    <string name="reminder_field_note">Note (optional)</string>
+    <string name="reminder_field_category">Category</string>
+    <string name="reminder_cadence_label">Cadence</string>
+    <string name="reminder_interval_value">About every %1$d days</string>
+    <string name="reminder_jitter_value">Variation: %1$d%%</string>
+    <string name="reminder_window_explain">Arrives every %1$d to %2$d days, varying each time, never on a fixed rhythm.</string>
+    <string name="reminder_presets_title">Choose a preset</string>
+
+    <!-- Presets: Love -->
+    <string name="preset_love_new_activity_name">Try something new together</string>
+    <string name="preset_love_new_activity_desc">A novel, slightly challenging shared activity. Novelty renews closeness and passion.</string>
+    <string name="preset_love_state_of_union_name">State of the Union chat</string>
+    <string name="preset_love_state_of_union_desc">A calm check-in on the week, opening with what you appreciate about each other.</string>
+    <string name="preset_love_love_maps_name">Update your love maps</string>
+    <string name="preset_love_love_maps_desc">Ask about their current worries, hopes and small news, so you never drift apart.</string>
+
+    <!-- Presets: Friendship -->
+    <string name="preset_friend_face_time_name">Unstructured time together</string>
+    <string name="preset_friend_face_time_desc">Plan casual face-to-face time. Shared hours are what turn a contact into a close friend.</string>
+    <string name="preset_friend_ask_advice_name">Ask for their advice</string>
+    <string name="preset_friend_ask_advice_desc">Ask their opinion on a real decision. Being asked makes people feel valued and invested.</string>
+
+    <!-- Presets: Family -->
+    <string name="preset_family_parents_call_name">Call your parents</string>
+    <string name="preset_family_parents_call_desc">A regular adult-to-adult call keeps the bond warm without slipping into old dynamics.</string>
+    <string name="preset_family_siblings_name">Reach out to a sibling</string>
+    <string name="preset_family_siblings_desc">A light, upbeat message or call. Siblings drift into apathy without active contact.</string>
+    <string name="preset_family_grandparents_name">Two-way support with grandparents</string>
+    <string name="preset_family_grandparents_desc">Offer and ask for help, so they feel useful, not merely cared for.</string>
+
+    <!-- Science / why screen -->
+    <string name="science_title">Why irregular cadence</string>
+    <string name="science_intro_title">Why reminders at all</string>
+    <string name="science_intro_body">Relationships don\'t survive on inertia. They\'re subject to a constant emotional entropy and need active, intentional maintenance: small, regular gestures of attention. Research links weak social ties to health risks on a par with well-known clinical factors, so tending your closest bonds is among the highest-leverage things you can do.</string>
+    <string name="science_why_title">Why not a fixed schedule</string>
+    <string name="science_why_body">A gesture that arrives like clockwork reads as automatic. The brain habituates to predictable rewards, and a reminder that fires on the same rhythm every time starts to feel like a chore rather than a genuine act of care. Novelty and a touch of unpredictability keep the same gesture feeling spontaneous, which is exactly what makes it land as authentic.</string>
+    <string name="science_how_title">How this app does it</string>
+    <string name="science_how_body">You set a rough cadence, for example \"about every two weeks.\" Each time a reminder fires, the app draws the next one at random from a window around your target, so \"every two weeks\" might actually be 12, 15 or 17 days. The rhythm never settles into a pattern, and the interval is measured from when you last acted, so it never drifts or piles up.</string>
+    <string name="science_refs_title">Where this comes from</string>
+    <string name="science_refs_body">The presets draw on established relationship science: Gottman\'s rituals of connection and \"love maps,\" Aron\'s self-expansion model (novelty renews closeness), Gable\'s work on celebrating good news, and Hall\'s and Dunbar\'s findings on how time and contact sustain friendship.</string>
+    <string name="science_disclaimer">This is for informational purposes only and is not a substitute for professional advice.</string>
+</resources>

@@ -7,6 +7,7 @@
     <string name="tab_reflect">Reflect</string>
     <string name="tab_circle">Circle</string>
     <string name="tab_events">Events</string>
+    <string name="tab_reminders">Reminders</string>
     <string name="tab_vault">Vault</string>
 
     <!-- Shared -->

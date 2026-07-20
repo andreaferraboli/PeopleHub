@@ -5,6 +5,8 @@
     <string name="channel_checkin_desc">Ti avvisa quando è passato un po\' dall\'ultima volta che hai visto qualcuno.</string>
     <string name="channel_birthday_name">Promemoria compleanni</string>
     <string name="channel_birthday_desc">Promemoria per i compleanni in arrivo e di oggi.</string>
+    <string name="channel_reminder_name">Promemoria relazioni</string>
+    <string name="channel_reminder_desc">Ti ricorda i piccoli gesti per le persone a cui tieni.</string>
 
     <!-- Check-in reminder -->
     <string name="notif_checkin_title">Non vedi %1$s da %2$d giorni</string>
@@ -15,6 +17,10 @@
     <string name="notif_birthday_today_title">Oggi è il compleanno di %1$s! 🎂</string>
     <string name="notif_birthday_upcoming_title">Il compleanno di %1$s è tra %2$d giorni</string>
 
+    <!-- Relationship reminders -->
+    <string name="notif_reminder_title">%1$s: %2$s</string>
+
     <!-- Actions -->
     <string name="notif_action_mark_seen">Segna come visto</string>
+    <string name="notif_action_reminder_done">Fatto</string>
 </resources>

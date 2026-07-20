@@ -3,12 +3,14 @@ package com.peoplehub.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.peoplehub.R
 import com.peoplehub.feature.events.navigation.EventsRoute
 import com.peoplehub.feature.people.navigation.PeopleListRoute
+import com.peoplehub.feature.reminders.navigation.RemindersRoute
 import kotlinx.serialization.Serializable
 
 /** Top-level, app-owned routes (the dashboard and settings tabs). */
@@ -27,12 +29,13 @@ data object ImportGuideRoute
 data object LanguageRoute
 
 /**
- * The four bottom-navigation destinations. Each maps to the start route of its section; detail and
+ * The five bottom-navigation destinations. Each maps to the start route of its section; detail and
  * edit screens are reached from within and are not top-level destinations.
  */
 enum class TopLevelDestination(val route: Any, val labelRes: Int, val icon: ImageVector) {
     REFLECT(DashboardRoute, R.string.tab_reflect, Icons.Outlined.AutoAwesome),
     CIRCLE(PeopleListRoute, R.string.tab_circle, Icons.Outlined.Groups),
     EVENTS(EventsRoute, R.string.tab_events, Icons.AutoMirrored.Outlined.EventNote),
+    REMINDERS(RemindersRoute, R.string.tab_reminders, Icons.Outlined.Favorite),
     VAULT(SettingsRoute, R.string.tab_vault, Icons.Outlined.Lock),
 }
