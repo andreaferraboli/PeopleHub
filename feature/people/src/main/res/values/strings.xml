@@ -126,7 +126,7 @@
 
     <!-- Per-person notification opt-in -->
     <string name="edit_notifications_title">Notifications</string>
-    <string name="edit_notifications_hint">Receive meetup and birthday reminders for this person</string>
+    <string name="edit_notifications_hint">Receive check-in reminders for this person. Birthday notifications are always on.</string>
 
     <!-- Birthday-only entry -->
     <string name="edit_birthday_only_title">Birthday only</string>

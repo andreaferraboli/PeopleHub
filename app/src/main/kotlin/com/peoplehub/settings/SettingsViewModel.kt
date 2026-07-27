@@ -9,6 +9,7 @@ import com.peoplehub.core.domain.model.BackupData
 import com.peoplehub.core.domain.model.ImportStrategy
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.ReminderOffset
+import com.peoplehub.core.domain.repository.ReminderStateRepository
 import com.peoplehub.core.domain.usecase.DeleteAllPeopleUseCase
 import com.peoplehub.core.domain.usecase.ExportBackupUseCase
 import com.peoplehub.core.domain.usecase.GetPeopleUseCase
@@ -27,13 +28,20 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
-/** State for the settings ("Vault") screen. */
+/**
+ * State for the settings ("Vault") screen.
+ *
+ * @property lastBirthdaySweep the day the birthday sweep last ran, surfaced in the notification
+ * diagnostics so a silent engine is visible instead of having to be guessed at.
+ */
 data class SettingsUiState(
     val settings: AppSettings,
     val isBusy: Boolean,
     val message: String?,
+    val lastBirthdaySweep: LocalDate? = null,
 )
 
 @HiltViewModel
@@ -52,22 +60,42 @@ class SettingsViewModel
         private val backupSerializer: BackupSerializer,
         private val csvBirthdaySupport: CsvBirthdaySupport,
         private val workScheduler: PeopleHubWorkScheduler,
+        private val reminderState: ReminderStateRepository,
     ) : ViewModel() {
         private val isBusy = MutableStateFlow(false)
         private val message = MutableStateFlow<String?>(null)
+        private val lastBirthdaySweep = MutableStateFlow<LocalDate?>(null)
 
         val state: StateFlow<SettingsUiState> =
             combine(
                 getSettings(),
                 isBusy,
                 message,
-            ) { settings, busy, msg ->
-                SettingsUiState(settings = settings, isBusy = busy, message = msg)
+                lastBirthdaySweep,
+            ) { settings, busy, msg, sweep ->
+                SettingsUiState(settings = settings, isBusy = busy, message = msg, lastBirthdaySweep = sweep)
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
                 initialValue = SettingsUiState(AppSettings(), isBusy = false, message = null),
             )
+
+        init {
+            refreshDiagnostics()
+        }
+
+        /** Re-reads the notification-engine bookkeeping shown in the diagnostics panel. */
+        fun refreshDiagnostics() {
+            viewModelScope.launch { lastBirthdaySweep.value = reminderState.lastBirthdaySweepDate() }
+        }
+
+        /**
+         * Runs the birthday sweep immediately, ignoring the once-a-day guard, so the user can verify
+         * the engine end to end instead of waiting for tomorrow morning.
+         */
+        fun runBirthdayCheckNow() {
+            workScheduler.enqueueBirthdaySweep(force = true)
+        }
 
         fun onThresholdChange(warningDays: Int, criticalDays: Int) {
             viewModelScope.launch { updateDefaultThreshold(warningDays, criticalDays) }
@@ -82,11 +110,21 @@ class SettingsViewModel
         }
 
         fun onToggleExactAlarms(enabled: Boolean) {
-            viewModelScope.launch { updateExactAlarms(enabled) }
+            viewModelScope.launch {
+                updateExactAlarms(enabled)
+                workScheduler.scheduleRecurringWork()
+            }
         }
 
+        /**
+         * Persists the new hour and re-schedules, otherwise the already-enqueued periodic work would
+         * keep firing at the old hour (unique work is kept, not replaced, on a plain re-enqueue).
+         */
         fun onReminderHourChange(hour: Int) {
-            viewModelScope.launch { updateDailyReminderHour(hour) }
+            viewModelScope.launch {
+                updateDailyReminderHour(hour)
+                workScheduler.scheduleRecurringWork()
+            }
         }
 
         /** Builds the full backup JSON (called from the screen before writing it to the chosen file). */

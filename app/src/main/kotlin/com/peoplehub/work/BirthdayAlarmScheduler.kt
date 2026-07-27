@@ -15,9 +15,13 @@ import javax.inject.Singleton
 /**
  * Schedules the daily birthday check using an exact alarm so reminders fire reliably even in Doze.
  *
- * On Android 12+ it honours the user's exact-alarm permission: when [AlarmManager.canScheduleExactAlarms]
- * is denied it gracefully falls back to an inexact `setAndAllowWhileIdle` alarm. The alarm is
- * re-armed for the next day by [BirthdayAlarmReceiver] and after device boot.
+ * On Android 12+ it honours both the user's "use exact alarms" preference and the system
+ * exact-alarm permission: when either says no it falls back to an inexact `setAndAllowWhileIdle`
+ * alarm. Since Android 14 that permission is **not** granted by default to an app targeting SDK 33+,
+ * so the fallback is the common case and an inexact alarm can slip by hours — which is why
+ * [PeopleHubWorkScheduler] also runs a WorkManager backstop and an app-launch catch-up.
+ *
+ * The alarm is re-armed for the next day by [BirthdayAlarmReceiver] and after device boot.
  */
 @Singleton
 class BirthdayAlarmScheduler
@@ -26,23 +30,29 @@ class BirthdayAlarmScheduler
         @ApplicationContext private val context: Context,
         private val clock: Clock,
     ) {
-        fun scheduleDailyCheck() {
+        /** Arms the next daily check at [hour], exact when [preferExact] and the system allows it. */
+        fun scheduleDailyCheck(hour: Int, preferExact: Boolean) {
             val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
-            val triggerAtMillis = nextTriggerMillis(DAILY_HOUR)
+            val triggerAtMillis = nextTriggerMillis(hour)
             val pendingIntent = buildPendingIntent()
 
-            val canScheduleExact =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    alarmManager.canScheduleExactAlarms()
-                } else {
-                    true
-                }
-
-            if (canScheduleExact) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
-            } else {
+            val exact = preferExact && canScheduleExactAlarms()
+            val scheduled =
+                exact &&
+                    runCatching {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+                    }.isSuccess
+            // The permission can be revoked between the check and the call, so fall back on failure.
+            if (!scheduled) {
                 alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
             }
+        }
+
+        /** Whether the system currently lets this app post exact alarms. Always true below API 31. */
+        fun canScheduleExactAlarms(): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
+            val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return false
+            return alarmManager.canScheduleExactAlarms()
         }
 
         private fun buildPendingIntent(): PendingIntent {
@@ -57,7 +67,7 @@ class BirthdayAlarmScheduler
             val now = ZonedDateTime.now(clock)
             var next =
                 now
-                    .withHour(hour)
+                    .withHour(hour.coerceIn(0, MAX_HOUR))
                     .withMinute(0)
                     .withSecond(0)
                     .withNano(0)
@@ -67,7 +77,7 @@ class BirthdayAlarmScheduler
 
         private companion object {
             const val REQUEST_CODE = 7001
-            const val DAILY_HOUR = 9
+            const val MAX_HOUR = 23
             val FLAGS = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         }
     }

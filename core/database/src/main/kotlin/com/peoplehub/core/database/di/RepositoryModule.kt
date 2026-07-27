@@ -1,5 +1,6 @@
 package com.peoplehub.core.database.di
 
+import com.peoplehub.core.database.datastore.ReminderStateRepositoryImpl
 import com.peoplehub.core.database.datastore.SettingsRepositoryImpl
 import com.peoplehub.core.database.repository.BackupRepositoryImpl
 import com.peoplehub.core.database.repository.CheckInRepositoryImpl
@@ -11,6 +12,7 @@ import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.EventRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
 import com.peoplehub.core.domain.repository.ReminderRepository
+import com.peoplehub.core.domain.repository.ReminderStateRepository
 import com.peoplehub.core.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
@@ -45,4 +47,8 @@ internal abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReminderStateRepository(impl: ReminderStateRepositoryImpl): ReminderStateRepository
 }

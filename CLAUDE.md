@@ -77,13 +77,33 @@ state views.
 
 ## Background work
 
-- **Check-in reminders**: a daily `PeriodicWorkRequest` (`CheckInReminderWorker`) around 09:00
-  (`setRequiresBatteryNotLow(false)`, initial delay computed to the target hour) notifies about
-  people past their critical threshold.
-- **Birthday reminders**: a daily exact alarm (`BirthdayAlarmScheduler`, `setExactAndAllowWhileIdle`
-  with an inexact fallback when the Android 12+ exact-alarm permission is denied) fires
-  `BirthdayAlarmReceiver`, which enqueues a one-off `BirthdayReminderWorker` and re-arms tomorrow's
-  alarm. `BootReceiver` re-schedules everything after a reboot.
+Every daily sweep runs at the single user-configurable `AppSettings.dailyReminderHour` (**default
+05:00**, Settings → Reminder timing). `PeopleHubWorkScheduler` owns all of it and is `suspend`
+because it reads that hour from DataStore; it records the hour it scheduled for, so changing it
+re-enqueues with `CANCEL_AND_REENQUEUE` instead of being swallowed by `KEEP`.
+
+- **Check-in reminders**: a daily `PeriodicWorkRequest` (`CheckInReminderWorker`,
+  `setRequiresBatteryNotLow(false)`, initial delay computed to the target hour) notifies about
+  people past their critical threshold. Gated on the person's `notificationsEnabled` opt-in.
+- **Birthday reminders**: `BirthdayReminderWorker` notifies **every** person with a matching
+  birthday — deliberately *not* gated on `notificationsEnabled` (that opt-in defaults to off, so
+  gating birthdays on it silently muted every imported profile). Three redundant triggers enqueue
+  it, because a lone alarm is fragile — since Android 14 `SCHEDULE_EXACT_ALARM` is denied by default
+  at `targetSdk 35`, and each alarm firing re-arms only the next one, so one drop breaks the chain
+  for good:
+  1. the daily alarm (`BirthdayAlarmScheduler`, `setExactAndAllowWhileIdle`, inexact fallback when
+     the permission is denied or the user turned exact alarms off) → `BirthdayAlarmReceiver`,
+  2. a daily `PeriodicWorkRequest` backstop, which survives reboots and process death,
+  3. an app-launch catch-up when the hour has passed and the day's sweep never ran.
+
+  `ReminderStateRepository.lastBirthdaySweepDate` makes that idempotent: the first trigger each day
+  claims the date and the rest no-op. The sweep is also enqueued as *unique* work so concurrent
+  triggers collapse. Settings → Notification health forces a run (`INPUT_FORCE`) for verification.
+- **Diagnostics**: notifications, exact alarms and battery optimisation all fail silently, so
+  Settings surfaces each with a one-tap route to the system screen that fixes it
+  (`NotificationDiagnostics`).
+- `BootReceiver` re-schedules everything after a reboot; it and `BirthdayAlarmReceiver` use
+  `goAsync()` since scheduling now suspends.
 - **Widgets**: `WidgetUpdateWorker` refreshes all Glance widgets every 6 hours; `updateWidgetsNow()`
   triggers an immediate refresh after a check-in. Feature modules request that refresh through the
   `WidgetRefresher` fun-interface in `core:domain` (bound in the app's `CoreModule`), because
@@ -171,5 +191,7 @@ source of truth.
 - Profile photos are picked with the permission-less Photo Picker and copied into internal storage;
   camera capture (which would need a `FileProvider`) is not wired up. Person photos can't be
   re-cropped after the fact (event backgrounds can — they keep their original alongside the crop).
-- Birthday reminder offsets are configured globally (Settings); per-person reminder overrides are
-  not persisted (the schema models a single global set).
+- Birthday reminder offsets, and the hour every sweep fires at, are configured globally (Settings);
+  per-person overrides are not persisted (the schema models a single global set). Birthday
+  notifications themselves are always on for everyone; the per-person `notificationsEnabled` toggle
+  only governs check-in reminders.

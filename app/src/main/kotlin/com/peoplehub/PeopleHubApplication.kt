@@ -8,11 +8,16 @@ import com.peoplehub.core.notifications.PeopleHubNotifier
 import com.peoplehub.locale.AppLocale
 import com.peoplehub.work.PeopleHubWorkScheduler
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Application entry point. Wires Hilt, supplies the [HiltWorkerFactory] to WorkManager, creates the
- * notification channels, and schedules the recurring background work on first launch.
+ * notification channels, and schedules the recurring background work on every launch (scheduling
+ * reads the configured reminder hour from DataStore, hence the application-scoped coroutine).
  */
 @HiltAndroidApp
 class PeopleHubApplication : Application(), Configuration.Provider {
@@ -29,10 +34,12 @@ class PeopleHubApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var workScheduler: PeopleHubWorkScheduler
 
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
         notifier.ensureChannels()
-        workScheduler.scheduleRecurringWork()
+        applicationScope.launch { workScheduler.scheduleRecurringWork() }
     }
 
     override val workManagerConfiguration: Configuration

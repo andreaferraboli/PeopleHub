@@ -1,10 +1,13 @@
 package com.peoplehub.core.domain.usecase
 
 import com.peoplehub.core.domain.model.PeopleFilter
+import com.peoplehub.core.domain.model.ReminderOffset
 import com.peoplehub.core.domain.model.UpcomingBirthday
 import com.peoplehub.core.domain.repository.PeopleRepository
+import com.peoplehub.core.domain.repository.SettingsRepository
 import com.peoplehub.core.domain.util.DateCalculations
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Clock
 import java.time.LocalDate
@@ -35,7 +38,6 @@ class GetAllBirthdaysUseCase
                             nextOccurrence = DateCalculations.nextBirthdayOccurrence(birthday, today),
                             daysUntil = DateCalculations.daysUntilBirthday(birthday, today),
                             turningAge = DateCalculations.ageOnNextBirthday(birthday, today),
-                            notificationsEnabled = person.notificationsEnabled,
                         )
                     }.sortedBy { it.daysUntil }
             }
@@ -55,5 +57,48 @@ class GetUpcomingBirthdaysUseCase
 
         companion object {
             const val DEFAULT_WINDOW_DAYS: Int = 30
+        }
+    }
+
+/**
+ * A birthday whose distance from today matches one of the globally enabled reminder offsets, i.e.
+ * one that should be notified in today's sweep.
+ *
+ * @property isToday whether this is the birthday itself (the "happy birthday" greeting) rather than
+ * an advance reminder.
+ */
+data class DueBirthdayReminder(
+    val personId: Long,
+    val fullName: String,
+    val daysUntil: Int,
+) {
+    val isToday: Boolean get() = daysUntil == ReminderOffset.SAME_DAY.daysBefore
+}
+
+/**
+ * Resolves which birthdays today's reminder sweep should notify: every birthday whose remaining day
+ * count matches an enabled [ReminderOffset].
+ *
+ * Deliberately independent of the per-person `notificationsEnabled` opt-in — that toggle governs
+ * check-in reminders only. Gating birthdays on it silently muted every profile added or imported
+ * without flipping the switch, which defaults to off.
+ */
+class GetDueBirthdayRemindersUseCase
+    @Inject
+    constructor(
+        private val getAllBirthdays: GetAllBirthdaysUseCase,
+        private val settingsRepository: SettingsRepository,
+    ) {
+        suspend operator fun invoke(): List<DueBirthdayReminder> {
+            val enabledOffsets =
+                settingsRepository.settings
+                    .first()
+                    .birthdayReminderOffsets
+                    .map { it.daysBefore }
+                    .toSet()
+            return getAllBirthdays()
+                .first()
+                .filter { it.daysUntil in enabledOffsets }
+                .map { DueBirthdayReminder(it.personId, it.fullName, it.daysUntil) }
         }
     }

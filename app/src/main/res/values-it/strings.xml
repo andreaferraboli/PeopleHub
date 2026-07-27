@@ -58,6 +58,20 @@
     <string name="vault_alarms_title">Orario dei promemoria</string>
     <string name="vault_exact_alarms">Usa allarmi esatti</string>
     <string name="vault_reminder_hour">Ora del promemoria giornaliero</string>
+
+    <!-- Vault: diagnostica del motore delle notifiche -->
+    <string name="vault_diag_title">Stato delle notifiche</string>
+    <string name="vault_diag_desc">I promemoria vengono consegnati da Android. Se anche solo una di queste voci è bloccata, non può arrivare nessuna notifica.</string>
+    <string name="vault_diag_notifications">Notifiche consentite</string>
+    <string name="vault_diag_exact_alarms">Sveglie e promemoria</string>
+    <string name="vault_diag_battery">Batteria senza restrizioni</string>
+    <string name="vault_diag_ok">OK</string>
+    <string name="vault_diag_fix">Risolvi</string>
+    <string name="vault_diag_last_run">Ultimo controllo compleanni: %1$s</string>
+    <string name="vault_diag_last_run_never">Il controllo dei compleanni non è mai stato eseguito.</string>
+    <string name="vault_diag_check_now">Controlla i compleanni adesso</string>
+    <string name="vault_diag_check_now_sent">Controllo compleanni avviato</string>
+
     <string name="vault_import_title">Importa backup</string>
     <string name="vault_import_message">Sostituire tutti i dati attuali, o unire solo i nuovi record?</string>
     <string name="vault_import_merge">Unisci</string>

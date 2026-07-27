@@ -58,6 +58,20 @@
     <string name="vault_alarms_title">Reminder timing</string>
     <string name="vault_exact_alarms">Use exact alarms</string>
     <string name="vault_reminder_hour">Daily reminder hour</string>
+
+    <!-- Vault: notification engine diagnostics -->
+    <string name="vault_diag_title">Notification health</string>
+    <string name="vault_diag_desc">Reminders are delivered by Android. If any of these is blocked, no notification can arrive.</string>
+    <string name="vault_diag_notifications">Notifications allowed</string>
+    <string name="vault_diag_exact_alarms">Alarms &amp; reminders</string>
+    <string name="vault_diag_battery">Battery unrestricted</string>
+    <string name="vault_diag_ok">OK</string>
+    <string name="vault_diag_fix">Fix</string>
+    <string name="vault_diag_last_run">Last birthday check: %1$s</string>
+    <string name="vault_diag_last_run_never">The birthday check has never run yet.</string>
+    <string name="vault_diag_check_now">Run the birthday check now</string>
+    <string name="vault_diag_check_now_sent">Birthday check started</string>
+
     <string name="vault_import_title">Import backup</string>
     <string name="vault_import_message">Replace all current data, or merge in only new records?</string>
     <string name="vault_import_merge">Merge</string>

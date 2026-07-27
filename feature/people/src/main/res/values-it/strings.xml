@@ -131,7 +131,7 @@
 
     <!-- Per-person notification opt-in -->
     <string name="edit_notifications_title">Notifiche</string>
-    <string name="edit_notifications_hint">Ricevi promemoria di uscite e compleanno per questa persona</string>
+    <string name="edit_notifications_hint">Ricevi i promemoria di uscite per questa persona. Le notifiche di compleanno sono sempre attive.</string>
 
     <!-- Birthday-only entry -->
     <string name="edit_birthday_only_title">Solo compleanno</string>

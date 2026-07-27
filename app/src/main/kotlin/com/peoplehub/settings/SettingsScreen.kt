@@ -1,6 +1,7 @@
 package com.peoplehub.settings
 
 import android.content.Intent
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.R
 import com.peoplehub.core.domain.model.ImportStrategy
@@ -56,6 +58,7 @@ import com.peoplehub.update.AvailableUpdate
 import com.peoplehub.update.UpdateUiState
 import com.peoplehub.update.UpdateViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /** Settings ("Vault"): backup & restore, frequency thresholds, and reminder preferences. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,6 +77,15 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var diagnostics by remember { mutableStateOf(readNotificationDiagnostics(context)) }
+    val checkNowMessage = stringResource(R.string.vault_diag_check_now_sent)
+
+    // Re-read on every resume so returning from a system settings screen reflects the new grant.
+    LifecycleResumeEffect(Unit) {
+        diagnostics = readNotificationDiagnostics(context)
+        viewModel.refreshDiagnostics()
+        onPauseOrDispose { }
+    }
 
     LaunchedEffect(state.message) {
         val message = state.message
@@ -192,6 +204,20 @@ fun SettingsScreen(
                 reminderHour = state.settings.dailyReminderHour,
                 onToggleExact = viewModel::onToggleExactAlarms,
                 onHourChange = viewModel::onReminderHourChange,
+            )
+
+            GoldDivider()
+
+            DiagnosticsSection(
+                diagnostics = diagnostics,
+                lastBirthdaySweep = state.lastBirthdaySweep,
+                onFixNotifications = { openNotificationSettings(context) },
+                onFixExactAlarms = { openExactAlarmSettings(context) },
+                onFixBattery = { openBatterySettings(context) },
+                onCheckNow = {
+                    viewModel.runBirthdayCheckNow()
+                    scope.launch { snackbarHostState.showSnackbar(checkNowMessage) }
+                },
             )
 
             GoldDivider()
@@ -436,6 +462,83 @@ private fun AlarmSection(
             onDecrement = { onHourChange((reminderHour - 1).coerceAtLeast(0)) },
             onIncrement = { onHourChange((reminderHour + 1).coerceAtMost(23)) },
         )
+    }
+}
+
+/**
+ * Surfaces the system switches that can silently mute the reminders, each with a one-tap route to
+ * the screen that fixes it, plus a manual sweep so the whole chain can be verified on the spot.
+ */
+@Composable
+private fun DiagnosticsSection(
+    diagnostics: NotificationDiagnostics,
+    lastBirthdaySweep: LocalDate?,
+    onFixNotifications: () -> Unit,
+    onFixExactAlarms: () -> Unit,
+    onFixBattery: () -> Unit,
+    onCheckNow: () -> Unit,
+) {
+    SettingsPanel(title = stringResource(R.string.vault_diag_title)) {
+        Text(
+            text = stringResource(R.string.vault_diag_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        DiagnosticRow(
+            label = stringResource(R.string.vault_diag_notifications),
+            ok = diagnostics.notificationsAllowed,
+            onFix = onFixNotifications,
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            DiagnosticRow(
+                label = stringResource(R.string.vault_diag_exact_alarms),
+                ok = diagnostics.exactAlarmsAllowed,
+                onFix = onFixExactAlarms,
+            )
+        }
+        DiagnosticRow(
+            label = stringResource(R.string.vault_diag_battery),
+            ok = diagnostics.batteryUnrestricted,
+            onFix = onFixBattery,
+        )
+        Text(
+            text =
+                lastBirthdaySweep
+                    ?.let { stringResource(R.string.vault_diag_last_run, it.toString()) }
+                    ?: stringResource(R.string.vault_diag_last_run_never),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        GhostButton(
+            text = stringResource(R.string.vault_diag_check_now),
+            onClick = onCheckNow,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun DiagnosticRow(label: String, ok: Boolean, onFix: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        if (ok) {
+            Text(
+                text = stringResource(R.string.vault_diag_ok),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        } else {
+            TextButton(onClick = onFix) { Text(stringResource(R.string.vault_diag_fix)) }
+        }
     }
 }
 
