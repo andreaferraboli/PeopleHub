@@ -25,4 +25,8 @@
     <string name="crop_confirm">Use photo</string>
     <string name="crop_cancel">Cancel</string>
     <string name="crop_load_failed">Couldn\'t load that image.</string>
+    <!-- Outings history card -->
+    <string name="outing_edit">Edit outing</string>
+    <string name="outing_no_description">No description</string>
+    <string name="outing_more_people">+%1$d</string>
 </resources>

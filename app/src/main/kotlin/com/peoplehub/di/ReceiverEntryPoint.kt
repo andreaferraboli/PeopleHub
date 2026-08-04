@@ -1,7 +1,7 @@
 package com.peoplehub.di
 
 import com.peoplehub.core.domain.usecase.CheckInPersonUseCase
-import com.peoplehub.core.domain.usecase.MarkReminderFiredUseCase
+import com.peoplehub.core.domain.usecase.MarkReminderDoneUseCase
 import com.peoplehub.core.notifications.PeopleHubNotifier
 import com.peoplehub.work.BirthdayAlarmScheduler
 import com.peoplehub.work.PeopleHubWorkScheduler
@@ -25,5 +25,6 @@ interface ReceiverEntryPoint {
 
     fun checkInPerson(): CheckInPersonUseCase
 
-    fun markReminderFired(): MarkReminderFiredUseCase
+    /** Backs the notification's "Done" action; the reminder cards call the same use case. */
+    fun markReminderDone(): MarkReminderDoneUseCase
 }

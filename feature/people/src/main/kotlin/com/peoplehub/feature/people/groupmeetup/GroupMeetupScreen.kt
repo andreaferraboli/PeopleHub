@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -46,6 +48,7 @@ import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.core.ui.components.UiStateContent
+import com.peoplehub.core.ui.modifier.safeBottomBarPadding
 import com.peoplehub.feature.people.R
 import java.time.Instant
 import java.time.LocalDate
@@ -55,8 +58,10 @@ import java.time.format.DateTimeFormatter
 private val MeetupDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
 
 /**
- * "Record an outing": select everyone you saw and log one meetup for each of them at once, optionally
- * across several days. Navigates back automatically once the meetup has been saved.
+ * "Record an outing" in both of its modes: select everyone you saw and log one meetup for each of them
+ * at once, optionally across several days — or, when the route carries an outing id, rewrite that
+ * outing's day, description and attendee list for everyone involved. Navigates back automatically once
+ * the outing has been saved or deleted.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +72,9 @@ fun GroupMeetupScreen(
     val peopleState by viewModel.people.collectAsStateWithLifecycle()
     val form by viewModel.form.collectAsStateWithLifecycle()
     val saved by viewModel.saved.collectAsStateWithLifecycle()
+    val selectedNames by viewModel.selectedNames.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(saved) {
         if (saved) onBack()
@@ -76,7 +83,10 @@ fun GroupMeetupScreen(
     Scaffold(
         topBar = {
             PeopleHubTopBar(
-                title = stringResource(R.string.group_meetup_title),
+                title =
+                    stringResource(
+                        if (form.editing) R.string.outing_edit_title else R.string.group_meetup_title,
+                    ),
                 navigationIcon = {
                     TooltipIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
@@ -84,21 +94,32 @@ fun GroupMeetupScreen(
                         onClick = onBack,
                     )
                 },
+                actions = {
+                    if (form.editing) {
+                        TooltipIconButton(
+                            icon = Icons.Outlined.DeleteOutline,
+                            description = stringResource(R.string.outing_delete),
+                            onClick = { showDeleteDialog = true },
+                        )
+                    }
+                },
             )
         },
         bottomBar = {
             PrimaryGoldButton(
                 text =
-                    if (form.selectedCount > 0) {
-                        stringResource(R.string.group_meetup_save_count, form.selectedCount)
-                    } else {
-                        stringResource(R.string.group_meetup_save)
+                    when {
+                        form.editing -> stringResource(R.string.outing_save_changes)
+                        form.selectedCount > 0 ->
+                            stringResource(R.string.group_meetup_save_count, form.selectedCount)
+                        else -> stringResource(R.string.group_meetup_save)
                     },
                 onClick = viewModel::onSave,
                 enabled = form.selectedCount > 0,
                 modifier =
                     Modifier
                         .fillMaxWidth()
+                        .safeBottomBarPadding()
                         .padding(horizontal = 20.dp, vertical = 12.dp),
             )
         },
@@ -113,6 +134,7 @@ fun GroupMeetupScreen(
         ) {
             MeetupDetailsCard(
                 form = form,
+                attendeeNames = selectedNames,
                 onToggleMultiDay = viewModel::onToggleMultiDay,
                 onStartDate = viewModel::onStartDate,
                 onEndDate = viewModel::onEndDate,
@@ -150,11 +172,29 @@ fun GroupMeetupScreen(
             }
         }
     }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.outing_delete_title)) },
+            text = { Text(stringResource(R.string.outing_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    viewModel.onDelete()
+                }) { Text(stringResource(R.string.outing_delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
 }
 
 @Composable
 private fun MeetupDetailsCard(
     form: GroupMeetupForm,
+    attendeeNames: List<String>,
     onToggleMultiDay: (Boolean) -> Unit,
     onStartDate: (LocalDate) -> Unit,
     onEndDate: (LocalDate) -> Unit,
@@ -167,15 +207,18 @@ private fun MeetupDetailsCard(
     GlassPanel(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             CapsLabel(text = stringResource(R.string.group_meetup_when))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { onToggleMultiDay(!form.multiDay) },
-            ) {
-                Checkbox(checked = form.multiDay, onCheckedChange = onToggleMultiDay)
-                Text(
-                    text = stringResource(R.string.checkin_multiday_toggle),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+            // An edit always concerns the single day the outing was recorded on.
+            if (!form.editing) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().clickable { onToggleMultiDay(!form.multiDay) },
+                ) {
+                    Checkbox(checked = form.multiDay, onCheckedChange = onToggleMultiDay)
+                    Text(
+                        text = stringResource(R.string.checkin_multiday_toggle),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
             }
             GhostButton(
                 text =
@@ -203,6 +246,20 @@ private fun MeetupDetailsCard(
                 placeholder = { Text(stringResource(R.string.checkin_note_hint)) },
                 shape = RoundedCornerShape(6.dp),
             )
+            if (attendeeNames.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.outing_attendees, attendeeNames.joinToString()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            form.error?.let { message ->
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 

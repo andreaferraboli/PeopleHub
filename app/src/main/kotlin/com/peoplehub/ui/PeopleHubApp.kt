@@ -1,6 +1,8 @@
 package com.peoplehub.ui
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,13 @@ import com.peoplehub.update.UpdatePrompt
 /**
  * The root app composable: a [Scaffold] hosting the bottom navigation bar and the navigation graph.
  * The bottom bar is shown only on the four top-level destinations and hidden on detail/edit screens.
+ *
+ * The app draws edge to edge, so the insets are handed down deliberately: this scaffold applies none
+ * itself (`contentWindowInsets` is empty) and lets each screen's own scaffold pad for the status bar
+ * and — on the screens where no navigation bar is drawn — for the phone's navigation buttons. Where
+ * the bottom bar *is* drawn it already covers that area (Material's `NavigationBar` insets itself), so
+ * the space it occupies is both padded **and** consumed here, otherwise every top-level screen would
+ * reserve the navigation-bar height a second time and float above the tab bar.
  */
 @Composable
 fun PeopleHubApp(navController: NavHostController = rememberNavController()) {
@@ -49,9 +58,10 @@ fun PeopleHubApp(navController: NavHostController = rememberNavController()) {
             }
         },
     ) { padding ->
+        val bottomBarSpace = PaddingValues(bottom = padding.calculateBottomPadding())
         PeopleHubNavHost(
             navController = navController,
-            modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
+            modifier = Modifier.padding(bottomBarSpace).consumeWindowInsets(bottomBarSpace),
         )
     }
 

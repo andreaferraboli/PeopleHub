@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +44,7 @@ import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.DayCountDisplay
 import com.peoplehub.core.ui.components.EmptyView
 import com.peoplehub.core.ui.components.ErrorView
+import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.LoadingView
 import com.peoplehub.core.ui.components.PeopleHubTopBar
@@ -52,7 +55,14 @@ import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.feature.reminders.R
 import com.peoplehub.feature.reminders.labelRes
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.absoluteValue
+
+/** Short "last done on" date, e.g. 4 Aug 2026. */
+private val ReminderDoneDateFormat: DateTimeFormatter
+    get() = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
 
 /** Stateful entry point for the global reminders list. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,6 +114,7 @@ fun RemindersListScreen(
             onPersonClick = onPersonClick,
             onToggleEnabled = viewModel::onToggleEnabled,
             onDelete = viewModel::onDelete,
+            onMarkDone = viewModel::onMarkDone,
         )
     }
 }
@@ -118,6 +129,7 @@ private fun RemindersListContent(
     onPersonClick: (Long) -> Unit,
     onToggleEnabled: (Long, Boolean) -> Unit,
     onDelete: (Long) -> Unit,
+    onMarkDone: (Long) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -163,7 +175,14 @@ private fun RemindersListContent(
             }
         }
 
-        remindersListBody(state.listState, onReminderClick, onPersonClick, onToggleEnabled, onDelete)
+        remindersListBody(
+            listState = state.listState,
+            onReminderClick = onReminderClick,
+            onPersonClick = onPersonClick,
+            onToggleEnabled = onToggleEnabled,
+            onDelete = onDelete,
+            onMarkDone = onMarkDone,
+        )
     }
 }
 
@@ -173,6 +192,7 @@ private fun LazyListScope.remindersListBody(
     onPersonClick: (Long) -> Unit,
     onToggleEnabled: (Long, Boolean) -> Unit,
     onDelete: (Long) -> Unit,
+    onMarkDone: (Long) -> Unit,
 ) {
     when (listState) {
         UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
@@ -194,6 +214,7 @@ private fun LazyListScope.remindersListBody(
                     onPersonClick = { onPersonClick(reminder.personId) },
                     onToggleEnabled = { onToggleEnabled(reminder.id, !reminder.enabled) },
                     onDelete = { onDelete(reminder.id) },
+                    onMarkDone = { onMarkDone(reminder.id) },
                 )
             }
     }
@@ -213,47 +234,92 @@ private fun ReminderCard(
     onPersonClick: () -> Unit,
     onToggleEnabled: () -> Unit,
     onDelete: () -> Unit,
+    onMarkDone: () -> Unit,
 ) {
     GlassPanel(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CapsLabel(
-                    text = reminder.personName,
-                    modifier = Modifier.clickable(onClick = onPersonClick),
-                )
-                Text(
-                    text = reminder.title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                if (!reminder.note.isNullOrBlank()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CapsLabel(
+                        text = reminder.personName,
+                        modifier = Modifier.clickable(onClick = onPersonClick),
+                    )
                     Text(
-                        text = reminder.note,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = reminder.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
+                    if (!reminder.note.isNullOrBlank()) {
+                        Text(
+                            text = reminder.note,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (reminder.isDue) {
+                        CategoryChip(
+                            label = stringResource(R.string.reminder_due),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    } else {
+                        DayCountDisplay(
+                            number = reminder.daysUntil.absoluteValue.toInt(),
+                            unitLabel = stringResource(R.string.reminder_days),
+                            prefix = stringResource(R.string.reminder_in),
+                            emphasized = reminder.enabled,
+                        )
+                    }
                 }
-                if (reminder.isDue) {
-                    CategoryChip(label = stringResource(R.string.reminder_due), tint = MaterialTheme.colorScheme.primary)
-                } else {
-                    DayCountDisplay(
-                        number = reminder.daysUntil.absoluteValue.toInt(),
-                        unitLabel = stringResource(R.string.reminder_days),
-                        prefix = stringResource(R.string.reminder_in),
-                        emphasized = reminder.enabled,
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Switch(checked = reminder.enabled, onCheckedChange = { onToggleEnabled() })
+                    TooltipIconButton(
+                        icon = Icons.Outlined.Delete,
+                        description = stringResource(R.string.reminder_delete),
+                        onClick = onDelete,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Switch(checked = reminder.enabled, onCheckedChange = { onToggleEnabled() })
-                TooltipIconButton(
-                    icon = Icons.Outlined.Delete,
-                    description = stringResource(R.string.reminder_delete),
-                    onClick = onDelete,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            ReminderDoneRow(reminder = reminder, onMarkDone = onMarkDone)
         }
+    }
+}
+
+/**
+ * The "done" control and the history it writes to: ticking the reminder off logs today and redraws its
+ * next occurrence, so the button doubles as the answer to "when did I last actually do this?".
+ *
+ * The button stays tappable once it has been ticked today — doing the same thing twice is allowed, and
+ * the second tick restarts the cadence from that moment — but its label says the day is already
+ * recorded, so the state is never ambiguous.
+ */
+@Composable
+private fun ReminderDoneRow(reminder: ReminderListItem, onMarkDone: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text =
+                when {
+                    reminder.doneToday -> stringResource(R.string.reminder_done_today)
+                    reminder.lastDoneOn != null ->
+                        stringResource(
+                            R.string.reminder_done_last,
+                            reminder.lastDoneOn.format(ReminderDoneDateFormat),
+                            reminder.timesDone,
+                        )
+                    else -> stringResource(R.string.reminder_done_never)
+                },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        GhostButton(
+            text =
+                stringResource(
+                    if (reminder.doneToday) R.string.reminder_done_again else R.string.reminder_mark_done,
+                ),
+            onClick = onMarkDone,
+            icon = if (reminder.doneToday) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+        )
     }
 }
 
@@ -263,6 +329,7 @@ private fun categoryOptions(): List<ReminderCategory?> =
 @Preview(name = "Phone", device = "spec:width=411dp,height=891dp")
 @Composable
 private fun RemindersListPreview() {
+    val previewToday = LocalDate.of(2026, 8, 4)
     PeopleHubTheme {
         RemindersListContent(
             state =
@@ -279,6 +346,9 @@ private fun RemindersListPreview() {
                                     ReminderCategory.LOVE,
                                     enabled = true,
                                     daysUntil = 4,
+                                    lastDoneOn = previewToday.minusDays(9),
+                                    timesDone = 3,
+                                    today = previewToday,
                                 ),
                                 ReminderListItem(
                                     2,
@@ -289,6 +359,9 @@ private fun RemindersListPreview() {
                                     ReminderCategory.FRIENDSHIP,
                                     enabled = true,
                                     daysUntil = 0,
+                                    lastDoneOn = previewToday,
+                                    timesDone = 1,
+                                    today = previewToday,
                                 ),
                             ),
                         ),
@@ -300,6 +373,7 @@ private fun RemindersListPreview() {
             onPersonClick = {},
             onToggleEnabled = { _, _ -> },
             onDelete = {},
+            onMarkDone = {},
         )
     }
 }

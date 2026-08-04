@@ -211,11 +211,12 @@ fun SettingsScreen(
             DiagnosticsSection(
                 diagnostics = diagnostics,
                 lastBirthdaySweep = state.lastBirthdaySweep,
+                lastRelationshipSweep = state.lastRelationshipSweep,
                 onFixNotifications = { openNotificationSettings(context) },
                 onFixExactAlarms = { openExactAlarmSettings(context) },
                 onFixBattery = { openBatterySettings(context) },
                 onCheckNow = {
-                    viewModel.runBirthdayCheckNow()
+                    viewModel.runNotificationCheckNow()
                     scope.launch { snackbarHostState.showSnackbar(checkNowMessage) }
                 },
             )
@@ -473,6 +474,7 @@ private fun AlarmSection(
 private fun DiagnosticsSection(
     diagnostics: NotificationDiagnostics,
     lastBirthdaySweep: LocalDate?,
+    lastRelationshipSweep: LocalDate?,
     onFixNotifications: () -> Unit,
     onFixExactAlarms: () -> Unit,
     onFixBattery: () -> Unit,
@@ -506,6 +508,14 @@ private fun DiagnosticsSection(
                 lastBirthdaySweep
                     ?.let { stringResource(R.string.vault_diag_last_run, it.toString()) }
                     ?: stringResource(R.string.vault_diag_last_run_never),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text =
+                lastRelationshipSweep
+                    ?.let { stringResource(R.string.vault_diag_last_reminder_run, it.toString()) }
+                    ?: stringResource(R.string.vault_diag_last_reminder_run_never),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

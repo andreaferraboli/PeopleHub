@@ -14,6 +14,8 @@ import com.peoplehub.feature.events.navigation.EventDetailRoute
 import com.peoplehub.feature.events.navigation.eventsSection
 import com.peoplehub.feature.people.navigation.AddEditPersonRoute
 import com.peoplehub.feature.people.navigation.BirthdayOnlyRoute
+import com.peoplehub.feature.people.navigation.EditOutingRoute
+import com.peoplehub.feature.people.navigation.OutingsCalendarRoute
 import com.peoplehub.feature.people.navigation.PeopleListRoute
 import com.peoplehub.feature.people.navigation.PersonDetailRoute
 import com.peoplehub.feature.people.navigation.RecordMeetupRoute
@@ -37,6 +39,8 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
                 onSeeAllBirthdays = { navController.navigate(BirthdaysRoute) },
                 onAddPerson = { navController.navigate(AddEditPersonRoute()) },
                 onRecordMeetup = { navController.navigate(RecordMeetupRoute) },
+                onOpenOutings = { navController.navigate(OutingsCalendarRoute) },
+                onEditOuting = { navController.navigate(EditOutingRoute(it)) },
             )
         }
 
@@ -46,6 +50,7 @@ fun PeopleHubNavHost(navController: NavHostController, modifier: Modifier = Modi
             onEditPerson = { navController.navigate(AddEditPersonRoute(it)) },
             onEventClick = { navController.navigate(EventDetailRoute(it)) },
             onRecordMeetup = { navController.navigate(RecordMeetupRoute) },
+            onEditOuting = { navController.navigate(EditOutingRoute(it)) },
             onAddReminder = { personId -> navController.navigate(AddEditReminderRoute(personId = personId)) },
             onEditReminder = { navController.navigate(AddEditReminderRoute(reminderId = it)) },
             onBack = { navController.popBackStack() },

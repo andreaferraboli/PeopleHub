@@ -28,8 +28,9 @@ complexity:
   LongParameterList:
     active: true
     # Feature nav sections take one navigation callback per reachable destination, so a section that
-    # fans out to several screens (e.g. people -> detail, edit, meetup, reminders) is legitimately wide.
-    functionThreshold: 9
+    # fans out to several screens (e.g. people -> detail, edit, meetup, outings, reminders) is
+    # legitimately wide.
+    functionThreshold: 10
     # Hilt view models inject one use case per action, so constructors are legitimately wide.
     constructorThreshold: 16
     ignoreDefaultParameters: true

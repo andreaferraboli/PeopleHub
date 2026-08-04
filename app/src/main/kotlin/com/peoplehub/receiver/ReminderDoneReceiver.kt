@@ -11,9 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Handles the "Done" action on a relationship reminder: reschedules the reminder from now (resetting
- * the clock to when the user actually did the thing) and dismisses the notification, without opening
- * the app.
+ * Handles the "Done" action on a relationship reminder: logs today in the reminder's completion history,
+ * restarts its cadence from now with a freshly drawn interval, and dismisses the notification, without
+ * opening the app. Same effect as the "done" button on the reminder cards, deliberately routed through
+ * the same use case so the history is complete however the user ticked it off.
  */
 class ReminderDoneReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -27,7 +28,7 @@ class ReminderDoneReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                entryPoint.markReminderFired().invoke(reminderId)
+                entryPoint.markReminderDone().invoke(reminderId)
                 if (notificationId > 0) entryPoint.notifier().cancel(notificationId)
             } finally {
                 pendingResult.finish()

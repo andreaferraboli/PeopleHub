@@ -7,6 +7,7 @@ import com.peoplehub.core.domain.usecase.GetPeopleUseCase
 import com.peoplehub.core.domain.usecase.GetPinnedEventUseCase
 import com.peoplehub.core.domain.usecase.GetUpcomingBirthdaysUseCase
 import com.peoplehub.core.domain.usecase.GetUrgentCheckInsUseCase
+import com.peoplehub.core.domain.usecase.ObserveOutingsUseCase
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.work.PeopleHubWorkScheduler
 import io.mockk.every
@@ -43,6 +44,7 @@ class DashboardViewModelTest {
             val getUrgentCheckIns = mockk<GetUrgentCheckInsUseCase>()
             val getUpcomingBirthdays = mockk<GetUpcomingBirthdaysUseCase>()
             val getPinnedEvent = mockk<GetPinnedEventUseCase>()
+            val observeOutings = mockk<ObserveOutingsUseCase>()
             val checkInPerson = mockk<CheckInPersonUseCase>(relaxed = true)
             val workScheduler = mockk<PeopleHubWorkScheduler>(relaxed = true)
 
@@ -56,6 +58,7 @@ class DashboardViewModelTest {
             every { getUrgentCheckIns() } returns flowOf(emptyList())
             every { getUpcomingBirthdays(any()) } returns flowOf(emptyList())
             every { getPinnedEvent() } returns flowOf(null)
+            every { observeOutings() } returns flowOf(emptyList())
 
             val viewModel =
                 DashboardViewModel(
@@ -63,6 +66,7 @@ class DashboardViewModelTest {
                     getUrgentCheckIns,
                     getUpcomingBirthdays,
                     getPinnedEvent,
+                    observeOutings,
                     checkInPerson,
                     workScheduler,
                 )

@@ -32,7 +32,12 @@ class CheckInPersonUseCase
             val timestamp = at ?: clock.instant()
             val id =
                 checkInRepository.recordCheckIn(
-                    CheckIn(personId = personId, timestamp = timestamp, note = note?.takeIf(String::isNotBlank)),
+                    CheckIn(
+                        personId = personId,
+                        timestamp = timestamp,
+                        note = note?.takeIf(String::isNotBlank),
+                        outingId = checkInRepository.newOutingId(),
+                    ),
                 )
             val previous = peopleRepository.getPerson(personId)?.lastCheckInAt
             if (previous == null || timestamp.isAfter(previous)) {
@@ -49,6 +54,10 @@ class CheckInPersonUseCase
  * so each person independently keeps the full history and the denormalised last-seen timestamp is
  * re-derived per attendee. Each day is anchored at noon in the clock's zone so the calendar-day math
  * is stable regardless of the exact hour.
+ *
+ * Every day gets its own [CheckIn.outingId], shared by all its attendees: that is what lets the
+ * outings history show the meetup as one card and edit its date, description and attendees as a unit.
+ * A multi-day meetup is therefore one outing per day, each editable on its own.
  */
 class RecordMeetupUseCase
     @Inject
@@ -60,18 +69,23 @@ class RecordMeetupUseCase
         suspend operator fun invoke(personIds: List<Long>, days: List<LocalDate>, note: String? = null) {
             if (personIds.isEmpty() || days.isEmpty()) return
             val cleanNote = note?.takeIf(String::isNotBlank)
+            val people = personIds.distinct()
+            // One id per day, all reserved up front: nothing is written yet, so asking for the "next"
+            // id repeatedly would hand out the same number for every day.
+            val firstOutingId = checkInRepository.newOutingId()
             val checkIns =
-                personIds.distinct().flatMap { personId ->
-                    days.distinct().map { day ->
+                days.distinct().sorted().flatMapIndexed { dayIndex, day ->
+                    people.map { personId ->
                         CheckIn(
                             personId = personId,
                             timestamp = day.atTime(NOON_HOUR, 0).atZone(clock.zone).toInstant(),
                             note = cleanNote,
+                            outingId = firstOutingId + dayIndex,
                         )
                     }
                 }
             checkInRepository.recordCheckIns(checkIns)
-            personIds.distinct().forEach { personId ->
+            people.forEach { personId ->
                 refreshLastCheckIn(checkInRepository, peopleRepository, personId)
             }
         }
@@ -82,9 +96,14 @@ class RecordMeetupUseCase
     }
 
 /**
- * Edits an existing check-in (its day and/or note) and re-derives the person's denormalised
- * last-seen timestamp from the remaining history, so moving the latest check-in keeps the cadence
- * tracker in sync.
+ * Edits **one person's** check-in (its day and/or note) and re-derives their denormalised last-seen
+ * timestamp from the remaining history, so moving the latest check-in keeps the cadence tracker in
+ * sync.
+ *
+ * When the edited row belongs to an outing shared with other people, it is detached into an outing of
+ * its own: the edit was made from a single person's history, so it must not silently rewrite the day
+ * or description everyone else sees. Editing the shared outing as a whole is what
+ * [UpdateOutingUseCase] is for.
  */
 class UpdateCheckInUseCase
     @Inject
@@ -93,8 +112,12 @@ class UpdateCheckInUseCase
         private val peopleRepository: PeopleRepository,
     ) {
         suspend operator fun invoke(checkIn: CheckIn) {
+            val outing = checkIn.outingId.takeIf { it > 0L }?.let { checkInRepository.getOuting(it) }
+            val isShared = outing != null && outing.attendees.any { it.personId != checkIn.personId }
+            val outingId =
+                if (isShared || checkIn.outingId <= 0L) checkInRepository.newOutingId() else checkIn.outingId
             checkInRepository.updateCheckIn(
-                checkIn.copy(note = checkIn.note?.takeIf(String::isNotBlank)),
+                checkIn.copy(note = checkIn.note?.takeIf(String::isNotBlank), outingId = outingId),
             )
             refreshLastCheckIn(checkInRepository, peopleRepository, checkIn.personId)
         }
@@ -118,7 +141,7 @@ class DeleteCheckInsUseCase
     }
 
 /** Re-derives a person's denormalised last-seen timestamp from their most recent surviving check-in. */
-private suspend fun refreshLastCheckIn(
+internal suspend fun refreshLastCheckIn(
     checkInRepository: CheckInRepository,
     peopleRepository: PeopleRepository,
     personId: Long,

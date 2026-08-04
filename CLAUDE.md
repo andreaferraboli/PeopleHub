@@ -1,8 +1,8 @@
 # PeopleHub — Engineering Guide
 
 PeopleHub is a **100% offline** Android app that acts as a personal relationship hub: it tracks the
-people in your life, their birthdays, when you last saw them ("check-ins"), their interests, and
-significant personal events with elapsed/remaining day counters.
+people in your life, their birthdays, when you last saw them ("check-ins", grouped into "outings"),
+their interests, and significant personal events with elapsed/remaining day counters.
 
 There is **no networking** anywhere in the app — no HTTP client, no analytics, nothing leaves the
 device. All data lives in a local Room database and DataStore.
@@ -37,9 +37,12 @@ device. All data lives in a local Room database and DataStore.
 :core:ui              Compose theme (Midnight Gold), design-system components, UiState, RelativeTime
 :core:notifications   Notification channels + PeopleHubNotifier + action constants
 :core:dataio   (JVM)  JSON (kotlinx.serialization) + CSV import/export, DTOs, mappers
-:feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import
+:feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import,
+                      record/edit an outing, outings calendar
 :feature:birthdays    Year/Month/List calendar views, CSV/JSON import + export
 :feature:events       Events list with filters, detail, add/edit, pin-to-widget
+:feature:reminders    Per-person relationship reminders: list (filter, pause, done, delete), add/edit,
+                      the "why irregular cadence" science screen
 :feature:widget       Three Glance widgets (birthdays, urgent check-ins, event) + config activity + updater
 ```
 
@@ -60,6 +63,37 @@ has **no Android dependencies**.
 - Errors are surfaced via `kotlin.Result` / sealed `UiState.Error`, never uncaught exceptions.
 - No hardcoded user-facing strings — everything lives in a module `strings.xml`.
 
+## Check-ins and outings
+
+Storage stays **per person**: seeing four friends on one evening writes four `check_in` rows, so each
+of them keeps the meeting in their own history and their own cadence tracker. `check_in.outing_id`
+(v8, indexed, ids handed out monotonically by `MAX(outing_id) + 1` and never reused) groups the rows
+written for one occasion, and the domain `Outing` is the *view* over them — the card the user sees on
+the home screen and in the outings calendar, and the unit they edit. A quick one-person check-in is
+just an outing with a single attendee; a multi-day meetup is one outing per day.
+
+Two edit paths, deliberately distinct:
+
+- `UpdateOutingUseCase` rewrites the whole outing — day, description and attendee list — applying the
+  change to every attendee's row (removed people lose theirs, added people gain one) and re-deriving
+  the denormalised last-seen of everyone touched on either side.
+- `UpdateCheckInUseCase` edits **one person's** row from their own history and, if that row was part
+  of a shared outing, **detaches** it into an outing of its own, so a personal edit never silently
+  rewrites what everyone else sees.
+
+Rows written before v8 (and imported backups carrying `outingId = 0`) are regrouped by
+(local day, description) — the migration, `BackupRepositoryImpl.insertCheckIns` and
+`ImportPersonUseCase` apply the same rule. **Every** import path allocates fresh outing ids: the ids in
+a file were handed out by whichever install exported it, so reusing them would either fuse the import
+into an unrelated local outing that happens to share a number, or — for `0` — collapse a whole history
+into one bogus outing spanning every date in it.
+
+The outing editor reuses the "record an outing" screen, seeded from the stored outing. Its people
+picker excludes birthday-only entries (bare birthdays, not tracked relationships) but keeps any that
+are *already attending the edited outing*: a quick check-in on such a person is reachable from their
+own screen, and hiding them would leave that outing with nothing ticked — unremovable, and impossible
+to save at all, since an outing needs at least one attendee.
+
 ## Design system — "Midnight Gold"
 
 A Neo-Luxury dark-first identity (transcribed from `stitch_peoplehub_personal_relationship_manager/`):
@@ -72,8 +106,26 @@ default** so the gold-on-onyx brand is preserved (`PeopleHubTheme(dynamicColor =
 
 Reusable components live in `core:ui/components`: `GlassPanel`, `GoldDivider`, `SectionHeader`,
 `CapsLabel`, `PrimaryGoldButton`, `GhostButton`, `TagChip`, `CategoryChip`, `PersonAvatar`,
-`DayCountDisplay`, `CheckInStatusBadge`, `PeopleHubTopBar`, and the `LoadingView/EmptyView/ErrorView`
-state views.
+`DayCountDisplay`, `CheckInStatusBadge`, `OutingCard`, `PeopleHubTopBar`, and the
+`LoadingView/EmptyView/ErrorView` state views.
+
+### Window insets (edge to edge)
+
+The app calls `enableEdgeToEdge()`, so **nothing** is inset for you and every screen has to say where the
+system bars go. The contract is:
+
+- The root scaffold in `PeopleHubApp` applies no insets of its own; it pads the nav host by the bottom
+  bar's height **and consumes that region** (`consumeWindowInsets`). Without the consume, every
+  top-level screen would reserve the navigation-bar height a second time and float above the tab bar.
+- Each screen's own `Scaffold` pads its content from the default `contentWindowInsets`, which covers the
+  status bar and — on screens where no tab bar is drawn — the phone's navigation buttons. `TopAppBar`
+  insets itself, so `PeopleHubTopBar` needs nothing.
+- A screen that puts its own action bar in the `bottomBar` slot **must** add
+  `Modifier.safeBottomBarPadding()` (`core:ui/modifier`). `Scaffold` does not inset that slot: it hands
+  the bar the full width at the very bottom of the window, so without it a save button sits underneath
+  the navigation buttons and cannot be tapped. The helper also lifts the bar above the soft keyboard.
+- Full-width dialogs (`usePlatformDefaultWidth = false`) use `Modifier.safeDialogPadding()`, which is
+  laid out against the raw window and would otherwise run under both bars.
 
 ## Background work
 
@@ -99,6 +151,28 @@ re-enqueues with `CANCEL_AND_REENQUEUE` instead of being swallowed by `KEEP`.
   `ReminderStateRepository.lastBirthdaySweepDate` makes that idempotent: the first trigger each day
   claims the date and the rest no-op. The sweep is also enqueued as *unique* work so concurrent
   triggers collapse. Settings → Notification health forces a run (`INPUT_FORCE`) for verification.
+- **Relationship reminders**: `RelationshipReminderWorker` fires the per-person reminders that have
+  come due, then reschedules each from now with fresh jitter (so a device that was off for days fires
+  each overdue reminder once, with no catch-up burst). It runs on the **same three redundant
+  triggers** as the birthday sweep, with its own claim date
+  (`ReminderStateRepository.lastRelationshipSweepDate`) and its own unique work name, because a lone
+  periodic job is silently dropped by Doze and OEM battery managers. Also **not** gated on
+  `notificationsEnabled`: the user created the reminder explicitly, and that off-by-default opt-in
+  meant it never notified at all. Settings → Notification health shows both sweeps' last run and its
+  "check now" forces both.
+
+  "Due" is resolved to **the end of the current day**, not the current instant (`GetDueRemindersUseCase`).
+  The cadence is whole days but a fire time carries the time of day it was drawn at, so comparing
+  against "now" made the early-morning sweep skip every reminder due later that day and deliver it a
+  full day late. A double fire is impossible: the next occurrence is at least a day away, so it cannot
+  also land inside today's window.
+- **Doing a reminder**: the reminder cards carry a "done" button (`MarkReminderDoneUseCase`, shared with
+  the notification's "Done" action) that logs the day in `reminder_completion` and restarts the cadence
+  from now with a **freshly drawn** interval. The log is what makes the gesture durable — a reminder row
+  only carries its *next* occurrence, so rescheduling alone would erase that anything happened — and it
+  is what keeps "done" distinct from "notified": `lastFiredAt` moves when the sweep posts a
+  notification, the log only when the user says they did the thing. One row per (reminder, day), so
+  ticking twice in a day counts once in the history while still redrawing the next occurrence.
 - **Diagnostics**: notifications, exact alarms and battery optimisation all fail silently, so
   Settings surfaces each with a one-tap route to the system screen that fixes it
   (`NotificationDiagnostics`).

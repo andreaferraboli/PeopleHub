@@ -44,13 +44,19 @@ data class InterestDto(
     val id: Long = 0L,
 )
 
-/** Serialization-friendly mirror of the domain `CheckIn`; the timestamp is epoch-millis. */
+/**
+ * Serialization-friendly mirror of the domain `CheckIn`; the timestamp is epoch-millis.
+ *
+ * [outingId] groups the check-ins recorded for one shared outing. It is `0` in files written before
+ * outings existed; the import then rebuilds the groups from the day and the note.
+ */
 @Serializable
 data class CheckInDto(
     val id: Long = 0L,
     val personId: Long,
     val timestampEpochMillis: Long,
     val note: String? = null,
+    val outingId: Long = 0L,
 )
 
 /** Serialization-friendly mirror of the domain `PersonEvent`; [dateTime] is an ISO local date-time string. */

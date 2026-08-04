@@ -166,4 +166,25 @@
     <string name="detail_cadence_value">Avvisa dopo %1$d giorni · critico dopo %2$d</string>
     <string name="detail_cadence_custom">Personalizzata</string>
     <string name="detail_cadence_default">Predefinita</string>
+    <!-- Cronologia e calendario delle uscite -->
+    <string name="outing_edit_title">Modifica uscita</string>
+    <string name="outing_save_changes">Salva modifiche</string>
+    <string name="outing_delete">Elimina uscita</string>
+    <string name="outing_delete_title">Eliminare questa uscita?</string>
+    <string name="outing_delete_message">Sarà rimossa dalla cronologia di tutte le persone coinvolte.</string>
+    <string name="outing_attendees">Presenti: %1$s</string>
+    <string name="outings_calendar_title">Calendario uscite</string>
+    <string name="outings_all_title">Tutte le uscite</string>
+    <string name="outings_show_all">Mostra tutte le uscite</string>
+    <string name="outings_empty">Nessuna uscita registrata per ora.</string>
+    <string name="outings_day_empty">Nessuna uscita in questo giorno.</string>
+    <string name="outings_previous_month">Mese precedente</string>
+    <string name="outings_next_month">Mese successivo</string>
+    <string name="outings_weekday_monday">L</string>
+    <string name="outings_weekday_tuesday">M</string>
+    <string name="outings_weekday_wednesday">M</string>
+    <string name="outings_weekday_thursday">G</string>
+    <string name="outings_weekday_friday">V</string>
+    <string name="outings_weekday_saturday">S</string>
+    <string name="outings_weekday_sunday">D</string>
 </resources>

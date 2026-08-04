@@ -18,6 +18,11 @@
     <string name="reminder_days">days</string>
     <string name="reminder_in">in</string>
     <string name="reminder_delete">Delete reminder</string>
+    <string name="reminder_mark_done">Done</string>
+    <string name="reminder_done_again">Done again</string>
+    <string name="reminder_done_today">Done today · the next one is already rescheduled</string>
+    <string name="reminder_done_last">Last done %1$s · %2$d times</string>
+    <string name="reminder_done_never">Never marked as done yet</string>
 
     <!-- Categories -->
     <string name="reminder_filter_all">All</string>

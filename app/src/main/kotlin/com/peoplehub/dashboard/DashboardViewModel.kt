@@ -3,6 +3,7 @@ package com.peoplehub.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.peoplehub.core.domain.model.CheckInUrgency
+import com.peoplehub.core.domain.model.Outing
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.UpcomingBirthday
@@ -11,6 +12,7 @@ import com.peoplehub.core.domain.usecase.GetPeopleUseCase
 import com.peoplehub.core.domain.usecase.GetPinnedEventUseCase
 import com.peoplehub.core.domain.usecase.GetUpcomingBirthdaysUseCase
 import com.peoplehub.core.domain.usecase.GetUrgentCheckInsUseCase
+import com.peoplehub.core.domain.usecase.ObserveOutingsUseCase
 import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.work.PeopleHubWorkScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +24,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** Aggregated home ("Reflect") state across people, check-ins, birthdays and the pinned event. */
+/**
+ * Aggregated home ("Reflect") state across people, check-ins, birthdays, the pinned event and the
+ * outings history.
+ *
+ * @property recentOutings the most recent outings, newest first; the full history lives in the
+ * outings calendar.
+ */
 data class DashboardData(
     val peopleCount: Int,
     val urgentCount: Int,
@@ -30,6 +38,7 @@ data class DashboardData(
     val urgentCheckIns: List<CheckInUrgency>,
     val upcomingBirthdays: List<UpcomingBirthday>,
     val pinnedEvent: PersonEvent?,
+    val recentOutings: List<Outing> = emptyList(),
 )
 
 @HiltViewModel
@@ -40,6 +49,7 @@ class DashboardViewModel
         getUrgentCheckIns: GetUrgentCheckInsUseCase,
         getUpcomingBirthdays: GetUpcomingBirthdaysUseCase,
         getPinnedEvent: GetPinnedEventUseCase,
+        observeOutings: ObserveOutingsUseCase,
         private val checkInPerson: CheckInPersonUseCase,
         private val workScheduler: PeopleHubWorkScheduler,
     ) : ViewModel() {
@@ -49,8 +59,11 @@ class DashboardViewModel
                 getUrgentCheckIns(),
                 getUpcomingBirthdays(BIRTHDAY_WINDOW_DAYS),
                 getPinnedEvent(),
-            ) { people, urgent, birthdays, pinned ->
-                if (people.isEmpty() && urgent.isEmpty() && birthdays.isEmpty() && pinned == null) {
+                observeOutings(),
+            ) { people, urgent, birthdays, pinned, outings ->
+                val nothingToShow =
+                    listOf(people, urgent, birthdays, outings).all(List<*>::isEmpty) && pinned == null
+                if (nothingToShow) {
                     UiState.Empty
                 } else {
                     UiState.Success(
@@ -61,6 +74,7 @@ class DashboardViewModel
                             urgentCheckIns = urgent.take(PREVIEW_LIMIT),
                             upcomingBirthdays = birthdays.take(PREVIEW_LIMIT),
                             pinnedEvent = pinned,
+                            recentOutings = outings.take(OUTINGS_PREVIEW_LIMIT),
                         ),
                     )
                 }
@@ -84,5 +98,6 @@ class DashboardViewModel
             const val STOP_TIMEOUT_MILLIS = 5_000L
             const val BIRTHDAY_WINDOW_DAYS = 30
             const val PREVIEW_LIMIT = 3
+            const val OUTINGS_PREVIEW_LIMIT = 5
         }
     }

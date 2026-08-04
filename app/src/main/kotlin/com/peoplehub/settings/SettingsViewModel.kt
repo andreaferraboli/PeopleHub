@@ -36,12 +36,15 @@ import javax.inject.Inject
  *
  * @property lastBirthdaySweep the day the birthday sweep last ran, surfaced in the notification
  * diagnostics so a silent engine is visible instead of having to be guessed at.
+ * @property lastRelationshipSweep the day the relationship-reminder sweep last ran, shown alongside
+ * [lastBirthdaySweep] because the two sweeps can fail independently.
  */
 data class SettingsUiState(
     val settings: AppSettings,
     val isBusy: Boolean,
     val message: String?,
     val lastBirthdaySweep: LocalDate? = null,
+    val lastRelationshipSweep: LocalDate? = null,
 )
 
 @HiltViewModel
@@ -65,6 +68,7 @@ class SettingsViewModel
         private val isBusy = MutableStateFlow(false)
         private val message = MutableStateFlow<String?>(null)
         private val lastBirthdaySweep = MutableStateFlow<LocalDate?>(null)
+        private val lastRelationshipSweep = MutableStateFlow<LocalDate?>(null)
 
         val state: StateFlow<SettingsUiState> =
             combine(
@@ -72,8 +76,15 @@ class SettingsViewModel
                 isBusy,
                 message,
                 lastBirthdaySweep,
-            ) { settings, busy, msg, sweep ->
-                SettingsUiState(settings = settings, isBusy = busy, message = msg, lastBirthdaySweep = sweep)
+                lastRelationshipSweep,
+            ) { settings, busy, msg, birthdaySweep, reminderSweep ->
+                SettingsUiState(
+                    settings = settings,
+                    isBusy = busy,
+                    message = msg,
+                    lastBirthdaySweep = birthdaySweep,
+                    lastRelationshipSweep = reminderSweep,
+                )
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -86,15 +97,19 @@ class SettingsViewModel
 
         /** Re-reads the notification-engine bookkeeping shown in the diagnostics panel. */
         fun refreshDiagnostics() {
-            viewModelScope.launch { lastBirthdaySweep.value = reminderState.lastBirthdaySweepDate() }
+            viewModelScope.launch {
+                lastBirthdaySweep.value = reminderState.lastBirthdaySweepDate()
+                lastRelationshipSweep.value = reminderState.lastRelationshipSweepDate()
+            }
         }
 
         /**
-         * Runs the birthday sweep immediately, ignoring the once-a-day guard, so the user can verify
-         * the engine end to end instead of waiting for tomorrow morning.
+         * Runs both notification sweeps immediately, ignoring the once-a-day guard, so the user can
+         * verify the engine end to end instead of waiting for tomorrow morning.
          */
-        fun runBirthdayCheckNow() {
+        fun runNotificationCheckNow() {
             workScheduler.enqueueBirthdaySweep(force = true)
+            workScheduler.enqueueRelationshipSweep(force = true)
         }
 
         fun onThresholdChange(warningDays: Int, criticalDays: Int) {

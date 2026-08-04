@@ -9,6 +9,7 @@ import com.peoplehub.feature.people.detail.PersonDetailScreen
 import com.peoplehub.feature.people.edit.AddEditPersonScreen
 import com.peoplehub.feature.people.groupmeetup.GroupMeetupScreen
 import com.peoplehub.feature.people.list.PeopleListScreen
+import com.peoplehub.feature.people.outings.OutingsCalendarScreen
 import kotlinx.serialization.Serializable
 
 /** Type-safe navigation routes for the people feature. */
@@ -35,6 +36,17 @@ data object BirthdayOnlyRoute
 @Serializable
 data object RecordMeetupRoute
 
+/** The outings history on a calendar, reached from the Reflect tab. */
+@Serializable
+data object OutingsCalendarRoute
+
+/**
+ * Edit route for an existing outing: reuses the "record an outing" form, seeded from the stored
+ * outing, so the day, description and attendee list are edited for every attendee at once.
+ */
+@Serializable
+data class EditOutingRoute(val outingId: Long)
+
 /**
  * Registers the people screens into the host graph. Navigation out of these screens is delegated to
  * the supplied callbacks so the feature stays decoupled from the rest of the app.
@@ -45,6 +57,7 @@ fun NavGraphBuilder.peopleSection(
     onEditPerson: (Long) -> Unit,
     onEventClick: (Long) -> Unit,
     onRecordMeetup: () -> Unit,
+    onEditOuting: (Long) -> Unit,
     onAddReminder: (Long) -> Unit,
     onEditReminder: (Long) -> Unit,
     onBack: () -> Unit,
@@ -78,5 +91,11 @@ fun NavGraphBuilder.peopleSection(
     }
     composable<RecordMeetupRoute> {
         GroupMeetupScreen(onBack = onBack)
+    }
+    composable<EditOutingRoute> {
+        GroupMeetupScreen(onBack = onBack)
+    }
+    composable<OutingsCalendarRoute> {
+        OutingsCalendarScreen(onBack = onBack, onEditOuting = onEditOuting)
     }
 }

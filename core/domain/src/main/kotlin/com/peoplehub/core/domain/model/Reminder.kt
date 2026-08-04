@@ -1,6 +1,7 @@
 package com.peoplehub.core.domain.model
 
 import java.time.Instant
+import java.time.LocalDate
 
 /**
  * A recurring "do something for this person" reminder that fires on a deliberately *irregular*
@@ -36,6 +37,24 @@ data class Reminder(
     val nextFireAt: Instant = Instant.EPOCH,
     val createdAt: Instant = Instant.EPOCH,
     val presetKey: String? = null,
+)
+
+/**
+ * What a reminder's completion log adds up to: how many times the user has ticked it off as done and
+ * the last day they did.
+ *
+ * A reminder only stores its *next* occurrence, so rescheduling would otherwise erase the fact that
+ * the gesture happened. Keeping the log separate is also what lets "done" and "notified" stay distinct
+ * — [Reminder.lastFiredAt] moves when the sweep posts a notification, [lastDoneOn] only when the user
+ * says they actually did the thing.
+ *
+ * @property timesDone the number of distinct days the reminder was completed on.
+ * @property lastDoneOn the most recent of those days.
+ */
+data class ReminderCompletion(
+    val reminderId: Long,
+    val timesDone: Int,
+    val lastDoneOn: LocalDate,
 )
 
 /**

@@ -36,6 +36,10 @@
     <string name="dashboard_empty_title">Il tuo hub è vuoto</string>
     <string name="dashboard_empty_desc">Aggiungi la prima persona per iniziare a tracciare le tue relazioni.</string>
     <string name="dashboard_empty_cta">Aggiungi la tua prima persona</string>
+    <string name="dashboard_outings_title">Cronologia uscite</string>
+    <string name="dashboard_outings_calendar">Calendario</string>
+    <string name="dashboard_outings_calendar_cta">Apri il calendario delle uscite</string>
+    <string name="dashboard_outings_empty">Nessuna uscita registrata per ora.</string>
 
     <!-- Settings / Vault -->
     <string name="vault_title">La Cassaforte</string>
@@ -69,8 +73,10 @@
     <string name="vault_diag_fix">Risolvi</string>
     <string name="vault_diag_last_run">Ultimo controllo compleanni: %1$s</string>
     <string name="vault_diag_last_run_never">Il controllo dei compleanni non è mai stato eseguito.</string>
-    <string name="vault_diag_check_now">Controlla i compleanni adesso</string>
-    <string name="vault_diag_check_now_sent">Controllo compleanni avviato</string>
+    <string name="vault_diag_last_reminder_run">Ultimo controllo promemoria: %1$s</string>
+    <string name="vault_diag_last_reminder_run_never">Il controllo dei promemoria non è mai stato eseguito.</string>
+    <string name="vault_diag_check_now">Controlla notifiche adesso</string>
+    <string name="vault_diag_check_now_sent">Controllo notifiche avviato</string>
 
     <string name="vault_import_title">Importa backup</string>
     <string name="vault_import_message">Sostituire tutti i dati attuali, o unire solo i nuovi record?</string>

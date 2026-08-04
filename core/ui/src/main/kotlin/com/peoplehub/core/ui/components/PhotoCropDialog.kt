@@ -42,6 +42,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.ui.R
+import com.peoplehub.core.ui.modifier.safeDialogPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.max
@@ -95,7 +96,7 @@ fun PhotoCropDialog(
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            modifier = Modifier.fillMaxWidth().safeDialogPadding().padding(24.dp),
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),

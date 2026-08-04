@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlin.random.Random
 
@@ -87,6 +88,69 @@ class ReminderUseCasesTest {
 
             useCase(404)
 
+            coVerify(exactly = 0) { repository.markFired(any(), any(), any()) }
+        }
+
+    @Test
+    fun `due reminders are asked for up to the end of today, not the current instant`() =
+        runTest {
+            // The sweep runs early in the morning; a reminder whose fire time lands at 20:00 today is
+            // due today, not tomorrow.
+            val cutOff = slot<Instant>()
+            coEvery { repository.getDueReminders(capture(cutOff)) } returns emptyList()
+            val useCase = GetDueRemindersUseCase(repository, clock)
+
+            useCase()
+
+            assertTrue(cutOff.captured.isAfter(now), "cut-off ${cutOff.captured} must be after $now")
+            assertEquals(LocalDate.of(2026, 7, 20), cutOff.captured.atZone(ZoneOffset.UTC).toLocalDate())
+            assertTrue(cutOff.captured.isBefore(Instant.parse("2026-07-21T00:00:00Z")))
+        }
+
+    @Test
+    fun `mark done logs today and restarts the cadence inside the jitter window`() =
+        runTest {
+            val reminder = Reminder(id = 5, personId = 1, title = "Call", targetIntervalDays = 7, jitterPercent = 20)
+            coEvery { repository.getReminder(5) } returns reminder
+            val nextFire = slot<Instant>()
+            val useCase = MarkReminderDoneUseCase(repository, clock, Random(1))
+
+            val result = useCase(5)
+
+            assertTrue(result.isSuccess)
+            coVerify { repository.recordCompletion(5, LocalDate.of(2026, 7, 20)) }
+            coVerify { repository.markFired(eq(5), eq(now), capture(nextFire)) }
+            val window = ReminderScheduling.window(7, 20)
+            val scheduledDays = Duration.between(now, nextFire.captured).toDays().toInt()
+            assertTrue(scheduledDays in window, "next fire $scheduledDays d must be inside $window")
+        }
+
+    @Test
+    fun `marking done twice on one day redraws the next fire but logs the day once`() =
+        runTest {
+            val reminder = Reminder(id = 5, personId = 1, title = "Call", targetIntervalDays = 7, jitterPercent = 20)
+            coEvery { repository.getReminder(5) } returns reminder
+            val useCase = MarkReminderDoneUseCase(repository, clock, Random(1))
+
+            useCase(5)
+            useCase(5)
+
+            // The day is written twice; deduplicating it is the store's job (one row per reminder/day),
+            // while each tick legitimately restarts the cadence from that moment.
+            coVerify(exactly = 2) { repository.recordCompletion(5, LocalDate.of(2026, 7, 20)) }
+            coVerify(exactly = 2) { repository.markFired(eq(5), eq(now), any()) }
+        }
+
+    @Test
+    fun `mark done leaves nothing behind when the reminder no longer exists`() =
+        runTest {
+            coEvery { repository.getReminder(404) } returns null
+            val useCase = MarkReminderDoneUseCase(repository, clock, Random(1))
+
+            val result = useCase(404)
+
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 0) { repository.recordCompletion(any(), any()) }
             coVerify(exactly = 0) { repository.markFired(any(), any(), any()) }
         }
 }

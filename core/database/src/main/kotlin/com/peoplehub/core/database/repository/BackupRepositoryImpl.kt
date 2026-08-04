@@ -14,6 +14,7 @@ import com.peoplehub.core.domain.model.BackupData
 import com.peoplehub.core.domain.model.MergeReport
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.repository.BackupRepository
+import java.time.ZoneId
 import javax.inject.Inject
 
 /**
@@ -83,11 +84,27 @@ internal class BackupRepositoryImpl
             return idMap
         }
 
+        /**
+         * Re-inserts the imported check-ins under their remapped people, giving every incoming outing a
+         * freshly allocated id so a merge cannot fuse an imported outing with an unrelated local one
+         * that happens to share the number. Rows from files written before outings existed (id `0`) are
+         * regrouped by day and description, the same rule the v8 migration uses.
+         */
         private suspend fun insertCheckIns(data: BackupData, idMap: Map<Long, Long>): Int {
             var added = 0
+            var nextOutingId = checkInDao.nextOutingId()
+            val outingIds = HashMap<String, Long>()
             for (checkIn in data.checkIns) {
                 val personId = idMap[checkIn.personId] ?: continue
-                checkInDao.insert(checkIn.copy(id = 0L, personId = personId).toEntity())
+                val groupKey =
+                    if (checkIn.outingId > 0L) {
+                        "id:${checkIn.outingId}"
+                    } else {
+                        val day = checkIn.timestamp.atZone(ZoneId.systemDefault()).toLocalDate()
+                        "legacy:$day|${checkIn.note.orEmpty()}"
+                    }
+                val outingId = outingIds.getOrPut(groupKey) { nextOutingId++ }
+                checkInDao.insert(checkIn.copy(id = 0L, personId = personId, outingId = outingId).toEntity())
                 added++
             }
             return added

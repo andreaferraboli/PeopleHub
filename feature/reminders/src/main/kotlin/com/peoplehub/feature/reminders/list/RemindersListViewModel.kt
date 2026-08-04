@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.ReminderCategory
+import com.peoplehub.core.domain.model.ReminderCompletion
 import com.peoplehub.core.domain.model.ReminderFilter
 import com.peoplehub.core.domain.usecase.DeleteReminderUseCase
 import com.peoplehub.core.domain.usecase.GetPeopleUseCase
 import com.peoplehub.core.domain.usecase.GetRemindersUseCase
+import com.peoplehub.core.domain.usecase.MarkReminderDoneUseCase
+import com.peoplehub.core.domain.usecase.ObserveReminderCompletionsUseCase
 import com.peoplehub.core.domain.usecase.SetReminderEnabledUseCase
 import com.peoplehub.core.domain.util.DateCalculations
 import com.peoplehub.core.ui.state.UiState
@@ -37,7 +40,14 @@ data class RemindersScreenState(
     val category: ReminderCategory?,
 )
 
-/** A reminder as rendered in the global list. */
+/**
+ * A reminder as rendered in the global list.
+ *
+ * @property lastDoneOn the day the user last ticked this reminder off as done, or `null` if never.
+ * @property timesDone how many distinct days it has been done on.
+ * @property today the day the item was built for, so "done today" is decided once, off the injected
+ * clock, instead of each recomposition reaching for the system date.
+ */
 data class ReminderListItem(
     val id: Long,
     val personId: Long,
@@ -47,12 +57,21 @@ data class ReminderListItem(
     val category: ReminderCategory,
     val enabled: Boolean,
     val daysUntil: Long,
+    val lastDoneOn: LocalDate? = null,
+    val timesDone: Int = 0,
+    val today: LocalDate = LocalDate.EPOCH,
 ) {
     /** Whether the reminder is due now (its next fire is today or already passed). */
     val isDue: Boolean get() = daysUntil <= 0L
+
+    /** Whether it has already been ticked off today, which is what the card's button reflects. */
+    val doneToday: Boolean get() = lastDoneOn == today
 }
 
-/** Backs the global reminders list with category filtering, enable toggling and deletion. */
+/**
+ * Backs the global reminders list with category filtering, enable toggling, deletion, and the "done"
+ * tick that logs the day and restarts the cadence at a new random distance.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class RemindersListViewModel
@@ -60,8 +79,10 @@ class RemindersListViewModel
     constructor(
         getReminders: GetRemindersUseCase,
         getPeople: GetPeopleUseCase,
+        observeCompletions: ObserveReminderCompletionsUseCase,
         private val setReminderEnabled: SetReminderEnabledUseCase,
         private val deleteReminder: DeleteReminderUseCase,
+        private val markReminderDone: MarkReminderDoneUseCase,
         private val clock: Clock,
     ) : ViewModel() {
         private val category = MutableStateFlow<ReminderCategory?>(null)
@@ -72,9 +93,10 @@ class RemindersListViewModel
                     combine(
                         getReminders(ReminderFilter(category = selected)),
                         getPeople(PeopleFilter()),
-                    ) { reminders, people ->
+                        observeCompletions(),
+                    ) { reminders, people, completions ->
                         val names = people.associate { it.id to it.fullName }
-                        reminders.map { it.toListItem(names[it.personId].orEmpty()) }
+                        reminders.map { it.toListItem(names[it.personId].orEmpty(), completions[it.id]) }
                     }
                 }.map { it.toListUiState() }
                 .catch { throwable -> emit(UiState.Error(throwable.message ?: "Unexpected error")) }
@@ -100,7 +122,16 @@ class RemindersListViewModel
             viewModelScope.launch { deleteReminder(id) }
         }
 
-        private fun Reminder.toListItem(personName: String): ReminderListItem {
+        /**
+         * Ticks the reminder off as done: today goes into its history and the next occurrence is drawn
+         * afresh, so the list reorders itself to the new (random) distance.
+         */
+        fun onMarkDone(id: Long) {
+            viewModelScope.launch { markReminderDone(id) }
+        }
+
+        private fun Reminder.toListItem(personName: String, completion: ReminderCompletion?): ReminderListItem {
+            val today = LocalDate.now(clock)
             val nextFireDate = nextFireAt.atZone(clock.zone).toLocalDate()
             return ReminderListItem(
                 id = id,
@@ -110,7 +141,10 @@ class RemindersListViewModel
                 note = note,
                 category = category,
                 enabled = enabled,
-                daysUntil = DateCalculations.signedDaysFromToday(nextFireDate, LocalDate.now(clock)),
+                daysUntil = DateCalculations.signedDaysFromToday(nextFireDate, today),
+                lastDoneOn = completion?.lastDoneOn,
+                timesDone = completion?.timesDone ?: 0,
+                today = today,
             )
         }
 

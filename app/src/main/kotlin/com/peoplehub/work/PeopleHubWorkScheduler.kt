@@ -6,6 +6,7 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
@@ -30,12 +31,13 @@ import javax.inject.Singleton
  * - a periodic widget refresh (every 6 hours),
  * - the daily birthday alarm (delegated to [BirthdayAlarmScheduler]).
  *
- * The birthday sweep has three triggers on purpose. The alarm is punctual but fragile: each firing
- * re-arms only the next one, so a single drop (force-stop, an OEM battery manager, or the inexact
- * fallback used when the Android 14+ exact-alarm permission is denied) breaks the chain for good.
- * The WorkManager job survives reboots and process death and retries on its own, and
- * [runBirthdayCatchUpIfMissed] closes the last gap by sweeping on launch when the day's run never
- * happened. [BirthdayReminderWorker] claims each day so the three triggers can't double-notify.
+ * Both notification sweeps (birthdays and per-person relationship reminders) have three triggers on
+ * purpose. The alarm is punctual but fragile: each firing re-arms only the next one, so a single drop
+ * (force-stop, an OEM battery manager, or the inexact fallback used when the Android 14+ exact-alarm
+ * permission is denied) breaks the chain for good. The WorkManager job survives reboots and process
+ * death and retries on its own, and [runCatchUpIfMissed] closes the last gap by sweeping on launch
+ * when the day's run never happened. Each worker claims its day in [ReminderStateRepository] so the
+ * three triggers can't double-notify.
  */
 @Singleton
 class PeopleHubWorkScheduler
@@ -69,7 +71,7 @@ class PeopleHubWorkScheduler
 
             reminderState.setScheduledReminderHour(hour)
             birthdayAlarmScheduler.scheduleDailyCheck(hour, preferExact = settings.useExactAlarms)
-            runBirthdayCatchUpIfMissed(hour)
+            runCatchUpIfMissed(hour)
         }
 
         /**
@@ -81,8 +83,20 @@ class PeopleHubWorkScheduler
                 OneTimeWorkRequestBuilder<BirthdayReminderWorker>()
                     .setInputData(Data.Builder().putBoolean(BirthdayReminderWorker.INPUT_FORCE, force).build())
                     .build()
-            val policy = if (force) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
-            WorkManager.getInstance(context).enqueueUniqueWork(BIRTHDAY_SWEEP_WORK, policy, request)
+            enqueueSweep(BIRTHDAY_SWEEP_WORK, request, force)
+        }
+
+        /**
+         * Enqueues a one-off relationship-reminder sweep as unique work, for the same reason as
+         * [enqueueBirthdaySweep]: the alarm, the launch catch-up and the manual check must collapse
+         * into a single execution.
+         */
+        fun enqueueRelationshipSweep(force: Boolean = false) {
+            val request =
+                OneTimeWorkRequestBuilder<RelationshipReminderWorker>()
+                    .setInputData(Data.Builder().putBoolean(RelationshipReminderWorker.INPUT_FORCE, force).build())
+                    .build()
+            enqueueSweep(REMINDER_SWEEP_WORK, request, force)
         }
 
         /** Enqueues a one-off widget refresh after a significant data change. */
@@ -91,15 +105,21 @@ class PeopleHubWorkScheduler
         }
 
         /**
-         * Sweeps immediately when today's reminder hour has already passed but no sweep has run —
-         * i.e. the alarm and the backstop both missed it. The worker itself no-ops if the day was
+         * Sweeps immediately when today's reminder hour has already passed but a sweep has not run —
+         * i.e. the alarm and the backstop both missed it. Each worker also no-ops if its day was
          * already claimed, so this costs nothing on a normal launch.
          */
-        private suspend fun runBirthdayCatchUpIfMissed(hour: Int) {
+        private suspend fun runCatchUpIfMissed(hour: Int) {
             val now = ZonedDateTime.now(clock)
             if (now.hour < hour) return
-            if (reminderState.lastBirthdaySweepDate() == LocalDate.now(clock)) return
-            enqueueBirthdaySweep()
+            val today = LocalDate.now(clock)
+            if (reminderState.lastBirthdaySweepDate() != today) enqueueBirthdaySweep()
+            if (reminderState.lastRelationshipSweepDate() != today) enqueueRelationshipSweep()
+        }
+
+        private fun enqueueSweep(uniqueName: String, request: OneTimeWorkRequest, force: Boolean) {
+            val policy = if (force) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
+            WorkManager.getInstance(context).enqueueUniqueWork(uniqueName, policy, request)
         }
 
         private inline fun <reified W : ListenableWorker> dailyRequestAt(hour: Int): PeriodicWorkRequest =
@@ -125,6 +145,7 @@ class PeopleHubWorkScheduler
             const val REMINDER_WORK = "relationship_reminders_daily"
             const val BIRTHDAY_WORK = "birthday_reminders_daily"
             const val BIRTHDAY_SWEEP_WORK = "birthday_sweep_once"
+            const val REMINDER_SWEEP_WORK = "relationship_sweep_once"
             const val WIDGET_WORK = "widget_update_periodic"
             const val WIDGET_INTERVAL_HOURS = 6L
             const val MAX_HOUR = 23

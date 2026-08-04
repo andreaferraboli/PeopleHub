@@ -2,9 +2,11 @@ package com.peoplehub.core.domain.repository
 
 import com.peoplehub.core.domain.model.DueReminder
 import com.peoplehub.core.domain.model.Reminder
+import com.peoplehub.core.domain.model.ReminderCompletion
 import com.peoplehub.core.domain.model.ReminderFilter
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
+import java.time.LocalDate
 
 /**
  * Read/write access to per-person relationship reminders.
@@ -20,10 +22,15 @@ interface ReminderRepository {
     suspend fun getReminder(id: Long): Reminder?
 
     /**
-     * The enabled reminders that are due at [now] (their `nextFireAt` has passed) and whose person
-     * currently has notifications enabled, denormalised with the person's name for the notification.
+     * The enabled reminders whose `nextFireAt` is at or before [upTo], denormalised with the person's
+     * name for the notification.
+     *
+     * Deliberately not gated on the person's `notificationsEnabled` opt-in: that toggle governs
+     * check-in reminders and defaults to off, so gating here silenced reminders the user had created on
+     * purpose. [upTo] is the end of the current day rather than the current instant — see
+     * [com.peoplehub.core.domain.usecase.GetDueRemindersUseCase].
      */
-    suspend fun getDueReminders(now: Instant): List<DueReminder>
+    suspend fun getDueReminders(upTo: Instant): List<DueReminder>
 
     /** Inserts or updates a reminder and returns its id. */
     suspend fun upsertReminder(reminder: Reminder): Long
@@ -36,6 +43,15 @@ interface ReminderRepository {
 
     /** Records that a reminder fired at [firedAt] and schedules its (freshly jittered) [nextFireAt]. */
     suspend fun markFired(id: Long, firedAt: Instant, nextFireAt: Instant)
+
+    /**
+     * Logs that reminder [id] was done on [day]. Recording the same day again is a no-op, so ticking a
+     * card twice cannot double-count.
+     */
+    suspend fun recordCompletion(id: Long, day: LocalDate)
+
+    /** Observes the completion log of every reminder, keyed by reminder id. */
+    fun observeCompletions(): Flow<Map<Long, ReminderCompletion>>
 
     /** One-shot read of every reminder, used by backup/export. */
     suspend fun getAllReminders(): List<Reminder>

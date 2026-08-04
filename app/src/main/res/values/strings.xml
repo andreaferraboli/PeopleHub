@@ -36,6 +36,10 @@
     <string name="dashboard_empty_title">Your hub is empty</string>
     <string name="dashboard_empty_desc">Add the first person to start tracking your relationships.</string>
     <string name="dashboard_empty_cta">Add your first person</string>
+    <string name="dashboard_outings_title">Outings history</string>
+    <string name="dashboard_outings_calendar">Calendar</string>
+    <string name="dashboard_outings_calendar_cta">Open the outings calendar</string>
+    <string name="dashboard_outings_empty">No outing recorded yet.</string>
 
     <!-- Settings / Vault -->
     <string name="vault_title">The Vault</string>
@@ -69,8 +73,10 @@
     <string name="vault_diag_fix">Fix</string>
     <string name="vault_diag_last_run">Last birthday check: %1$s</string>
     <string name="vault_diag_last_run_never">The birthday check has never run yet.</string>
-    <string name="vault_diag_check_now">Run the birthday check now</string>
-    <string name="vault_diag_check_now_sent">Birthday check started</string>
+    <string name="vault_diag_last_reminder_run">Last reminder check: %1$s</string>
+    <string name="vault_diag_last_reminder_run_never">The reminder check has never run yet.</string>
+    <string name="vault_diag_check_now">Run the notification check now</string>
+    <string name="vault_diag_check_now_sent">Notification check started</string>
 
     <string name="vault_import_title">Import backup</string>
     <string name="vault_import_message">Replace all current data, or merge in only new records?</string>

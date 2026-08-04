@@ -25,4 +25,8 @@
     <string name="crop_confirm">Usa foto</string>
     <string name="crop_cancel">Annulla</string>
     <string name="crop_load_failed">Impossibile caricare l\'immagine.</string>
+    <!-- Card cronologia uscite -->
+    <string name="outing_edit">Modifica uscita</string>
+    <string name="outing_no_description">Nessuna descrizione</string>
+    <string name="outing_more_people">+%1$d</string>
 </resources>

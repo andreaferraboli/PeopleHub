@@ -12,6 +12,7 @@ import com.peoplehub.core.database.entity.InterestEntity
 import com.peoplehub.core.database.entity.PersonEntity
 import com.peoplehub.core.database.entity.PersonFtsEntity
 import com.peoplehub.core.database.entity.PersonTagEntity
+import com.peoplehub.core.database.entity.ReminderCompletionEntity
 import com.peoplehub.core.database.entity.ReminderEntity
 
 /**
@@ -27,6 +28,7 @@ import com.peoplehub.core.database.entity.ReminderEntity
         CheckInEntity::class,
         EventEntity::class,
         ReminderEntity::class,
+        ReminderCompletionEntity::class,
     ],
     version = PeopleHubDatabase.VERSION,
     exportSchema = true,
@@ -41,7 +43,7 @@ abstract class PeopleHubDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
 
     companion object {
-        const val VERSION: Int = 7
+        const val VERSION: Int = 9
         const val NAME: String = "peoplehub.db"
     }
 }

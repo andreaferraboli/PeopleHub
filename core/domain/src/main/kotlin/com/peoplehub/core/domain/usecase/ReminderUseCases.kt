@@ -2,12 +2,14 @@ package com.peoplehub.core.domain.usecase
 
 import com.peoplehub.core.domain.model.DueReminder
 import com.peoplehub.core.domain.model.Reminder
+import com.peoplehub.core.domain.model.ReminderCompletion
 import com.peoplehub.core.domain.model.ReminderFilter
 import com.peoplehub.core.domain.repository.ReminderRepository
 import com.peoplehub.core.domain.util.ReminderScheduling
 import kotlinx.coroutines.flow.Flow
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -130,20 +132,33 @@ class SetReminderEnabledUseCase
         suspend operator fun invoke(id: Long, enabled: Boolean) = repository.setEnabled(id, enabled)
     }
 
-/** The reminders due right now, for the reminder worker to notify about. */
+/**
+ * The reminders due **today or earlier**, for the reminder worker to notify about.
+ *
+ * The cadence is measured in whole days but a fire time carries the time of day it was drawn from
+ * (the moment the reminder was created, or last done). Comparing that against "now" would make the
+ * daily sweep — which runs once, early in the morning — miss every reminder whose fire time falls
+ * later in the day, and deliver it a full day late instead. Anchoring the cut-off to the end of today
+ * restores day granularity without risking a double fire: the next occurrence is always at least a day
+ * away, so it cannot also fall inside today's window.
+ */
 class GetDueRemindersUseCase
     @Inject
     constructor(
         private val repository: ReminderRepository,
         private val clock: Clock,
     ) {
-        suspend operator fun invoke(): List<DueReminder> = repository.getDueReminders(Instant.now(clock))
+        suspend operator fun invoke(): List<DueReminder> {
+            val startOfTomorrow = LocalDate.now(clock).plusDays(1).atStartOfDay(clock.zone)
+            return repository.getDueReminders(startOfTomorrow.toInstant().minusMillis(1))
+        }
     }
 
 /**
  * Records that a reminder fired and reschedules its next occurrence from now with fresh jitter, so
- * it does not fire again until a new randomised interval has elapsed. Called both by the worker
- * after posting a notification and by the "Done" notification action.
+ * it does not fire again until a new randomised interval has elapsed. Called by the worker after
+ * posting a notification; ticking a reminder off as *done* goes through [MarkReminderDoneUseCase]
+ * instead, because that also has to be remembered.
  */
 class MarkReminderFiredUseCase
     @Inject
@@ -159,4 +174,45 @@ class MarkReminderFiredUseCase
                 ReminderScheduling.nextFireAt(now, reminder.targetIntervalDays, reminder.jitterPercent, random)
             repository.markFired(reminderId, now, next)
         }
+    }
+
+/**
+ * Ticks a reminder off as done: logs today in its completion history and restarts the cadence from
+ * now with a **freshly drawn** interval, so the next occurrence lands at a new random distance rather
+ * than resuming the old schedule.
+ *
+ * The log is what makes the gesture durable — the reminder row only carries its next occurrence, so
+ * rescheduling alone would leave no trace that anything happened. Logging today before rescheduling
+ * also means a failure to draw the next date cannot lose the record of the day.
+ *
+ * Doing the same reminder twice in one day is idempotent as far as the history goes (one row per day),
+ * but the second tick still redraws the next occurrence — the user is saying "I did it just now".
+ *
+ * Called both by the "done" button on the reminder cards and by the "Done" action on the notification.
+ */
+class MarkReminderDoneUseCase
+    @Inject
+    constructor(
+        private val repository: ReminderRepository,
+        private val clock: Clock,
+        private val random: Random,
+    ) {
+        suspend operator fun invoke(reminderId: Long): Result<Unit> =
+            runCatching {
+                val reminder = repository.getReminder(reminderId) ?: return@runCatching
+                val now = Instant.now(clock)
+                repository.recordCompletion(reminderId, now.atZone(clock.zone).toLocalDate())
+                val next =
+                    ReminderScheduling.nextFireAt(now, reminder.targetIntervalDays, reminder.jitterPercent, random)
+                repository.markFired(reminderId, now, next)
+            }
+    }
+
+/** Observes how many times, and when last, each reminder has been ticked off as done. */
+class ObserveReminderCompletionsUseCase
+    @Inject
+    constructor(
+        private val repository: ReminderRepository,
+    ) {
+        operator fun invoke(): Flow<Map<Long, ReminderCompletion>> = repository.observeCompletions()
     }

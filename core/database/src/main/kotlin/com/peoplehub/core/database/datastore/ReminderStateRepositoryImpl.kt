@@ -23,6 +23,13 @@ internal class ReminderStateRepositoryImpl
             dataStore.edit { prefs -> prefs[Keys.LAST_BIRTHDAY_SWEEP_EPOCH_DAY] = date.toEpochDay() }
         }
 
+        override suspend fun lastRelationshipSweepDate(): LocalDate? =
+            dataStore.data.first()[Keys.LAST_RELATIONSHIP_SWEEP_EPOCH_DAY]?.let(LocalDate::ofEpochDay)
+
+        override suspend fun setLastRelationshipSweepDate(date: LocalDate) {
+            dataStore.edit { prefs -> prefs[Keys.LAST_RELATIONSHIP_SWEEP_EPOCH_DAY] = date.toEpochDay() }
+        }
+
         override suspend fun scheduledReminderHour(): Int? = dataStore.data.first()[Keys.SCHEDULED_REMINDER_HOUR]
 
         override suspend fun setScheduledReminderHour(hour: Int) {
@@ -31,6 +38,7 @@ internal class ReminderStateRepositoryImpl
 
         private object Keys {
             val LAST_BIRTHDAY_SWEEP_EPOCH_DAY = longPreferencesKey("last_birthday_sweep_epoch_day")
+            val LAST_RELATIONSHIP_SWEEP_EPOCH_DAY = longPreferencesKey("last_relationship_sweep_epoch_day")
             val SCHEDULED_REMINDER_HOUR = intPreferencesKey("scheduled_reminder_hour")
         }
     }

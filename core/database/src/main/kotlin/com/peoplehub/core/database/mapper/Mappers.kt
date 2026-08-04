@@ -1,6 +1,8 @@
 package com.peoplehub.core.database.mapper
 
 import com.peoplehub.core.database.dao.DueReminderRow
+import com.peoplehub.core.database.dao.OutingRow
+import com.peoplehub.core.database.dao.ReminderCompletionRow
 import com.peoplehub.core.database.entity.CheckInEntity
 import com.peoplehub.core.database.entity.EventEntity
 import com.peoplehub.core.database.entity.InterestEntity
@@ -13,10 +15,13 @@ import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.domain.model.DueReminder
 import com.peoplehub.core.domain.model.Interest
+import com.peoplehub.core.domain.model.Outing
+import com.peoplehub.core.domain.model.OutingAttendee
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.ReminderCategory
+import com.peoplehub.core.domain.model.ReminderCompletion
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -92,6 +97,7 @@ fun CheckInEntity.toDomain(): CheckIn =
         personId = personId,
         timestamp = Instant.ofEpochMilli(timestampEpochMillis),
         note = note,
+        outingId = outingId,
     )
 
 /** Maps a domain [CheckIn] to its entity row. */
@@ -101,7 +107,48 @@ fun CheckIn.toEntity(): CheckInEntity =
         personId = personId,
         timestampEpochMillis = timestamp.toEpochMilli(),
         note = note,
+        outingId = outingId,
     )
+
+/**
+ * Folds the joined per-attendee [OutingRow]s into domain [Outing]s, most recent first.
+ *
+ * Rows are grouped by their outing id; the day is resolved in the device's zone, and duplicate rows
+ * for the same person (only possible in data written before outings existed) collapse into a single
+ * attendee while every underlying row id is kept so deletes and moves stay complete.
+ */
+fun List<OutingRow>.toOutings(): List<Outing> =
+    groupBy { it.outingId }
+        .map { (outingId, rows) -> rows.toOuting(outingId) }
+        .sortedWith(compareByDescending<Outing> { it.timestamp }.thenByDescending { it.id })
+
+/** Folds the rows of a single outing into its domain model. */
+fun List<OutingRow>.toOuting(outingId: Long): Outing {
+    val timestampMillis = minOf { it.timestampEpochMillis }
+    val timestamp = Instant.ofEpochMilli(timestampMillis)
+    return Outing(
+        id = outingId,
+        date = timestamp.atZone(zone).toLocalDate(),
+        timestamp = timestamp,
+        note = firstNotNullOfOrNull { row -> row.note?.takeIf(String::isNotBlank) },
+        attendees =
+            distinctBy { it.personId }
+                .map { it.toAttendee() }
+                .sortedBy { it.fullName.lowercase() },
+        checkInIds = map { it.id },
+    )
+}
+
+private fun OutingRow.toAttendee(): OutingAttendee {
+    val person = Person(id = personId, firstName = firstName, lastName = lastName, photoPath = photoPath)
+    return OutingAttendee(
+        checkInId = id,
+        personId = personId,
+        fullName = person.fullName,
+        initials = person.initials,
+        photoPath = photoPath,
+    )
+}
 
 /** Maps an [EventEntity] to its domain model. */
 fun EventEntity.toDomain(): PersonEvent =
@@ -181,4 +228,12 @@ fun DueReminderRow.toDomain(): DueReminder =
         personName = "$firstName $lastName".trim(),
         title = title,
         note = note,
+    )
+
+/** Maps a folded completion-log row to its domain model. */
+fun ReminderCompletionRow.toDomain(): ReminderCompletion =
+    ReminderCompletion(
+        reminderId = reminderId,
+        timesDone = timesDone,
+        lastDoneOn = LocalDate.ofEpochDay(lastDoneEpochDay),
     )

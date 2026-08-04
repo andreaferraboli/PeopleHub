@@ -166,4 +166,25 @@
     <string name="detail_cadence_value">Warns after %1$d days · critical after %2$d</string>
     <string name="detail_cadence_custom">Custom</string>
     <string name="detail_cadence_default">Default</string>
+    <!-- Outings history &amp; calendar -->
+    <string name="outing_edit_title">Edit outing</string>
+    <string name="outing_save_changes">Save changes</string>
+    <string name="outing_delete">Delete outing</string>
+    <string name="outing_delete_title">Delete this outing?</string>
+    <string name="outing_delete_message">It will be removed from the history of everyone who was there.</string>
+    <string name="outing_attendees">There: %1$s</string>
+    <string name="outings_calendar_title">Outings calendar</string>
+    <string name="outings_all_title">All outings</string>
+    <string name="outings_show_all">Show all outings</string>
+    <string name="outings_empty">No outing recorded yet.</string>
+    <string name="outings_day_empty">Nothing recorded on this day.</string>
+    <string name="outings_previous_month">Previous month</string>
+    <string name="outings_next_month">Next month</string>
+    <string name="outings_weekday_monday">M</string>
+    <string name="outings_weekday_tuesday">T</string>
+    <string name="outings_weekday_wednesday">W</string>
+    <string name="outings_weekday_thursday">T</string>
+    <string name="outings_weekday_friday">F</string>
+    <string name="outings_weekday_saturday">S</string>
+    <string name="outings_weekday_sunday">S</string>
 </resources>

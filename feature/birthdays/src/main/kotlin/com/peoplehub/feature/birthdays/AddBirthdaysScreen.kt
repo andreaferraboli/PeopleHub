@@ -41,6 +41,7 @@ import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
 import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.core.ui.modifier.safeBottomBarPadding
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -90,6 +91,7 @@ fun AddBirthdaysScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
+                        .safeBottomBarPadding()
                         .padding(horizontal = 20.dp, vertical = 16.dp),
             )
         },

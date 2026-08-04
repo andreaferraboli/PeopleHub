@@ -3,7 +3,10 @@ package com.peoplehub.core.database.repository
 import com.peoplehub.core.database.dao.CheckInDao
 import com.peoplehub.core.database.mapper.toDomain
 import com.peoplehub.core.database.mapper.toEntity
+import com.peoplehub.core.database.mapper.toOuting
+import com.peoplehub.core.database.mapper.toOutings
 import com.peoplehub.core.domain.model.CheckIn
+import com.peoplehub.core.domain.model.Outing
 import com.peoplehub.core.domain.repository.CheckInRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -30,6 +33,14 @@ internal class CheckInRepositoryImpl
 
         override fun observeHistory(personId: Long): Flow<List<CheckIn>> =
             dao.observeForPerson(personId).map { list -> list.map { it.toDomain() } }
+
+        override suspend fun newOutingId(): Long = dao.nextOutingId()
+
+        override fun observeOutings(): Flow<List<Outing>> =
+            dao.observeOutingRows().map { rows -> rows.toOutings() }
+
+        override suspend fun getOuting(outingId: Long): Outing? =
+            dao.getOutingRows(outingId).takeIf { it.isNotEmpty() }?.toOuting(outingId)
 
         override suspend fun getAllCheckIns(): List<CheckIn> = dao.getAll().map { it.toDomain() }
 

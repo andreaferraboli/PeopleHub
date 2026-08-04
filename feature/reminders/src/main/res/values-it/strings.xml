@@ -18,6 +18,11 @@
     <string name="reminder_days">giorni</string>
     <string name="reminder_in">tra</string>
     <string name="reminder_delete">Elimina promemoria</string>
+    <string name="reminder_mark_done">Fatto</string>
+    <string name="reminder_done_again">Fatto di nuovo</string>
+    <string name="reminder_done_today">Fatto oggi · la prossima scadenza è già stata ricalcolata</string>
+    <string name="reminder_done_last">Ultima volta il %1$s · %2$d volte</string>
+    <string name="reminder_done_never">Mai segnato come fatto</string>
 
     <!-- Categories -->
     <string name="reminder_filter_all">Tutti</string>

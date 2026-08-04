@@ -80,6 +80,7 @@ fun CheckInDto.toDomain(): CheckIn =
         personId = personId,
         timestamp = Instant.ofEpochMilli(timestampEpochMillis),
         note = note,
+        outingId = outingId,
     )
 
 /** Converts a domain [CheckIn] into its serializable [CheckInDto]. */
@@ -89,6 +90,7 @@ fun CheckIn.toDto(): CheckInDto =
         personId = personId,
         timestampEpochMillis = timestamp.toEpochMilli(),
         note = note,
+        outingId = outingId,
     )
 
 /**

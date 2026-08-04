@@ -47,6 +47,7 @@ import com.peoplehub.core.ui.components.EmptyView
 import com.peoplehub.core.ui.components.GhostButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.GoldDivider
+import com.peoplehub.core.ui.components.OutingCard
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.PrimaryGoldButton
@@ -71,6 +72,8 @@ fun DashboardScreen(
     onSeeAllBirthdays: () -> Unit,
     onAddPerson: () -> Unit,
     onRecordMeetup: () -> Unit,
+    onOpenOutings: () -> Unit,
+    onEditOuting: (Long) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -111,6 +114,8 @@ fun DashboardScreen(
                 onSeeAllBirthdays = onSeeAllBirthdays,
                 onQuickCheckIn = viewModel::onQuickCheckIn,
                 onRecordMeetup = onRecordMeetup,
+                onOpenOutings = onOpenOutings,
+                onEditOuting = onEditOuting,
             )
         }
     }
@@ -126,6 +131,8 @@ private fun DashboardContent(
     onSeeAllBirthdays: () -> Unit,
     onQuickCheckIn: (Long) -> Unit,
     onRecordMeetup: () -> Unit,
+    onOpenOutings: () -> Unit,
+    onEditOuting: (Long) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -195,6 +202,38 @@ private fun DashboardContent(
 
         data.pinnedEvent?.let { event ->
             item(key = "pinned") { PinnedEventCard(event, onEventClick) }
+        }
+
+        item(key = "outings-divider") { GoldDivider() }
+
+        item(key = "outings-header") {
+            SectionHeader(
+                title = stringResource(R.string.dashboard_outings_title),
+                actionLabel = stringResource(R.string.dashboard_outings_calendar),
+                onActionClick = onOpenOutings,
+            )
+        }
+
+        if (data.recentOutings.isEmpty()) {
+            item(key = "outings-empty") {
+                Text(
+                    text = stringResource(R.string.dashboard_outings_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            items(data.recentOutings, key = { "outing-${it.id}" }) { outing ->
+                OutingCard(outing = outing, onEdit = { onEditOuting(outing.id) })
+            }
+        }
+
+        item(key = "outings-calendar-cta") {
+            GhostButton(
+                text = stringResource(R.string.dashboard_outings_calendar_cta),
+                onClick = onOpenOutings,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -368,6 +407,8 @@ private fun DashboardPreview() {
             onSeeAllBirthdays = {},
             onQuickCheckIn = {},
             onRecordMeetup = {},
+            onOpenOutings = {},
+            onEditOuting = {},
         )
     }
 }

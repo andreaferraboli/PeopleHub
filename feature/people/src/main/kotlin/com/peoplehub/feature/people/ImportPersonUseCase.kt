@@ -1,9 +1,11 @@
 package com.peoplehub.feature.people
 
 import com.peoplehub.core.dataio.PersonJsonImporter
+import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.usecase.UpsertPersonUseCase
+import java.time.ZoneId
 import javax.inject.Inject
 
 /**
@@ -36,8 +38,33 @@ class ImportPersonUseCase
             upsertPerson(person).mapCatching { id ->
                 val history = sourceJson?.let(importer::parseCheckIns).orEmpty()
                 if (history.isNotEmpty()) {
-                    checkInRepository.recordCheckIns(history.map { it.copy(personId = id) })
+                    checkInRepository.recordCheckIns(history.map { it.copy(personId = id) }.withFreshOutingIds())
                 }
                 person
             }
+
+        /**
+         * Re-keys the imported history onto outing ids this database has never used.
+         *
+         * The ids in the file are meaningless here: they were handed out by whichever install exported
+         * it, so keeping them would either fuse the imported check-ins into an unrelated local outing
+         * that happens to share a number, or — for files written before outings existed, where every id
+         * is `0` — collapse the person's whole history into one bogus outing spanning every date in it.
+         * Rows that shared an outing in the source still share one here; legacy `0` rows are grouped by
+         * day and description, the same rule the v8 migration and the backup import apply.
+         */
+        private suspend fun List<CheckIn>.withFreshOutingIds(): List<CheckIn> {
+            var nextOutingId = checkInRepository.newOutingId()
+            val allocated = HashMap<String, Long>()
+            return map { checkIn ->
+                val groupKey =
+                    if (checkIn.outingId > 0L) {
+                        "id:${checkIn.outingId}"
+                    } else {
+                        val day = checkIn.timestamp.atZone(ZoneId.systemDefault()).toLocalDate()
+                        "legacy:$day|${checkIn.note.orEmpty()}"
+                    }
+                checkIn.copy(outingId = allocated.getOrPut(groupKey) { nextOutingId++ })
+            }
+        }
     }
