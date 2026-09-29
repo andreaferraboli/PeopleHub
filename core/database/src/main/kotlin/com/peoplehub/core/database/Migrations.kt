@@ -28,6 +28,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *   (local day, description), which is exactly how a shared outing used to be recognisable.
  * - **v9** — adds `reminder_completion`, the log of the days each reminder was ticked off as done.
  *   Nothing to backfill: before it existed, doing a reminder left no trace beyond the reschedule.
+ * - **v10** — turns `reminder_completion` into a log of **every** tap on "done": the unique
+ *   (reminder, day) index becomes a plain one, so a second tap on the same day adds a row instead of
+ *   being ignored, and `done_epoch_millis` records the exact instant. Existing rows keep their day;
+ *   their instant is recovered from the reminder's `last_fired_epoch_millis` when that falls on the same
+ *   local day (marking done always moves it, and the sweep cannot fire again the same day), and stays
+ *   `null` otherwise, meaning "done that day, time unknown".
  */
 internal val MIGRATION_1_2: Migration =
     object : Migration(1, 2) {
@@ -134,6 +140,27 @@ internal val MIGRATION_8_9: Migration =
         }
     }
 
+internal val MIGRATION_9_10: Migration =
+    object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `reminder_completion` ADD COLUMN `done_epoch_millis` INTEGER")
+            db.execSQL("DROP INDEX IF EXISTS `index_reminder_completion_reminder_id_done_epoch_day`")
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS " +
+                    "`index_reminder_completion_reminder_id_done_epoch_day` " +
+                    "ON `reminder_completion` (`reminder_id`, `done_epoch_day`)",
+            )
+            db.execSQL(
+                "UPDATE reminder_completion SET done_epoch_millis = (" +
+                    "SELECT r.last_fired_epoch_millis FROM reminder r " +
+                    "WHERE r.id = reminder_completion.reminder_id " +
+                    "AND r.last_fired_epoch_millis IS NOT NULL " +
+                    "AND CAST(julianday(date(r.last_fired_epoch_millis / 1000, 'unixepoch', 'localtime')) " +
+                    "- 2440587.5 AS INTEGER) = reminder_completion.done_epoch_day)",
+            )
+        }
+    }
+
 /** All migrations registered with the database builder, in order. */
 internal val ALL_MIGRATIONS: Array<Migration> =
     arrayOf(
@@ -145,4 +172,5 @@ internal val ALL_MIGRATIONS: Array<Migration> =
         MIGRATION_6_7,
         MIGRATION_7_8,
         MIGRATION_8_9,
+        MIGRATION_9_10,
     )

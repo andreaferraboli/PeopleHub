@@ -167,12 +167,15 @@ re-enqueues with `CANCEL_AND_REENQUEUE` instead of being swallowed by `KEEP`.
   full day late. A double fire is impossible: the next occurrence is at least a day away, so it cannot
   also land inside today's window.
 - **Doing a reminder**: the reminder cards carry a "done" button (`MarkReminderDoneUseCase`, shared with
-  the notification's "Done" action) that logs the day in `reminder_completion` and restarts the cadence
+  the notification's "Done" action) that appends the moment to `reminder_completion` and restarts the cadence
   from now with a **freshly drawn** interval. The log is what makes the gesture durable — a reminder row
   only carries its *next* occurrence, so rescheduling alone would erase that anything happened — and it
   is what keeps "done" distinct from "notified": `lastFiredAt` moves when the sweep posts a
-  notification, the log only when the user says they did the thing. One row per (reminder, day), so
-  ticking twice in a day counts once in the history while still redrawing the next occurrence.
+  notification, the log only when the user says they did the thing. Since v10 the log is append-only
+  with **one row per tap** (`done_epoch_day` + `done_epoch_millis`): ticking twice in a day keeps both
+  taps, each redrawing the next occurrence, and the card's summary unfolds into the full list. "Last
+  done" is still the latest `done_epoch_day`. Rows from v9 only knew the day; the migration recovers
+  their time from `last_fired_epoch_millis` when it falls on that same day, else it stays `null`.
 - **Diagnostics**: notifications, exact alarms and battery optimisation all fail silently, so
   Settings surfaces each with a one-tap route to the system screen that fixes it
   (`NotificationDiagnostics`).
@@ -203,6 +206,7 @@ export JAVA_HOME='/c/Program Files/Android/Android Studio/jbr'   # Git Bash on W
 ./gradlew :core:domain:test           # domain tests only
 ./gradlew ktlintCheck detekt          # static analysis / formatting gates
 ./gradlew lint                        # Android lint
+./gradlew :core:database:connectedDebugAndroidTest   # Room migration tests (needs a device/emulator)
 ```
 
 ## Auto-update (GitHub Releases)

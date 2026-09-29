@@ -2,7 +2,6 @@ package com.peoplehub.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.peoplehub.core.database.entity.ReminderCompletionEntity
@@ -20,16 +19,6 @@ data class DueReminderRow(
     val note: String?,
     @androidx.room.ColumnInfo(name = "first_name") val firstName: String,
     @androidx.room.ColumnInfo(name = "last_name") val lastName: String,
-)
-
-/**
- * How often a reminder has been ticked off as done, and when it last was — the whole completion log of
- * one reminder folded into the two values the cards display.
- */
-data class ReminderCompletionRow(
-    @androidx.room.ColumnInfo(name = "reminder_id") val reminderId: Long,
-    @androidx.room.ColumnInfo(name = "times_done") val timesDone: Int,
-    @androidx.room.ColumnInfo(name = "last_done_epoch_day") val lastDoneEpochDay: Long,
 )
 
 /** Data-access object for per-person relationship reminders. */
@@ -89,17 +78,16 @@ interface ReminderDao {
     suspend fun deleteAll()
 
     /**
-     * Logs that a reminder was done on a day. Ticking the same day twice is ignored rather than
-     * rejected, so a card the user can tap again stays idempotent.
+     * Appends one tap to a reminder's completion log. A single insert, so concurrent taps (the card and
+     * the notification action) each land as their own row with nothing to read back and rewrite.
      */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert
     suspend fun insertCompletion(completion: ReminderCompletionEntity)
 
-    /** The completion log of every reminder, folded into a count and the most recent day. */
-    @Query(
-        "SELECT reminder_id AS reminder_id, COUNT(*) AS times_done, " +
-            "MAX(done_epoch_day) AS last_done_epoch_day " +
-            "FROM reminder_completion GROUP BY reminder_id",
-    )
-    fun observeCompletions(): Flow<List<ReminderCompletionRow>>
+    /**
+     * The completion log of every reminder, most recent first. Insertion order breaks ties within a day,
+     * which also orders rows written before the log kept the time of day.
+     */
+    @Query("SELECT * FROM reminder_completion ORDER BY done_epoch_day DESC, id DESC")
+    fun observeCompletions(): Flow<List<ReminderCompletionEntity>>
 }

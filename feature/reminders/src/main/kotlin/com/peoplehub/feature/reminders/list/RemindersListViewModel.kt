@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.LocalDate
+import java.time.LocalTime
 import javax.inject.Inject
 
 /** Immutable state for the global reminders screen. */
@@ -44,7 +45,8 @@ data class RemindersScreenState(
  * A reminder as rendered in the global list.
  *
  * @property lastDoneOn the day the user last ticked this reminder off as done, or `null` if never.
- * @property timesDone how many distinct days it has been done on.
+ * @property timesDone how many times it has been ticked off as done.
+ * @property doneHistory every one of those taps, most recent first, in the device's time zone.
  * @property today the day the item was built for, so "done today" is decided once, off the injected
  * clock, instead of each recomposition reaching for the system date.
  */
@@ -59,6 +61,7 @@ data class ReminderListItem(
     val daysUntil: Long,
     val lastDoneOn: LocalDate? = null,
     val timesDone: Int = 0,
+    val doneHistory: List<DoneMoment> = emptyList(),
     val today: LocalDate = LocalDate.EPOCH,
 ) {
     /** Whether the reminder is due now (its next fire is today or already passed). */
@@ -67,6 +70,16 @@ data class ReminderListItem(
     /** Whether it has already been ticked off today, which is what the card's button reflects. */
     val doneToday: Boolean get() = lastDoneOn == today
 }
+
+/**
+ * One tap on "done" as shown in a card's history.
+ *
+ * @property time the local time of day, or `null` for taps recorded before the app kept it.
+ */
+data class DoneMoment(
+    val day: LocalDate,
+    val time: LocalTime?,
+)
 
 /**
  * Backs the global reminders list with category filtering, enable toggling, deletion, and the "done"
@@ -144,6 +157,10 @@ class RemindersListViewModel
                 daysUntil = DateCalculations.signedDaysFromToday(nextFireDate, today),
                 lastDoneOn = completion?.lastDoneOn,
                 timesDone = completion?.timesDone ?: 0,
+                doneHistory =
+                    completion?.history.orEmpty().map { entry ->
+                        DoneMoment(day = entry.day, time = entry.at?.atZone(clock.zone)?.toLocalTime())
+                    },
                 today = today,
             )
         }

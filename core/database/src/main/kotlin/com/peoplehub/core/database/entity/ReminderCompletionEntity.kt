@@ -7,15 +7,17 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Room entity for one day on which the user ticked a reminder off as done.
+ * Room entity for one time the user ticked a reminder off as done.
  *
  * The log is what makes "done" durable: the reminder row itself only carries the *next* occurrence, so
- * without this table rescheduling would erase the fact that the gesture happened at all. One row per
- * (reminder, day) — the unique index makes ticking the same reminder twice in a day idempotent rather
- * than an error, which is what a card the user can tap repeatedly needs.
+ * without this table rescheduling would erase the fact that the gesture happened at all. Since v10 it is
+ * append-only with **one row per tap**: ticking the same reminder twice in a day writes two rows, so the
+ * history keeps every moment the user said "done". Appending a row is a single `INSERT`, atomic on its
+ * own, with no read-modify-write of a list.
  *
- * The day is stored as an epoch day (not millis) because that is the granularity the feature is about:
- * "on that day it was done".
+ * [doneEpochDay] is the local day of the tap, fixed when it was written (so a later time-zone change
+ * never moves it to a different day), and is what "last done on" is computed from. [doneEpochMillis]
+ * is the exact instant; it is `null` only for rows written before v10, which recorded the day alone.
  */
 @Entity(
     tableName = "reminder_completion",
@@ -27,10 +29,11 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index(value = ["reminder_id", "done_epoch_day"], unique = true)],
+    indices = [Index(value = ["reminder_id", "done_epoch_day"])],
 )
 data class ReminderCompletionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     @ColumnInfo(name = "reminder_id") val reminderId: Long,
     @ColumnInfo(name = "done_epoch_day") val doneEpochDay: Long,
+    @ColumnInfo(name = "done_epoch_millis") val doneEpochMillis: Long?,
 )

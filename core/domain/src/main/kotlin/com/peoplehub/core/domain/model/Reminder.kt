@@ -40,21 +40,37 @@ data class Reminder(
 )
 
 /**
- * What a reminder's completion log adds up to: how many times the user has ticked it off as done and
- * the last day they did.
+ * What a reminder's completion log adds up to: every time the user ticked it off as done, how many
+ * times that is, and the last day they did.
  *
  * A reminder only stores its *next* occurrence, so rescheduling would otherwise erase the fact that
  * the gesture happened. Keeping the log separate is also what lets "done" and "notified" stay distinct
  * — [Reminder.lastFiredAt] moves when the sweep posts a notification, [lastDoneOn] only when the user
  * says they actually did the thing.
  *
- * @property timesDone the number of distinct days the reminder was completed on.
- * @property lastDoneOn the most recent of those days.
+ * @property history every tap on "done", most recent first.
+ * @property timesDone the number of taps in [history].
+ * @property lastDoneOn the day of the most recent tap, or `null` if [history] is empty.
  */
 data class ReminderCompletion(
     val reminderId: Long,
-    val timesDone: Int,
-    val lastDoneOn: LocalDate,
+    val history: List<ReminderDoneEntry>,
+) {
+    val timesDone: Int get() = history.size
+
+    val lastDoneOn: LocalDate? get() = history.maxOfOrNull { it.day }
+}
+
+/**
+ * One tap on "done" in a reminder's history.
+ *
+ * @property day the local day the tap happened on, fixed when it was recorded.
+ * @property at the exact instant, or `null` for taps recorded before the app kept the time of day
+ * (those only ever stored the day).
+ */
+data class ReminderDoneEntry(
+    val day: LocalDate,
+    val at: Instant?,
 )
 
 /**

@@ -177,16 +177,16 @@ class MarkReminderFiredUseCase
     }
 
 /**
- * Ticks a reminder off as done: logs today in its completion history and restarts the cadence from
- * now with a **freshly drawn** interval, so the next occurrence lands at a new random distance rather
- * than resuming the old schedule.
+ * Ticks a reminder off as done: appends this moment to its completion history and restarts the cadence
+ * from now with a **freshly drawn** interval, so the next occurrence lands at a new random distance
+ * rather than resuming the old schedule.
  *
  * The log is what makes the gesture durable — the reminder row only carries its next occurrence, so
- * rescheduling alone would leave no trace that anything happened. Logging today before rescheduling
- * also means a failure to draw the next date cannot lose the record of the day.
+ * rescheduling alone would leave no trace that anything happened. Logging before rescheduling also
+ * means a failure to draw the next date cannot lose the record of the tap.
  *
- * Doing the same reminder twice in one day is idempotent as far as the history goes (one row per day),
- * but the second tick still redraws the next occurrence — the user is saying "I did it just now".
+ * Every tap is kept, including a second one on the same day, and each redraws the next occurrence —
+ * the user is saying "I did it just now".
  *
  * Called both by the "done" button on the reminder cards and by the "Done" action on the notification.
  */
@@ -201,14 +201,14 @@ class MarkReminderDoneUseCase
             runCatching {
                 val reminder = repository.getReminder(reminderId) ?: return@runCatching
                 val now = Instant.now(clock)
-                repository.recordCompletion(reminderId, now.atZone(clock.zone).toLocalDate())
+                repository.recordCompletion(reminderId, now, now.atZone(clock.zone).toLocalDate())
                 val next =
                     ReminderScheduling.nextFireAt(now, reminder.targetIntervalDays, reminder.jitterPercent, random)
                 repository.markFired(reminderId, now, next)
             }
     }
 
-/** Observes how many times, and when last, each reminder has been ticked off as done. */
+/** Observes every time each reminder has been ticked off as done, keyed by reminder id. */
 class ObserveReminderCompletionsUseCase
     @Inject
     constructor(
