@@ -2,13 +2,13 @@ package com.peoplehub.core.database.mapper
 
 import com.peoplehub.core.database.dao.DueReminderRow
 import com.peoplehub.core.database.dao.OutingRow
-import com.peoplehub.core.database.dao.ReminderCompletionRow
 import com.peoplehub.core.database.entity.CheckInEntity
 import com.peoplehub.core.database.entity.EventEntity
 import com.peoplehub.core.database.entity.InterestEntity
 import com.peoplehub.core.database.entity.PersonEntity
 import com.peoplehub.core.database.entity.PersonTagEntity
 import com.peoplehub.core.database.entity.PersonWithDetails
+import com.peoplehub.core.database.entity.ReminderCompletionEntity
 import com.peoplehub.core.database.entity.ReminderEntity
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInThreshold
@@ -21,7 +21,7 @@ import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.ReminderCategory
-import com.peoplehub.core.domain.model.ReminderCompletion
+import com.peoplehub.core.domain.model.ReminderDoneEntry
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -230,10 +230,9 @@ fun DueReminderRow.toDomain(): DueReminder =
         note = note,
     )
 
-/** Maps a folded completion-log row to its domain model. */
-fun ReminderCompletionRow.toDomain(): ReminderCompletion =
-    ReminderCompletion(
-        reminderId = reminderId,
-        timesDone = timesDone,
-        lastDoneOn = LocalDate.ofEpochDay(lastDoneEpochDay),
+/** Maps one completion-log row to its history entry. */
+fun ReminderCompletionEntity.toDomain(): ReminderDoneEntry =
+    ReminderDoneEntry(
+        day = LocalDate.ofEpochDay(doneEpochDay),
+        at = doneEpochMillis?.let(Instant::ofEpochMilli),
     )

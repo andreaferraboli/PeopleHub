@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Science
@@ -30,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -56,6 +61,7 @@ import com.peoplehub.core.ui.theme.PeopleHubTheme
 import com.peoplehub.feature.reminders.R
 import com.peoplehub.feature.reminders.labelRes
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.absoluteValue
@@ -63,6 +69,10 @@ import kotlin.math.absoluteValue
 /** Short "last done on" date, e.g. 4 Aug 2026. */
 private val ReminderDoneDateFormat: DateTimeFormatter
     get() = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+
+/** Time of day of a tap in the done history, e.g. 18:42. */
+private val ReminderDoneTimeFormat: DateTimeFormatter
+    get() = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
 
 /** Stateful entry point for the global reminders list. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -286,40 +296,79 @@ private fun ReminderCard(
 }
 
 /**
- * The "done" control and the history it writes to: ticking the reminder off logs today and redraws its
- * next occurrence, so the button doubles as the answer to "when did I last actually do this?".
+ * The "done" control and the history it writes to: ticking the reminder off logs this moment and
+ * redraws its next occurrence, so the button doubles as the answer to "when did I last actually do
+ * this?".
  *
  * The button stays tappable once it has been ticked today — doing the same thing twice is allowed, and
- * the second tick restarts the cadence from that moment — but its label says the day is already
- * recorded, so the state is never ambiguous.
+ * the second tick is logged too and restarts the cadence from that moment — but its label says the day
+ * is already recorded, so the state is never ambiguous. Tapping the summary unfolds every recorded tap.
  */
 @Composable
 private fun ReminderDoneRow(reminder: ReminderListItem, onMarkDone: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text =
-                when {
-                    reminder.doneToday -> stringResource(R.string.reminder_done_today)
-                    reminder.lastDoneOn != null ->
-                        stringResource(
-                            R.string.reminder_done_last,
-                            reminder.lastDoneOn.format(ReminderDoneDateFormat),
-                            reminder.timesDone,
-                        )
-                    else -> stringResource(R.string.reminder_done_never)
-                },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        GhostButton(
-            text =
-                stringResource(
-                    if (reminder.doneToday) R.string.reminder_done_again else R.string.reminder_mark_done,
-                ),
-            onClick = onMarkDone,
-            icon = if (reminder.doneToday) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-        )
+    var showHistory by remember { mutableStateOf(false) }
+    val hasHistory = reminder.doneHistory.isNotEmpty()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clickable(enabled = hasHistory) { showHistory = !showHistory },
+            ) {
+                Text(
+                    text =
+                        when {
+                            reminder.doneToday -> stringResource(R.string.reminder_done_today)
+                            reminder.lastDoneOn != null ->
+                                stringResource(
+                                    R.string.reminder_done_last,
+                                    reminder.lastDoneOn.format(ReminderDoneDateFormat),
+                                    reminder.timesDone,
+                                )
+                            else -> stringResource(R.string.reminder_done_never)
+                        },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (hasHistory) {
+                    Icon(
+                        imageVector = if (showHistory) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                        contentDescription =
+                            stringResource(
+                                if (showHistory) R.string.reminder_done_history_hide else R.string.reminder_done_history_show,
+                            ),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            GhostButton(
+                text =
+                    stringResource(
+                        if (reminder.doneToday) R.string.reminder_done_again else R.string.reminder_mark_done,
+                    ),
+                onClick = onMarkDone,
+                icon = if (reminder.doneToday) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+            )
+        }
+        if (showHistory && hasHistory) {
+            reminder.doneHistory.forEach { moment ->
+                Text(
+                    text =
+                        moment.time?.let { time ->
+                            stringResource(
+                                R.string.reminder_done_history_entry,
+                                moment.day.format(ReminderDoneDateFormat),
+                                time.format(ReminderDoneTimeFormat),
+                            )
+                        } ?: moment.day.format(ReminderDoneDateFormat),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 
@@ -348,6 +397,12 @@ private fun RemindersListPreview() {
                                     daysUntil = 4,
                                     lastDoneOn = previewToday.minusDays(9),
                                     timesDone = 3,
+                                    doneHistory =
+                                        listOf(
+                                            DoneMoment(previewToday.minusDays(9), LocalTime.of(18, 42)),
+                                            DoneMoment(previewToday.minusDays(23), LocalTime.of(9, 5)),
+                                            DoneMoment(previewToday.minusDays(40), null),
+                                        ),
                                     today = previewToday,
                                 ),
                                 ReminderListItem(
@@ -361,6 +416,7 @@ private fun RemindersListPreview() {
                                     daysUntil = 0,
                                     lastDoneOn = previewToday,
                                     timesDone = 1,
+                                    doneHistory = listOf(DoneMoment(previewToday, LocalTime.of(8, 15))),
                                     today = previewToday,
                                 ),
                             ),

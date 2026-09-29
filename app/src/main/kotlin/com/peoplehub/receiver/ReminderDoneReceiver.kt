@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Handles the "Done" action on a relationship reminder: logs today in the reminder's completion history,
+ * Handles the "Done" action on a relationship reminder: logs the tap in the reminder's completion history,
  * restarts its cadence from now with a freshly drawn interval, and dismisses the notification, without
  * opening the app. Same effect as the "done" button on the reminder cards, deliberately routed through
  * the same use case so the history is complete however the user ticked it off.

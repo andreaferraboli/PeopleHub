@@ -43,7 +43,7 @@ abstract class PeopleHubDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
 
     companion object {
-        const val VERSION: Int = 9
+        const val VERSION: Int = 10
         const val NAME: String = "peoplehub.db"
     }
 }

@@ -60,11 +60,21 @@ internal class ReminderRepositoryImpl
         override suspend fun markFired(id: Long, firedAt: Instant, nextFireAt: Instant) =
             dao.markFired(id, firedAt.toEpochMilli(), nextFireAt.toEpochMilli())
 
-        override suspend fun recordCompletion(id: Long, day: LocalDate) =
-            dao.insertCompletion(ReminderCompletionEntity(reminderId = id, doneEpochDay = day.toEpochDay()))
+        override suspend fun recordCompletion(id: Long, at: Instant, day: LocalDate) =
+            dao.insertCompletion(
+                ReminderCompletionEntity(
+                    reminderId = id,
+                    doneEpochDay = day.toEpochDay(),
+                    doneEpochMillis = at.toEpochMilli(),
+                ),
+            )
 
         override fun observeCompletions(): Flow<Map<Long, ReminderCompletion>> =
-            dao.observeCompletions().map { rows -> rows.associate { it.reminderId to it.toDomain() } }
+            dao.observeCompletions().map { rows ->
+                rows
+                    .groupBy { it.reminderId }
+                    .mapValues { (reminderId, log) -> ReminderCompletion(reminderId, log.map { it.toDomain() }) }
+            }
 
         override suspend fun getAllReminders(): List<Reminder> = dao.getAll().map { it.toDomain() }
 

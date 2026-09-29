@@ -108,7 +108,7 @@ class ReminderUseCasesTest {
         }
 
     @Test
-    fun `mark done logs today and restarts the cadence inside the jitter window`() =
+    fun `mark done logs this moment and restarts the cadence inside the jitter window`() =
         runTest {
             val reminder = Reminder(id = 5, personId = 1, title = "Call", targetIntervalDays = 7, jitterPercent = 20)
             coEvery { repository.getReminder(5) } returns reminder
@@ -118,7 +118,7 @@ class ReminderUseCasesTest {
             val result = useCase(5)
 
             assertTrue(result.isSuccess)
-            coVerify { repository.recordCompletion(5, LocalDate.of(2026, 7, 20)) }
+            coVerify { repository.recordCompletion(5, now, LocalDate.of(2026, 7, 20)) }
             coVerify { repository.markFired(eq(5), eq(now), capture(nextFire)) }
             val window = ReminderScheduling.window(7, 20)
             val scheduledDays = Duration.between(now, nextFire.captured).toDays().toInt()
@@ -126,7 +126,7 @@ class ReminderUseCasesTest {
         }
 
     @Test
-    fun `marking done twice on one day redraws the next fire but logs the day once`() =
+    fun `marking done twice on one day logs both taps and redraws the next fire each time`() =
         runTest {
             val reminder = Reminder(id = 5, personId = 1, title = "Call", targetIntervalDays = 7, jitterPercent = 20)
             coEvery { repository.getReminder(5) } returns reminder
@@ -135,9 +135,8 @@ class ReminderUseCasesTest {
             useCase(5)
             useCase(5)
 
-            // The day is written twice; deduplicating it is the store's job (one row per reminder/day),
-            // while each tick legitimately restarts the cadence from that moment.
-            coVerify(exactly = 2) { repository.recordCompletion(5, LocalDate.of(2026, 7, 20)) }
+            // Every tap is part of the history, and each one legitimately restarts the cadence from then.
+            coVerify(exactly = 2) { repository.recordCompletion(5, now, LocalDate.of(2026, 7, 20)) }
             coVerify(exactly = 2) { repository.markFired(eq(5), eq(now), any()) }
         }
 
@@ -150,7 +149,7 @@ class ReminderUseCasesTest {
             val result = useCase(404)
 
             assertTrue(result.isSuccess)
-            coVerify(exactly = 0) { repository.recordCompletion(any(), any()) }
+            coVerify(exactly = 0) { repository.recordCompletion(any(), any(), any()) }
             coVerify(exactly = 0) { repository.markFired(any(), any(), any()) }
         }
 }

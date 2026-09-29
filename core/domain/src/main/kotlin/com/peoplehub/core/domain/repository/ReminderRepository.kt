@@ -45,12 +45,12 @@ interface ReminderRepository {
     suspend fun markFired(id: Long, firedAt: Instant, nextFireAt: Instant)
 
     /**
-     * Logs that reminder [id] was done on [day]. Recording the same day again is a no-op, so ticking a
-     * card twice cannot double-count.
+     * Appends one entry to reminder [id]'s completion history: it was done at [at], on local [day].
+     * Every call adds an entry, so ticking a card twice in a day keeps both taps.
      */
-    suspend fun recordCompletion(id: Long, day: LocalDate)
+    suspend fun recordCompletion(id: Long, at: Instant, day: LocalDate)
 
-    /** Observes the completion log of every reminder, keyed by reminder id. */
+    /** Observes the completion history of every reminder, keyed by reminder id. */
     fun observeCompletions(): Flow<Map<Long, ReminderCompletion>>
 
     /** One-shot read of every reminder, used by backup/export. */
