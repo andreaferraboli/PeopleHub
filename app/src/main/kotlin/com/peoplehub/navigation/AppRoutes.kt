@@ -1,13 +1,8 @@
 package com.peoplehub.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.EventNote
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.peoplehub.R
+import com.peoplehub.core.ui.icon.VellutoIcons
 import com.peoplehub.feature.events.navigation.EventsRoute
 import com.peoplehub.feature.people.navigation.PeopleListRoute
 import com.peoplehub.feature.reminders.navigation.RemindersRoute
@@ -33,9 +28,9 @@ data object LanguageRoute
  * edit screens are reached from within and are not top-level destinations.
  */
 enum class TopLevelDestination(val route: Any, val labelRes: Int, val icon: ImageVector) {
-    REFLECT(DashboardRoute, R.string.tab_reflect, Icons.Outlined.AutoAwesome),
-    CIRCLE(PeopleListRoute, R.string.tab_circle, Icons.Outlined.Groups),
-    EVENTS(EventsRoute, R.string.tab_events, Icons.AutoMirrored.Outlined.EventNote),
-    REMINDERS(RemindersRoute, R.string.tab_reminders, Icons.Outlined.Favorite),
-    VAULT(SettingsRoute, R.string.tab_vault, Icons.Outlined.Lock),
+    REFLECT(DashboardRoute, R.string.tab_reflect, VellutoIcons.Sparkle),
+    CIRCLE(PeopleListRoute, R.string.tab_circle, VellutoIcons.Users),
+    EVENTS(EventsRoute, R.string.tab_events, VellutoIcons.CalendarRange),
+    REMINDERS(RemindersRoute, R.string.tab_reminders, VellutoIcons.Heart),
+    VAULT(SettingsRoute, R.string.tab_vault, VellutoIcons.Lock),
 }

@@ -34,7 +34,7 @@ device. All data lives in a local Room database and DataStore.
                       WorkManager workers, AlarmManager scheduler, BroadcastReceivers, app DI (Clock)
 :core:domain   (JVM)  Models, repository interfaces, use cases, pure date math, deep-link constants
 :core:database        Room entities/DAOs/migrations, repository impls, mappers, DataStore settings, DI
-:core:ui              Compose theme (Midnight Gold), design-system components, UiState, RelativeTime
+:core:ui              Compose theme (Velluto, see DESIGN.md), design-system components, icons, scenes, UiState
 :core:notifications   Notification channels + PeopleHubNotifier + action constants
 :core:dataio   (JVM)  JSON (kotlinx.serialization) + CSV import/export, DTOs, mappers
 :feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import,
@@ -94,19 +94,24 @@ are *already attending the edited outing*: a quick check-in on such a person is 
 own screen, and hiding them would leave that outing with nothing ticked — unremovable, and impossible
 to save at all, since an outing needs at least one attendee.
 
-## Design system — "Midnight Gold"
+## Design system — "Velluto"
 
-A Neo-Luxury dark-first identity (transcribed from `stitch_peoplehub_personal_relationship_manager/`):
-onyx background `#131313`, champagne-gold primary `#f2ca50`, editorial serif (Bodoni Moda) for
-display/headline and a clean sans (Manrope) for body, glassmorphic panels, and a gold "fade"
-divider. Because the app ships no fonts (offline), the families resolve to the platform serif /
-sans-serif; drop real `bodoni_moda` / `manrope` into `core:ui/res/font` and repoint
-`PeopleHubFonts` to adopt the exact faces. Dynamic Color is supported on Android 12+ but **off by
-default** so the gold-on-onyx brand is preserved (`PeopleHubTheme(dynamicColor = true)` to opt in).
+**Read `DESIGN.md` before touching any UI.** It holds the tokens, the component catalogue, the motion
+and accessibility rules and what may not change. In short: velvet-dark / warm-paper backgrounds, one
+accent `VellutoAccent` (`#FFC83D`, every other accent token is computed from it), Instrument Serif +
+Geist bundled in `core:ui/res/font` (OFL, licences in `core:ui/assets/licenses`), Lucide stroke icons
+as `VellutoIcons` (no Material Icons), floating glass navigation pill (Haze blur on Android 12+),
+floating 3D gold objects as generated VectorDrawables (`tools/scenes/build_scenes.py`), cascading
+entrances and slow ambient loops that all stop when the system removes animations. Read the Velluto
+tokens with `PeopleHubTheme.colors / type / spacing / radii / motion`; `MaterialTheme.colorScheme`
+is mapped so stock Material components stay on brand (`primary` = the accent *as text*, AA).
+Dynamic Color is supported on Android 12+ but **off by default**.
 
-Reusable components live in `core:ui/components`: `GlassPanel`, `GoldDivider`, `SectionHeader`,
-`CapsLabel`, `PrimaryGoldButton`, `GhostButton`, `TagChip`, `CategoryChip`, `PersonAvatar`,
-`DayCountDisplay`, `CheckInStatusBadge`, `OutingCard`, `PeopleHubTopBar`, and the
+Reusable components live in `core:ui/components` (catalogue in DESIGN.md): `VellutoBackground`,
+`ScreenHero`, `GlassPanel`, `SurfaceCard`, `NotchedCard`, `SectionHeader`, `VellutoButton`,
+`GlassIconButton`, `AccentFab`, `TagChip`, `StatusPill`, `SegmentedPill`, `SearchField`,
+`PersonAvatar`, `AvatarStack`, `DateTile`, `KpiBlock`, `SegmentBar`, `EventCover`, `OutingCard`,
+`SettingsCard`, `StepperRow`, `PeopleHubTopBar`, `VellutoNavBar`, and the
 `LoadingView/EmptyView/ErrorView` state views.
 
 ### Window insets (edge to edge)
@@ -114,9 +119,11 @@ Reusable components live in `core:ui/components`: `GlassPanel`, `GoldDivider`, `
 The app calls `enableEdgeToEdge()`, so **nothing** is inset for you and every screen has to say where the
 system bars go. The contract is:
 
-- The root scaffold in `PeopleHubApp` applies no insets of its own; it pads the nav host by the bottom
-  bar's height **and consumes that region** (`consumeWindowInsets`). Without the consume, every
-  top-level screen would reserve the navigation-bar height a second time and float above the tab bar.
+- The root shell in `PeopleHubApp` applies no insets of its own. On the five top-level screens the
+  content runs **under** the floating glass navigation bar: the shell consumes the system navigation
+  inset for the nav host and provides `LocalNavBarClearance` (system inset + bar + its margin). A
+  top-level screen adds that clearance (+60dp for the FAB and fade) below its scrolling content and
+  lifts its FAB by it; elsewhere the clearance is `0.dp`. See DESIGN.md, "The app shell and insets".
 - Each screen's own `Scaffold` pads its content from the default `contentWindowInsets`, which covers the
   status bar and — on screens where no tab bar is drawn — the phone's navigation buttons. `TopAppBar`
   insets itself, so `PeopleHubTopBar` needs nothing.
