@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -203,14 +204,15 @@ fun StatusPill(
     icon: ImageVector? = null,
     dot: Boolean = icon == null,
     border: Color = Color.Transparent,
+    maxLines: Int = 1,
 ) {
     Row(
         modifier =
             modifier
-                .height(28.dp)
-                .background(container, CircleShape)
-                .lightEdge(CircleShape, Color.Transparent, border)
-                .padding(horizontal = 10.dp),
+                .heightIn(min = 28.dp)
+                .background(container, StatusPillShape)
+                .lightEdge(StatusPillShape, Color.Transparent, border)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -219,9 +221,18 @@ fun StatusPill(
         } else if (dot) {
             Box(Modifier.size(6.dp).background(content, CircleShape))
         }
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = content,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
+
+/** A pill on one line, a soft rounded box when [StatusPill] wraps onto more lines. */
+private val StatusPillShape = RoundedCornerShape(14.dp)
 
 /**
  * The Velluto segmented control: a glass track with pills, the selected one filled with the text

@@ -884,6 +884,8 @@ private fun UpdatesCard(
                     content = c.ok,
                     container = c.okSoft,
                     icon = VellutoIcons.Check,
+                    // The only string here is a full sentence: let it wrap instead of truncating.
+                    maxLines = Int.MAX_VALUE,
                 )
             is UpdateUiState.Error ->
                 Text(current.message, style = MaterialTheme.typography.bodyMedium, color = c.err)

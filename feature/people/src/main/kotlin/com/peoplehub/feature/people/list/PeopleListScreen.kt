@@ -490,7 +490,6 @@ private fun PersonCard(
                 PersonStatusPill(person = person, showBirthday = showBirthday)
             }
             CardTrailingMark(
-                person = person,
                 selectionMode = selectionMode,
                 selected = selected,
             )
@@ -530,30 +529,26 @@ private fun PersonStatusPill(
 }
 
 /**
- * The round 48dp mark at the end of a card. In selection mode it is the selection check (solid
- * accent when selected). Otherwise it is the "open" chevron, soft accent when the person is due or
- * overdue, a hairline when recent, bare when tracking is off. Decorative: the card is the target.
+ * The mark at the end of a card. In selection mode it is the round selection check (solid accent
+ * when selected). Otherwise it is a bare "open" chevron with no button styling: the list offers no
+ * per-row action, the whole card is the target. Decorative in both cases (no semantics).
  */
 @Composable
 private fun CardTrailingMark(
-    person: PersonListItem,
     selectionMode: Boolean,
     selected: Boolean,
 ) {
     val c = PeopleHubTheme.colors
-    val late = person.status == CheckInStatus.OVERDUE || person.status == CheckInStatus.DUE
     val look =
         when {
             selectionMode && selected -> MarkLook(c.accent, Color.Transparent, c.onAccent, VellutoIcons.Check)
             selectionMode -> MarkLook(Color.Transparent, c.line, c.text2, null)
-            person.checkInDisabled -> MarkLook(Color.Transparent, Color.Transparent, c.text2, VellutoIcons.ChevronRight)
-            late -> MarkLook(c.accentSoft, c.accentEdge, c.accentOnSoft, VellutoIcons.ChevronRight)
-            else -> MarkLook(Color.Transparent, c.line, c.text2, VellutoIcons.ChevronRight)
+            else -> MarkLook(Color.Transparent, Color.Transparent, c.text2, VellutoIcons.ChevronRight)
         }
     Box(
         modifier =
             Modifier
-                .size(PeopleHubTheme.spacing.touchTarget)
+                .size(if (selectionMode) PeopleHubTheme.spacing.touchTarget else CHEVRON_BOX)
                 .clearAndSetSemantics {}
                 .then(
                     if (selectionMode && selected) {
@@ -570,6 +565,9 @@ private fun CardTrailingMark(
         }
     }
 }
+
+/** Size of the bare chevron outside selection mode (it is not a touch target). */
+private val CHEVRON_BOX = 24.dp
 
 /** Fill, hairline, glyph colour and glyph of a [CardTrailingMark]. */
 private data class MarkLook(
