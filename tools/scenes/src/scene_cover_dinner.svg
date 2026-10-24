@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 358 210" data-bg="radial-gradient(circle at 12% 30%, rgba(255,196,110,0.55) 0 16px, rgba(255,196,110,0) 28px), radial-gradient(circle at 34% 16%, rgba(255,150,90,0.45) 0 10px, rgba(0,0,0,0) 20px), radial-gradient(circle at 60% 32%, rgba(255,214,140,0.42) 0 22px, rgba(0,0,0,0) 36px), radial-gradient(circle at 84% 14%, rgba(255,120,80,0.45) 0 14px, rgba(0,0,0,0) 25px), radial-gradient(circle at 94% 46%, rgba(255,200,120,0.4) 0 12px, rgba(0,0,0,0) 22px), radial-gradient(circle at 44% 58%, rgba(255,180,100,0.28) 0 18px, rgba(0,0,0,0) 30px), linear-gradient(180deg, #3A1410 0%, #5A1E16 40%, #2A0E0C 100%)">
+            <path d="M192 92q2 20 18 22 16-2 18-22z" fill="rgba(130,20,34,0.75)"/>
+            <path d="M238 88q2 20 18 22 16-2 18-22z" fill="rgba(130,20,34,0.75)"/>
+            <path d="M190 66q0 44 20 48 20-4 20-48zM210 114v40M196 156h28M236 62q0 44 20 48 20-4 20-48zM256 110v44M242 156h28" fill="rgba(255,226,180,0.06)" stroke="rgba(255,230,190,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M196 74q1 18 8 28M242 70q1 18 8 28" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M226 52l3-8M232 54l7-5M220 50l-1-8" stroke="{{g1}}" stroke-width="1.6" stroke-linecap="round" data-name="sparkle"/>
+          </svg>

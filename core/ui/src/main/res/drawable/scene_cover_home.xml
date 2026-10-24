@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da tools/scenes/build_scenes.py (accento FFC83D). Non modificare a mano: cambia il sorgente in tools/scenes/src e rilancia lo script. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="358dp"
+    android:height="196dp"
+    android:viewportWidth="358"
+    android:viewportHeight="196">
+    <path
+        android:name="bg_0"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="40.5" android:startY="-40.5" android:endX="317.5" android:endY="236.5" android:tileMode="clamp">
+                <item android:offset="0" android:color="#F0DDBB"/>
+                <item android:offset="0.4" android:color="#D2AE80"/>
+                <item android:offset="0.8" android:color="#8A6444"/>
+                <item android:offset="1" android:color="#5A3E2A"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M60,0 L116,0 L186,196 L130,196 Z M140,0 L180,0 L250,196 L210,196 Z"
+        android:fillColor="#4DFFF8E2" />
+    <path
+        android:pathData="M200,120 L240,106 L280,120 L280,160 L240,174 L200,160 Z"
+        android:fillColor="#A87A4C" />
+    <path
+        android:pathData="M240,134 L240,174 L280,160 L280,120 Z"
+        android:fillColor="#8A603A" />
+    <path
+        android:pathData="M200,120 L240,134 L280,120"
+        android:strokeColor="#6A4A2E"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M218,114 L258,128"
+        android:strokeColor="#E8D2A8"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+</vector>

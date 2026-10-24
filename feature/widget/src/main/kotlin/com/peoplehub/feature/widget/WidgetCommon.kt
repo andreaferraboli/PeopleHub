@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
@@ -20,10 +19,11 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.peoplehub.core.ui.theme.VellutoAccent
 import dagger.hilt.android.EntryPointAccessors
 
 /** Champagne-gold accent for widget headers and emphasised numbers. */
-internal val WidgetGold = ColorProvider(Color(0xFFF2CA50))
+internal val WidgetGold = ColorProvider(VellutoAccent)
 
 /** Resolves the Hilt [WidgetEntryPoint] for use inside `provideGlance`. */
 internal fun widgetEntryPoint(context: Context): WidgetEntryPoint =

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da tools/scenes/build_scenes.py (accento FFC83D). Non modificare a mano: cambia il sorgente in tools/scenes/src e rilancia lo script. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="358dp"
+    android:height="210dp"
+    android:viewportWidth="358"
+    android:viewportHeight="210">
+    <path
+        android:name="bg_0"
+        android:pathData="M0,0 L358,0 L358,210 L0,210 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="179" android:startY="0" android:endX="179" android:endY="210" android:tileMode="clamp">
+                <item android:offset="0" android:color="#070B22"/>
+                <item android:offset="0.45" android:color="#141C48"/>
+                <item android:offset="0.78" android:color="#34285A"/>
+                <item android:offset="1" android:color="#5A3352"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:name="bg_1"
+        android:pathData="M0,0 L358,0 L358,210 L0,210 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="286.4" android:centerY="42" android:gradientRadius="44" android:tileMode="clamp">
+                <item android:offset="0" android:color="#F2FFF4D6"/>
+                <item android:offset="0.205" android:color="#F2FFF4D6"/>
+                <item android:offset="0.5" android:color="#2EFFF0C8"/>
+                <item android:offset="1" android:color="#00FFF0C8"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <group android:name="star_1_group">
+        <path
+            android:name="star_1"
+            android:pathData="M38.8,26 A1.2,1.2 0 1,0 41.2,26 A1.2,1.2 0 1,0 38.8,26 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
+    <path
+        android:pathData="M95,44 A1,1 0 1,0 97,44 A1,1 0 1,0 95,44 Z"
+        android:fillColor="#FFFFFF" />
+    <group android:name="star_2_group">
+        <path
+            android:name="star_2"
+            android:pathData="M148.7,18 A1.3,1.3 0 1,0 151.3,18 A1.3,1.3 0 1,0 148.7,18 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
+    <path
+        android:pathData="M209,38 A1,1 0 1,0 211,38 A1,1 0 1,0 209,38 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M250.9,14 A1.1,1.1 0 1,0 253.1,14 A1.1,1.1 0 1,0 250.9,14 Z"
+        android:fillColor="#FFFFFF" />
+    <group android:name="star_3_group">
+        <path
+            android:name="star_3"
+            android:pathData="M328.8,58 A1.2,1.2 0 1,0 331.2,58 A1.2,1.2 0 1,0 328.8,58 Z"
+            android:fillColor="#FFFFFF" />
+    </group>
+    <path
+        android:pathData="M0,210 L0,150 L22,150 L22,120 L40,120 L40,140 L54,140 L54,98 L74,98 L74,132 L86,132 L86,112 L100,112 L100,96 L108,64 L116,96 L116,104 L132,104 L132,82 L154,82 L154,128 L168,128 L168,92 L190,92 L190,118 L206,118 L206,100 L228,100 L228,136 L244,136 L244,76 L262,76 L262,124 L280,124 L280,108 L300,108 L300,140 L318,140 L318,118 L358,118 L358,210 Z"
+        android:fillColor="#0A0B1C" />
+    <path
+        android:pathData="M27,128 L30,128 L30,132 L27,132 Z M33,128 L36,128 L36,132 L33,132 Z M27,138 L30,138 L30,142 L27,142 Z M59,106 L62,106 L62,110 L59,110 Z M65,106 L68,106 L68,110 L65,110 Z M59,118 L62,118 L62,122 L59,122 Z M65,126 L68,126 L68,130 L65,130 Z M137,90 L140,90 L140,94 L137,94 Z M143,90 L146,90 L146,94 L143,94 Z M149,100 L152,100 L152,104 L149,104 Z M137,112 L140,112 L140,116 L137,116 Z M173,100 L176,100 L176,104 L173,104 Z M179,110 L182,110 L182,114 L179,114 Z M211,108 L214,108 L214,112 L211,112 Z M217,116 L220,116 L220,120 L217,120 Z M249,84 L252,84 L252,88 L249,88 Z M255,94 L258,94 L258,98 L255,98 Z M249,104 L252,104 L252,108 L249,108 Z M255,116 L258,116 L258,120 L255,120 Z M285,114 L288,114 L288,118 L285,118 Z M291,124 L294,124 L294,128 L291,128 Z M323,126 L326,126 L326,130 L323,130 Z M333,132 L336,132 L336,136 L333,136 Z"
+        android:fillColor="#D9FFCE78" />
+</vector>

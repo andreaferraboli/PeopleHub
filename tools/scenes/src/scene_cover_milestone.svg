@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 358 210" data-bg="radial-gradient(circle at 80% 20%, rgba(255,244,214,0.95) 0 9px, rgba(255,240,200,0.18) 22px, rgba(0,0,0,0) 44px), linear-gradient(180deg, #070B22 0%, #141C48 45%, #34285A 78%, #5A3352 100%)">
+            <g fill="#FFFFFF">
+<circle cx="40" cy="26" r="1.2" data-name="star_1"/>
+<circle cx="96" cy="44" r="1"/>
+<circle cx="150" cy="18" r="1.3" data-name="star_2"/>
+<circle cx="210" cy="38" r="1"/>
+<circle cx="252" cy="14" r="1.1"/>
+<circle cx="330" cy="58" r="1.2" data-name="star_3"/>
+</g>
+            <polygon points="0,210 0,150 22,150 22,120 40,120 40,140 54,140 54,98 74,98 74,132 86,132 86,112 100,112 100,96 108,64 116,96 116,104 132,104 132,82 154,82 154,128 168,128 168,92 190,92 190,118 206,118 206,100 228,100 228,136 244,136 244,76 262,76 262,124 280,124 280,108 300,108 300,140 318,140 318,118 358,118 358,210" fill="#0A0B1C"/>
+            <path d="M27 128h3v4h-3zM33 128h3v4h-3zM27 138h3v4h-3zM59 106h3v4h-3zM65 106h3v4h-3zM59 118h3v4h-3zM65 126h3v4h-3zM137 90h3v4h-3zM143 90h3v4h-3zM149 100h3v4h-3zM137 112h3v4h-3zM173 100h3v4h-3zM179 110h3v4h-3zM211 108h3v4h-3zM217 116h3v4h-3zM249 84h3v4h-3zM255 94h3v4h-3zM249 104h3v4h-3zM255 116h3v4h-3zM285 114h3v4h-3zM291 124h3v4h-3zM323 126h3v4h-3zM333 132h3v4h-3z" fill="rgba(255,206,120,0.85)"/>
+          </svg>
