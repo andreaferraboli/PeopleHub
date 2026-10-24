@@ -103,6 +103,7 @@ fun SettingsRow(
     icon: ImageVector? = null,
     value: String? = null,
     trailingIcon: ImageVector? = null,
+    supporting: String? = null,
 ) {
     val c = PeopleHubTheme.colors
     Row(
@@ -116,12 +117,16 @@ fun SettingsRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (icon != null) Icon(icon, contentDescription = null, tint = c.text2, modifier = Modifier.size(20.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            color = c.text,
-            modifier = Modifier.weight(1f),
-        )
+        Column(modifier = Modifier.weight(1f).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = c.text,
+            )
+            if (supporting != null) {
+                Text(text = supporting, style = MaterialTheme.typography.bodySmall, color = c.text2)
+            }
+        }
         if (value != null) {
             Text(
                 text = value,

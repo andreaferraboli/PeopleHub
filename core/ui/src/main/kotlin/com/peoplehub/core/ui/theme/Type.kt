@@ -69,6 +69,15 @@ data class VellutoType(
             lineHeight = 14.sp,
             letterSpacing = 0.13.em,
         ),
+    /** Serif italic hero subtitle ("L'architettura dei tuoi momenti."). */
+    val heroSubtitle: TextStyle =
+        TextStyle(
+            fontFamily = PeopleHubFonts.Display,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Italic,
+            fontSize = 21.sp,
+            lineHeight = 25.sp,
+        ),
     /** 92sp hero KPI ("5 need attention"). */
     val kpiHero: TextStyle = kpi(92, 76, -0.043),
     /** 58–62sp countdown on event covers. */

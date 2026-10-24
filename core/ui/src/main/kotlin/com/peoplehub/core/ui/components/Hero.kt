@@ -96,6 +96,7 @@ fun ScreenHero(
     sceneOffsetY: Dp = 56.dp,
     titleTopPadding: Dp = 40.dp,
     subtitleMaxWidth: Dp = 270.dp,
+    subtitleStyle: TextStyle = MaterialTheme.typography.bodyMedium,
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
@@ -135,7 +136,7 @@ fun ScreenHero(
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = subtitleStyle,
                         color = c.text2,
                         modifier = Modifier.widthIn(max = subtitleMaxWidth),
                     )

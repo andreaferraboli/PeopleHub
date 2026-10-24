@@ -60,6 +60,8 @@ data class CoverPin(
     val onToggle: () -> Unit,
     /** Text shown next to the pin when pinned ("Nel widget"); icon only when `null`. */
     val pinnedText: String? = null,
+    /** Draws the pin state only, not as a toggle (where the screen offers no pin action). */
+    val readOnly: Boolean = false,
 )
 
 /**
@@ -68,6 +70,7 @@ data class CoverPin(
  * people at the bottom-left and the day countdown at the bottom-right. Text is always light: the
  * scrim guarantees its contrast on any picture.
  *
+ * @param onClick opens the event; `null` for a cover that is not tappable (the event detail header).
  * @param past archived events are slightly desaturated, as in the mockup's "Archivio".
  * @param highlighted the next upcoming event: accent hairline and soft accent glow.
  * @param drift a very slow zoom/pan of the picture (ambient motion, off when animations are off).
@@ -76,7 +79,7 @@ data class CoverPin(
 fun EventCover(
     title: String,
     dateLine: String,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     supportingLine: String? = null,
     category: String? = null,
@@ -102,7 +105,7 @@ fun EventCover(
                 .height(height)
                 .softShadow(if (highlighted) c.glowSoft else c.shadow, shape, VellutoElevation.Hero)
                 .clip(shape)
-                .clickable(role = Role.Button, onClick = onClick),
+                .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier),
     ) {
         val pictureModifier =
             Modifier
@@ -214,7 +217,13 @@ private fun PinToggle(pin: CoverPin) {
                     Modifier.background(MEDIA_CHIP_FILL, CircleShape).lightEdge(CircleShape, Color.Transparent, MEDIA_PIN_EDGE)
                 },
             ).clip(CircleShape)
-            .toggleable(value = pin.pinned, role = Role.Switch, onValueChange = { pin.onToggle() })
+            .then(
+                if (pin.readOnly) {
+                    Modifier
+                } else {
+                    Modifier.toggleable(value = pin.pinned, role = Role.Switch, onValueChange = { pin.onToggle() })
+                },
+            )
     WithTooltip(description = pin.label) {
         if (pin.pinned && pin.pinnedText != null) {
             Row(

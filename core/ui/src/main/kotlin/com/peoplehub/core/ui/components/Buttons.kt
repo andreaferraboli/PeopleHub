@@ -97,7 +97,7 @@ fun VellutoButton(
     val glow = style == VellutoButtonStyle.Primary && enabled
     val motion = PeopleHubTheme.motion
     val pulse = rememberPulse(reduced = !breathing || motion.reduced, motion.breathMillis)
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center, propagateMinConstraints = true) {
         if (glow) GlowBehind(color = c.glowStrong, spec = VellutoElevation.Glow, pulse = pulse)
         Button(
             onClick = onClick,

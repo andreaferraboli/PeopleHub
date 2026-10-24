@@ -198,7 +198,7 @@ fun SectionHeader(
 
 /**
  * An inline accent text action ("Vedi tutti", "Apri la guida") with a full 48dp touch target and an
- * optional trailing icon slot.
+ * optional leading and trailing icon slot.
  */
 @Composable
 fun TextAction(
@@ -206,6 +206,7 @@ fun TextAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     color: Color = PeopleHubTheme.colors.accentText,
+    leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
@@ -218,6 +219,9 @@ fun TextAction(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        if (leading != null) {
+            CompositionLocalProvider(LocalContentColor provides color) { leading() }
+        }
         Text(text = label, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium), color = color)
         if (trailing != null) {
             CompositionLocalProvider(LocalContentColor provides color) { trailing() }
