@@ -22,7 +22,7 @@ device. All data lives in a local Room database and DataStore.
 | Widgets | Glance |
 | I/O | kotlinx.serialization JSON + hand-written CSV parsing |
 | Images | Coil 3 (local files in internal storage) |
-| Tests | JUnit5 + MockK + Turbine |
+| Tests | JUnit5 + MockK + Turbine; Compose UI on the JVM with Robolectric (JUnit4 via the vintage engine) |
 | Quality | Ktlint + Detekt, `allWarningsAsErrors = true` |
 
 `minSdk 26`, `targetSdk/compileSdk 35`.
@@ -266,6 +266,9 @@ source of truth.
 - Naming: PascalCase types, `camelCase` members, use-case classes end in `UseCase` and expose
   `operator fun invoke`; repository implementations end in `Impl` and are `internal`.
 - `LazyColumn`/`LazyRow` always pass a `key`. No `lateinit` in composables — use `remember`/`by`.
+- Attach a `TopAppBarScrollBehavior`'s `nestedScrollConnection` only while its top app bar is actually
+  laid out. Without the bar its offset limit stays at `-Float.MAX_VALUE` and the connection swallows
+  every upward drag, so the list cannot scroll (the 1.7.0 Circle bug, covered by `PeopleListScrollTest`).
 - KDoc on public classes and non-trivial public functions. No `TODO`/`FIXME` in committed code.
 - Routes are `@Serializable` types; each feature exposes a `NavGraphBuilder.<name>Section(...)`
   extension that takes navigation callbacks, keeping features decoupled. The app wires them in

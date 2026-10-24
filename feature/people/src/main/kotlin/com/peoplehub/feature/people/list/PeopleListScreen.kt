@@ -148,7 +148,15 @@ fun PeopleListScreen(
 
     VellutoBackground(secondGlow = true) {
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            // Only while the selection bar is on screen: with no top app bar laid out, the
+            // scroll behaviour's offset limit stays at -Float.MAX_VALUE and its nested-scroll
+            // connection eats every upward drag, so the list could never scroll.
+            modifier =
+                if (state.inSelectionMode) {
+                    Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                } else {
+                    Modifier
+                },
             containerColor = Color.Transparent,
             topBar = {
                 if (state.inSelectionMode) {
