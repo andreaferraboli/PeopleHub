@@ -1,20 +1,21 @@
 package com.peoplehub.core.ui.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import com.peoplehub.core.ui.theme.LabelCaps
+import androidx.compose.ui.text.TextStyle
+import com.peoplehub.core.ui.theme.PeopleHubTheme
 
 /**
- * The large elapsed/remaining day counter used by events and birthdays: an optional caps prefix
- * (e.g. "IN"), a serif display number, and a caps unit label (e.g. "DAYS" / "DAYS AGO").
+ * The elapsed/remaining day counter of events and birthdays: an optional caps [prefix] ("TRA"), a
+ * big tabular Geist number and a caps [unitLabel] ("GIORNI", "GIORNI FA"), right-aligned by default
+ * as on the Velluto covers.
  *
- * @param emphasized when true (typically future/upcoming) the number is rendered in champagne gold;
- * otherwise it uses a muted on-surface tone for past items.
+ * @param emphasized upcoming items use the accent-as-text colour, past ones the primary text colour.
+ * @param onMedia draws it in the light cover colours, for use over a photo or illustrated scene.
  */
 @Composable
 fun DayCountDisplay(
@@ -23,23 +24,23 @@ fun DayCountDisplay(
     modifier: Modifier = Modifier,
     prefix: String? = null,
     emphasized: Boolean = true,
+    onMedia: Boolean = false,
+    numberStyle: TextStyle = PeopleHubTheme.type.kpiMedium,
+    horizontalAlignment: Alignment.Horizontal = Alignment.End,
 ) {
+    val c = PeopleHubTheme.colors
     val numberColor: Color =
-        if (emphasized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    Column(modifier = modifier) {
-        if (prefix != null) {
-            Text(text = prefix.uppercase(), style = LabelCaps, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        when {
+            onMedia -> c.onMedia
+            emphasized -> c.accentText
+            else -> c.text
         }
-        Text(
-            text = number.toString(),
-            style = MaterialTheme.typography.displayMedium,
-            color = numberColor,
-        )
-        Text(
-            text = unitLabel.uppercase(),
-            style = LabelCaps,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Start,
-        )
+    val capsColor = if (onMedia) c.onMediaMuted else c.text2
+    Column(modifier = modifier, horizontalAlignment = horizontalAlignment) {
+        if (prefix != null) {
+            Text(text = prefix.uppercase(), style = PeopleHubTheme.type.tileCaps, color = capsColor)
+        }
+        Text(text = number.toString(), style = numberStyle, color = numberColor, maxLines = 1)
+        Text(text = unitLabel.uppercase(), style = PeopleHubTheme.type.tileCaps, color = capsColor)
     }
 }

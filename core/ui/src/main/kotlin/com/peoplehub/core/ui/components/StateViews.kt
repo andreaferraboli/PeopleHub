@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,22 +13,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.peoplehub.core.ui.R
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.glassSurface
 import com.peoplehub.core.ui.state.UiState
+import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoShapes
 
-/** Centred loading spinner in the brand gold. */
+/** Centred loading state: a thin accent spinner on a soft accent glow. */
 @Composable
 fun LoadingView(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    val c = PeopleHubTheme.colors
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        AmbientGlow(size = 160.dp, strong = false)
+        CircularProgressIndicator(color = c.accent, trackColor = c.track, strokeWidth = 3.dp, modifier = Modifier.size(40.dp))
     }
 }
 
@@ -44,7 +44,7 @@ fun EmptyView(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
-    icon: ImageVector = Icons.Outlined.Inbox,
+    icon: ImageVector = VellutoIcons.Inbox,
     action: (@Composable () -> Unit)? = null,
 ) {
     StateMessage(icon = icon, title = title, description = description, modifier = modifier, action = action)
@@ -57,7 +57,13 @@ fun ErrorView(
     modifier: Modifier = Modifier,
     title: String = stringResource(R.string.ui_error_generic),
 ) {
-    StateMessage(icon = Icons.Outlined.ErrorOutline, title = title, description = message, modifier = modifier)
+    StateMessage(
+        icon = VellutoIcons.CircleAlert,
+        tint = PeopleHubTheme.colors.err,
+        title = title,
+        description = message,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -66,8 +72,10 @@ private fun StateMessage(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
+    tint: Color = PeopleHubTheme.colors.accentOnSoft,
     action: (@Composable () -> Unit)? = null,
 ) {
+    val c = PeopleHubTheme.colors
     Column(
         modifier =
             modifier
@@ -76,23 +84,29 @@ private fun StateMessage(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            modifier = Modifier.size(48.dp),
-        )
+        Box(contentAlignment = Alignment.Center) {
+            AmbientGlow(size = 180.dp, strong = false)
+            Box(
+                modifier =
+                    Modifier
+                        .size(72.dp)
+                        .glassSurface(c, VellutoShapes.CardSmall),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(30.dp))
+            }
+        }
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.headlineMedium,
+            color = c.text,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 16.dp),
+            modifier = Modifier.padding(top = 20.dp),
         )
         Text(
             text = description,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = c.text2,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp),
         )
