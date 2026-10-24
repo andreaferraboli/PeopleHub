@@ -1,5 +1,6 @@
 package com.peoplehub.core.ui.modifier
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.Modifier
@@ -11,7 +12,6 @@ import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.platform.InspectorInfo
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import com.peoplehub.core.ui.theme.LocalVellutoMotion
 import kotlinx.coroutines.launch
@@ -47,11 +47,12 @@ private class RiseInNode(
     LayoutModifierNode,
     CompositionLocalConsumerModifierNode {
     private var progress = Animatable(0f)
-    private var offsetPx = 0f
 
+    // The entrance plays once, when the node attaches: reading the motion tokens at that moment is
+    // the intent (a later change of reduce-motion must not replay or cut an entrance already done).
+    @SuppressLint("SuspiciousCompositionLocalModifierRead")
     override fun onAttach() {
         val motion = currentValueOf(LocalVellutoMotion)
-        offsetPx = with(currentValueOf(LocalDensity)) { motion.riseOffset.toPx() }
         if (motion.reduced) {
             progress = Animatable(1f)
             return
@@ -70,6 +71,7 @@ private class RiseInNode(
         constraints: Constraints,
     ): MeasureResult {
         val placeable = measurable.measure(constraints)
+        val offsetPx = currentValueOf(LocalVellutoMotion).riseOffset.toPx()
         return layout(placeable.width, placeable.height) {
             placeable.placeWithLayer(0, 0) {
                 val p = progress.value
