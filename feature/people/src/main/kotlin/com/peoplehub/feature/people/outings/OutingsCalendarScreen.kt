@@ -1,27 +1,20 @@
 package com.peoplehub.feature.people.outings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -34,20 +27,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.core.domain.model.Outing
-import com.peoplehub.core.ui.components.CapsLabel
-import com.peoplehub.core.ui.components.GhostButton
+import com.peoplehub.core.ui.components.DisplayTitle
+import com.peoplehub.core.ui.components.EmptyView
+import com.peoplehub.core.ui.components.GlassIconButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.OutingCard
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.SectionHeader
-import com.peoplehub.core.ui.components.TooltipIconButton
 import com.peoplehub.core.ui.components.UiStateContent
+import com.peoplehub.core.ui.components.VellutoBackground
+import com.peoplehub.core.ui.components.VellutoButton
+import com.peoplehub.core.ui.components.VellutoButtonStyle
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.ShadowSpec
+import com.peoplehub.core.ui.modifier.VellutoElevation
+import com.peoplehub.core.ui.modifier.riseIn
+import com.peoplehub.core.ui.modifier.softShadow
+import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoShapes
 import com.peoplehub.feature.people.R
 import java.time.LocalDate
 import java.time.YearMonth
@@ -56,6 +62,9 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 private const val DAYS_IN_WEEK = 7
+
+/** Outing cards past this index enter without the cascade. */
+private const val MAX_RISE_INDEX = 8
 
 private val DayTitleFormatter: DateTimeFormatter
     get() = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.getDefault())
@@ -75,84 +84,130 @@ fun OutingsCalendarScreen(
     val today = viewModel.today
     var month by remember { mutableStateOf(YearMonth.from(today)) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    val spacing = PeopleHubTheme.spacing
 
-    Scaffold(
-        topBar = {
-            PeopleHubTopBar(
-                title = stringResource(R.string.outings_calendar_title),
-                navigationIcon = {
-                    TooltipIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        description = stringResource(R.string.action_back),
-                        onClick = onBack,
-                    )
-                },
-            )
-        },
-    ) { innerPadding ->
-        UiStateContent(
-            state = state,
-            emptyContent = {
-                Text(
-                    text = stringResource(R.string.outings_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(innerPadding).padding(20.dp),
+    VellutoBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                PeopleHubTopBar(
+                    title = stringResource(R.string.outings_calendar_title),
+                    navigationIcon = {
+                        GlassIconButton(
+                            icon = VellutoIcons.ArrowLeft,
+                            description = stringResource(R.string.action_back),
+                            onClick = onBack,
+                            modifier = Modifier.padding(start = spacing.s, end = spacing.xs),
+                        )
+                    },
                 )
             },
-        ) { data ->
-            val selected = selectedDate
-            val shown = selected?.let { data.byDate[it].orEmpty() } ?: data.outings
-            LazyColumn(
-                contentPadding =
-                    PaddingValues(
-                        top = innerPadding.calculateTopPadding() + 8.dp,
-                        bottom = innerPadding.calculateBottomPadding() + 96.dp,
-                        start = 20.dp,
-                        end = 20.dp,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item(key = "calendar") {
-                    MonthCalendar(
-                        month = month,
-                        today = today,
-                        selectedDate = selected,
-                        byDate = data.byDate,
-                        onPreviousMonth = { month = month.minusMonths(1) },
-                        onNextMonth = { month = month.plusMonths(1) },
-                        onDayClick = { day -> selectedDate = if (selected == day) null else day },
+        ) { innerPadding ->
+            UiStateContent(
+                state = state,
+                emptyContent = {
+                    EmptyView(
+                        title = stringResource(R.string.outings_calendar_title),
+                        description = stringResource(R.string.outings_empty),
+                        icon = VellutoIcons.CalendarDays,
+                        modifier = Modifier.padding(innerPadding),
                     )
-                }
-                item(key = "list-header") {
-                    SectionHeader(
-                        title =
-                            selected?.format(DayTitleFormatter)
-                                ?: stringResource(R.string.outings_all_title),
-                    )
-                }
-                if (selected != null) {
-                    item(key = "clear-day") {
-                        GhostButton(
-                            text = stringResource(R.string.outings_show_all),
-                            onClick = { selectedDate = null },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
-                if (shown.isEmpty()) {
-                    item(key = "day-empty") {
-                        Text(
-                            text = stringResource(R.string.outings_day_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                } else {
-                    items(shown, key = { it.id }) { outing ->
-                        OutingCard(outing = outing, onEdit = { onEditOuting(outing.id) })
-                    }
-                }
+                },
+            ) { data ->
+                OutingsCalendarContent(
+                    data = data,
+                    month = month,
+                    today = today,
+                    selectedDate = selectedDate,
+                    contentPadding = innerPadding,
+                    onPreviousMonth = { month = month.minusMonths(1) },
+                    onNextMonth = { month = month.plusMonths(1) },
+                    onSelectDate = { selectedDate = it },
+                    onEditOuting = onEditOuting,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The stateless body: the month grid in a glass panel, a serif header for the day (or "all outings")
+ * and the matching outing cards.
+ */
+@Composable
+internal fun OutingsCalendarContent(
+    data: OutingsCalendarData,
+    month: YearMonth,
+    today: LocalDate,
+    selectedDate: LocalDate?,
+    contentPadding: PaddingValues,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onSelectDate: (LocalDate?) -> Unit,
+    onEditOuting: (Long) -> Unit,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    val shown = selectedDate?.let { data.byDate[it].orEmpty() } ?: data.outings
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding =
+            PaddingValues(
+                top = contentPadding.calculateTopPadding() + spacing.s,
+                bottom = contentPadding.calculateBottomPadding() + spacing.section,
+                start = spacing.gutter,
+                end = spacing.gutter,
+            ),
+        verticalArrangement = Arrangement.spacedBy(spacing.m),
+    ) {
+        item(key = "calendar") {
+            MonthCalendar(
+                month = month,
+                today = today,
+                selectedDate = selectedDate,
+                byDate = data.byDate,
+                onPreviousMonth = onPreviousMonth,
+                onNextMonth = onNextMonth,
+                onDayClick = { day -> onSelectDate(if (selectedDate == day) null else day) },
+                modifier = Modifier.riseIn(0),
+            )
+        }
+        item(key = "list-header") {
+            SectionHeader(
+                title =
+                    selectedDate?.format(DayTitleFormatter)?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                        ?: stringResource(R.string.outings_all_title),
+                count = shown.size.toString(),
+                modifier = Modifier.padding(top = spacing.s).riseIn(1),
+            )
+        }
+        if (selectedDate != null) {
+            item(key = "clear-day") {
+                VellutoButton(
+                    text = stringResource(R.string.outings_show_all),
+                    onClick = { onSelectDate(null) },
+                    style = VellutoButtonStyle.Ghost,
+                    icon = VellutoIcons.List,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+        if (shown.isEmpty()) {
+            item(key = "day-empty") {
+                Text(
+                    text = stringResource(R.string.outings_day_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.text2,
+                    modifier = Modifier.padding(horizontal = spacing.xxs),
+                )
+            }
+        } else {
+            itemsIndexed(shown, key = { _, outing -> outing.id }) { index, outing ->
+                OutingCard(
+                    outing = outing,
+                    onEdit = { onEditOuting(outing.id) },
+                    modifier = Modifier.riseIn((index + 2).coerceAtMost(MAX_RISE_INDEX)),
+                )
             }
         }
     }
@@ -167,37 +222,40 @@ private fun MonthCalendar(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onDayClick: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    GlassPanel(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    val spacing = PeopleHubTheme.spacing
+    GlassPanel(modifier = modifier.fillMaxWidth(), shape = VellutoShapes.CardLarge, shadow = VellutoElevation.Raised) {
+        // Narrow side padding and no gaps between columns keep every day cell at least 48dp wide.
+        Column(modifier = Modifier.padding(horizontal = spacing.s, vertical = spacing.l)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(start = spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(spacing.s),
             ) {
-                Text(
-                    text = "${month.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${month.year}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                val monthName =
+                    month.month
+                        .getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+                        .replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                DisplayTitle(
+                    text = "$monthName ${month.year}",
+                    accent = month.year.toString(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.weight(1f),
                 )
-                Row {
-                    TooltipIconButton(
-                        icon = Icons.Filled.ChevronLeft,
-                        description = stringResource(R.string.outings_previous_month),
-                        onClick = onPreviousMonth,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    TooltipIconButton(
-                        icon = Icons.Filled.ChevronRight,
-                        description = stringResource(R.string.outings_next_month),
-                        onClick = onNextMonth,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                GlassIconButton(
+                    icon = VellutoIcons.ChevronLeft,
+                    description = stringResource(R.string.outings_previous_month),
+                    onClick = onPreviousMonth,
+                )
+                GlassIconButton(
+                    icon = VellutoIcons.ChevronRight,
+                    description = stringResource(R.string.outings_next_month),
+                    onClick = onNextMonth,
+                    modifier = Modifier.padding(end = spacing.xs),
+                )
             }
-            Spacer(Modifier.height(12.dp))
-            WeekdayHeaderRow()
-            Spacer(Modifier.height(8.dp))
+            WeekdayHeaderRow(modifier = Modifier.padding(top = spacing.l, bottom = spacing.xs))
             MonthDayGrid(
                 month = month,
                 today = today,
@@ -210,7 +268,7 @@ private fun MonthCalendar(
 }
 
 @Composable
-private fun WeekdayHeaderRow() {
+private fun WeekdayHeaderRow(modifier: Modifier = Modifier) {
     // Monday-first, matching the grid below.
     val weekdays =
         listOf(
@@ -222,12 +280,12 @@ private fun WeekdayHeaderRow() {
             R.string.outings_weekday_saturday,
             R.string.outings_weekday_sunday,
         )
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = modifier.fillMaxWidth()) {
         weekdays.forEach { res ->
             Text(
-                text = stringResource(res),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = stringResource(res).uppercase(),
+                style = PeopleHubTheme.type.tileCaps,
+                color = PeopleHubTheme.colors.text2,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f),
             )
@@ -247,9 +305,9 @@ private fun MonthDayGrid(
     val firstDayOffset = month.atDay(1).dayOfWeek.value - 1
     val cells = firstDayOffset + month.lengthOfMonth()
     val rows = (cells + DAYS_IN_WEEK - 1) / DAYS_IN_WEEK
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column {
         (0 until rows).forEach { row ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 (0 until DAYS_IN_WEEK).forEach { col ->
                     val dayOfMonth = row * DAYS_IN_WEEK + col - firstDayOffset + 1
                     Box(modifier = Modifier.weight(1f)) {
@@ -271,8 +329,9 @@ private fun MonthDayGrid(
 }
 
 /**
- * One calendar day. Days with outings get a gold ring (filled when selected) and a small count badge
- * when more than one outing was recorded; empty days are inert.
+ * One calendar day. Today is the solid accent disc; the selected day is inverted (text-coloured disc);
+ * days with outings sit on a soft accent disc with a marker under the number (a dot, or the count when
+ * more than one outing was recorded). Only days with outings are tappable; empty days are inert.
  */
 @Composable
 private fun DayCell(
@@ -282,53 +341,58 @@ private fun DayCell(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val c = PeopleHubTheme.colors
     val hasOutings = count > 0
-    val cellModifier =
-        Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clip(CircleShape)
-            .then(
-                when {
-                    isSelected -> Modifier.background(MaterialTheme.colorScheme.primary)
-                    isToday -> Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    else -> Modifier
-                },
-            ).then(
-                if (hasOutings) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier,
-            ).then(if (hasOutings) Modifier.clickable(onClick = onClick) else Modifier)
-    Box(modifier = cellModifier, contentAlignment = Alignment.Center) {
-        Text(
-            text = date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            color =
-                when {
-                    isSelected -> MaterialTheme.colorScheme.onPrimary
-                    hasOutings -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurface
-                },
-        )
-        if (count > 1) {
-            Box(
-                modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .size(16.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isSelected) {
-                                MaterialTheme.colorScheme.onPrimary
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
+    val (fill, content) =
+        when {
+            isSelected -> c.text to c.bg
+            isToday -> c.accent to c.onAccent
+            hasOutings -> c.accentSoft to c.accentOnSoft
+            else -> Color.Transparent to c.text
+        }
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(CircleShape)
+                .then(if (hasOutings) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+                .padding(3.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .then(
+                        if (isToday && !isSelected) {
+                            Modifier.softShadow(c.glowSoft, CircleShape, ShadowSpec(14.dp, 4.dp))
+                        } else {
+                            Modifier
+                        },
+                    ).background(fill, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = if (hasOutings || isToday) FontWeight.SemiBold else FontWeight.Normal,
+                            fontFeatureSettings = "tnum",
                         ),
-                contentAlignment = Alignment.Center,
-            ) {
-                CapsLabel(
-                    text = count.toString(),
-                    color =
-                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
+                    color = content,
                 )
+                if (count > 1) {
+                    Text(text = count.toString(), style = PeopleHubTheme.type.tileCaps, color = content)
+                } else if (hasOutings) {
+                    Box(
+                        Modifier
+                            .padding(top = 2.dp)
+                            .size(5.dp)
+                            .background(content, CircleShape),
+                    )
+                }
             }
         }
     }
