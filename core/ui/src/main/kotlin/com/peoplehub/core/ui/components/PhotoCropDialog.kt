@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.media.ExifInterface
 import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,10 +17,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,19 +29,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.peoplehub.core.domain.model.CropTransform
 import com.peoplehub.core.ui.R
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.VellutoElevation
+import com.peoplehub.core.ui.modifier.cardSurface
 import com.peoplehub.core.ui.modifier.safeDialogPadding
+import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoColors
+import com.peoplehub.core.ui.theme.VellutoShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.max
@@ -89,28 +101,42 @@ fun PhotoCropDialog(
     var zoom by remember(sourceUri) { mutableFloatStateOf(initialCrop.zoom.coerceIn(1f, MAX_ZOOM)) }
     var pan by remember(sourceUri) { mutableStateOf(Offset(initialCrop.panX, initialCrop.panY)) }
 
-    Dialog(
-        onDismissRequest = onCancel,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth().safeDialogPadding().padding(24.dp),
+    // The crop stage is always dark, like a photo viewer, whatever the app theme: the image reads
+    // truest on a dark surround. The accent is carried over so a re-coloured app stays consistent.
+    PeopleHubTheme(darkTheme = true, accent = PeopleHubTheme.colors.accent) {
+        val c = PeopleHubTheme.colors
+        val spacing = PeopleHubTheme.spacing
+        Dialog(
+            onDismissRequest = onCancel,
+            properties = DialogProperties(usePlatformDefaultWidth = false),
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .safeDialogPadding()
+                        .padding(spacing.xl)
+                        .cardSurface(c, VellutoShapes.Hero, VellutoElevation.Hero)
+                        .clip(VellutoShapes.Hero)
+                        .padding(spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(spacing.l),
             ) {
-                Text(
-                    text = stringResource(R.string.crop_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing.m),
+                ) {
+                    IconTile(VellutoIcons.Crop)
+                    Text(
+                        text = stringResource(R.string.crop_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = c.text,
+                        modifier = Modifier.weight(1f).semantics { heading() },
+                    )
+                }
                 Text(
                     text = stringResource(R.string.crop_hint),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = c.text2,
                 )
 
                 val current = bitmap
@@ -119,7 +145,9 @@ fun PhotoCropDialog(
                         Modifier
                             .fillMaxWidth()
                             .aspectRatio(aspectRatio)
-                            .clipToBounds(),
+                            .background(c.bg)
+                            .clipToBounds()
+                            .cropFrame(c),
                     contentAlignment = Alignment.Center,
                 ) {
                     val boxW = constraints.maxWidth.toFloat()
@@ -152,32 +180,42 @@ fun PhotoCropDialog(
                             Text(
                                 text = stringResource(R.string.crop_load_failed),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error,
+                                color = c.err,
+                                modifier = Modifier.padding(spacing.l),
                             )
 
-                        else -> CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        else ->
+                            CircularProgressIndicator(
+                                color = c.accent,
+                                trackColor = c.track,
+                                strokeWidth = 3.dp,
+                                strokeCap = StrokeCap.Round,
+                            )
                     }
                 }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.m),
                 ) {
-                    GhostButton(
+                    VellutoButton(
                         text = stringResource(R.string.crop_cancel),
                         onClick = onCancel,
+                        style = VellutoButtonStyle.Ghost,
                         modifier = Modifier.weight(1f),
                     )
-                    PrimaryGoldButton(
+                    VellutoButton(
                         text = stringResource(R.string.crop_confirm),
                         onClick = {
-                            val src = bitmap ?: return@PrimaryGoldButton
+                            val src = bitmap ?: return@VellutoButton
                             onCropped(
                                 cropBitmap(src, aspectRatio, zoom, pan),
                                 CropTransform(zoom = zoom, panX = pan.x, panY = pan.y),
                             )
                         },
                         enabled = bitmap != null,
+                        icon = VellutoIcons.Check,
+                        height = spacing.touchTarget,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -185,6 +223,49 @@ fun PhotoCropDialog(
         }
     }
 }
+
+/** Length of each accent corner bracket of the crop frame. */
+private val CornerLength = 22.dp
+
+/** Stroke of the accent corner brackets and of the frame outline. */
+private val CornerStroke = 3.dp
+private val FrameStroke = 1.dp
+
+/**
+ * Draws the crop frame over the image: rule-of-thirds guides, a thin accent outline and thick accent
+ * corner brackets. The frame is the exact rectangle that becomes the photo, so it stays square-cornered.
+ */
+private fun Modifier.cropFrame(c: VellutoColors): Modifier =
+    drawWithContent {
+        drawContent()
+        val w = size.width
+        val h = size.height
+        val guide = c.hi
+        for (i in 1..2) {
+            val x = w * i / THIRDS
+            val y = h * i / THIRDS
+            drawLine(guide, Offset(x, 0f), Offset(x, h), strokeWidth = FrameStroke.toPx())
+            drawLine(guide, Offset(0f, y), Offset(w, y), strokeWidth = FrameStroke.toPx())
+        }
+        val frame = FrameStroke.toPx()
+        drawRect(c.accentEdge, topLeft = Offset(frame / 2f, frame / 2f), size = Size(w - frame, h - frame), style = Stroke(frame))
+        val len = CornerLength.toPx().coerceAtMost(minOf(w, h) / 2f)
+        val stroke = CornerStroke.toPx()
+        val half = stroke / 2f
+        val corners =
+            listOf(
+                Offset(half, half) to Offset(1f, 1f),
+                Offset(w - half, half) to Offset(-1f, 1f),
+                Offset(half, h - half) to Offset(1f, -1f),
+                Offset(w - half, h - half) to Offset(-1f, -1f),
+            )
+        corners.forEach { (corner, dir) ->
+            drawLine(c.accent, corner, Offset(corner.x + dir.x * len, corner.y), strokeWidth = stroke, cap = StrokeCap.Round)
+            drawLine(c.accent, corner, Offset(corner.x, corner.y + dir.y * len), strokeWidth = stroke, cap = StrokeCap.Round)
+        }
+    }
+
+private const val THIRDS = 3f
 
 private val FilterPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 

@@ -3,12 +3,8 @@ package com.peoplehub.feature.widget
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
@@ -24,10 +20,11 @@ import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.navigation.DeepLinks
 import com.peoplehub.core.domain.util.DateCalculations
@@ -66,90 +63,95 @@ class PinnedEventWidgetReceiver : GlanceAppWidgetReceiver() {
 
 @Composable
 private fun EventWidgetContent(context: Context, event: PersonEvent?, today: LocalDate, background: Bitmap?) {
-    GlanceTheme {
-        if (event == null) {
-            EmptyEventWidget(context)
-        } else {
-            Box(
-                modifier =
-                    GlanceModifier
-                        .fillMaxSize()
-                        .cornerRadius(16.dp)
-                        .clickable(deepLinkAction(context, DeepLinks.event(event.id))),
-            ) {
-                if (background == null) {
-                    Box(modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.surface)) {}
-                } else {
-                    Image(
-                        provider = ImageProvider(background),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = GlanceModifier.fillMaxSize(),
-                    )
-                }
-                EventDetails(context, event, today, overPhoto = background != null)
+    if (event == null) {
+        EmptyEventWidget(context)
+    } else {
+        Box(
+            modifier =
+                GlanceModifier
+                    .fillMaxSize()
+                    .background(WidgetHeroBg)
+                    .cornerRadius(WidgetRadii.hero)
+                    .clickable(deepLinkAction(context, DeepLinks.event(event.id))),
+        ) {
+            if (background != null) {
+                Image(
+                    provider = ImageProvider(background),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = GlanceModifier.fillMaxSize(),
+                )
             }
+            EventDetails(context, event, today)
         }
     }
 }
 
-/** Category, title and day counter, stacked at the bottom of the card as they are in the app. */
+/**
+ * Category, title and day counter, stacked at the bottom of the card as they are on the in-app
+ * cover. The card is always dark (the baked-in photo scrim, or the velvet hero background when there
+ * is no photo), so the media text colours hold whatever the launcher's theme is.
+ */
 @Composable
-private fun EventDetails(context: Context, event: PersonEvent, today: LocalDate, overPhoto: Boolean) {
-    // Over a photo the baked-in scrim guarantees contrast, so white-on-dark holds whatever the
-    // launcher's theme is; without one we defer to the theme's own foreground colour.
-    val primary = if (overPhoto) WidgetWhite else GlanceTheme.colors.onSurface
+private fun EventDetails(context: Context, event: PersonEvent, today: LocalDate) {
     val signedDays = DateCalculations.signedDaysFromToday(event.dateTime.toLocalDate(), today)
 
     Column(
-        modifier = GlanceModifier.fillMaxSize().padding(14.dp),
+        modifier = GlanceModifier.fillMaxSize().padding(WidgetSpacing.l),
         verticalAlignment = Alignment.Vertical.Bottom,
     ) {
         event.category?.let { category ->
             Text(
                 text = category.uppercase(),
-                style = TextStyle(color = WidgetGold, fontWeight = FontWeight.Bold, fontSize = 10.sp),
+                maxLines = 1,
+                style = TextStyle(color = WidgetGold, fontWeight = FontWeight.Bold, fontSize = WidgetType.tileCaps.fontSize),
             )
         }
         Text(
             text = event.title,
             maxLines = 2,
-            style = TextStyle(color = primary, fontWeight = FontWeight.Bold, fontSize = 18.sp),
+            style =
+                TextStyle(
+                    color = WidgetOnMedia,
+                    fontSize = WidgetTextSize.eventTitle,
+                    fontFamily = FontFamily.Serif,
+                ),
         )
-        DayCount(context, signedDays, primary)
+        DayCount(context, signedDays)
     }
 }
 
-/** The big gold number plus its unit, mirroring the app's `DayCountDisplay`. */
+/** The big accent number plus its unit, mirroring the app's `DayCountDisplay`. */
 @Composable
-private fun DayCount(context: Context, signedDays: Long, primary: ColorProvider) {
+private fun DayCount(context: Context, signedDays: Long) {
     if (signedDays == 0L) {
         Text(
             text = context.getString(R.string.widget_today),
-            style = TextStyle(color = WidgetGold, fontWeight = FontWeight.Bold, fontSize = 22.sp),
+            style = TextStyle(color = WidgetGold, fontWeight = FontWeight.Medium, fontSize = WidgetType.kpiTile.fontSize),
         )
         return
     }
     val future = signedDays > 0L
-    // Future events are the ones you're counting down to, so they get the gold emphasis.
-    val numberColor = if (future) WidgetGold else primary
+    // Future events are the ones you're counting down to, so they get the accent emphasis.
+    val numberColor = if (future) WidgetGold else WidgetOnMedia
+    val unitStyle = TextStyle(color = WidgetOnMediaMuted, fontWeight = FontWeight.Medium, fontSize = WidgetTextSize.caps)
 
     Row(verticalAlignment = Alignment.Vertical.Bottom) {
         if (future) {
             Text(
-                text = context.getString(R.string.widget_event_in),
-                style = TextStyle(color = primary, fontSize = 12.sp),
-                modifier = GlanceModifier.padding(end = 4.dp, bottom = 3.dp),
+                text = context.getString(R.string.widget_event_in).uppercase(),
+                style = unitStyle,
+                modifier = GlanceModifier.padding(end = WidgetSpacing.xs, bottom = WidgetSpacing.xs),
             )
         }
         Text(
             text = signedDays.absoluteValue.toString(),
-            style = TextStyle(color = numberColor, fontWeight = FontWeight.Bold, fontSize = 28.sp),
+            style = TextStyle(color = numberColor, fontWeight = FontWeight.Medium, fontSize = WidgetType.kpiSmall.fontSize),
         )
         Text(
-            text = context.getString(if (future) R.string.widget_event_days else R.string.widget_event_days_ago),
-            style = TextStyle(color = primary, fontSize = 12.sp),
-            modifier = GlanceModifier.padding(start = 4.dp, bottom = 3.dp),
+            text = context.getString(if (future) R.string.widget_event_days else R.string.widget_event_days_ago).uppercase(),
+            style = unitStyle,
+            modifier = GlanceModifier.padding(start = WidgetSpacing.xs, bottom = WidgetSpacing.xs),
         )
     }
 }
@@ -161,17 +163,14 @@ private fun EmptyEventWidget(context: Context) {
         modifier =
             GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.surface)
-                .cornerRadius(16.dp)
-                .padding(12.dp),
+                .background(WidgetSurface)
+                .cornerRadius(WidgetRadii.hero)
+                .padding(WidgetSpacing.l),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = context.getString(R.string.widget_event_empty),
-            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant),
+            style = TextStyle(color = WidgetText2, fontSize = WidgetTextSize.label, textAlign = TextAlign.Center),
         )
     }
 }
-
-/** Text colour used on top of a scrimmed photo, where the launcher's theme must not win. */
-private val WidgetWhite = ColorProvider(Color.White)

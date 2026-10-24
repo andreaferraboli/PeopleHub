@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,18 +12,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,22 +29,38 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.R
 import com.peoplehub.core.domain.model.ImportStrategy
 import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.CategoryChip
+import com.peoplehub.core.ui.components.GlassIconButton
 import com.peoplehub.core.ui.components.GlassPanel
-import com.peoplehub.core.ui.components.GoldDivider
+import com.peoplehub.core.ui.components.GroupedRows
+import com.peoplehub.core.ui.components.Hairline
+import com.peoplehub.core.ui.components.IconTile
 import com.peoplehub.core.ui.components.PeopleHubTopBar
-import com.peoplehub.core.ui.components.PrimaryGoldButton
-import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.core.ui.components.TextAction
+import com.peoplehub.core.ui.components.VellutoBackground
+import com.peoplehub.core.ui.components.VellutoButton
+import com.peoplehub.core.ui.components.VellutoButtonStyle
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.VellutoElevation
+import com.peoplehub.core.ui.modifier.lightEdge
+import com.peoplehub.core.ui.modifier.riseIn
+import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoShapes
 import com.peoplehub.io.readTextRobust
 
 private val JSON_TYPES = arrayOf("application/json", "text/plain", "application/octet-stream")
@@ -67,6 +82,8 @@ fun ImportGuideScreen(
     val outcome by viewModel.outcome.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var pendingBackupJson by remember { mutableStateOf<String?>(null) }
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
 
     val csvLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -81,72 +98,87 @@ fun ImportGuideScreen(
             if (uri != null) pendingBackupJson = readText(context, uri)
         }
 
-    Scaffold(
-        topBar = {
-            PeopleHubTopBar(
-                title = stringResource(R.string.import_guide_title),
-                navigationIcon = {
-                    TooltipIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        description = stringResource(R.string.action_back),
-                        onClick = onBack,
+    VellutoBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                PeopleHubTopBar(
+                    title = stringResource(R.string.import_guide_title),
+                    navigationIcon = {
+                        GlassIconButton(
+                            icon = VellutoIcons.ArrowLeft,
+                            description = stringResource(R.string.action_back),
+                            onClick = onBack,
+                            modifier = Modifier.padding(start = spacing.xxs),
+                        )
+                    },
+                )
+            },
+        ) { innerPadding ->
+            Column(
+                modifier =
+                    Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = spacing.gutter, vertical = spacing.l),
+                verticalArrangement = Arrangement.spacedBy(spacing.ml),
+            ) {
+                if (isBusy) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().clip(VellutoShapes.Pill),
+                        color = c.accent,
+                        trackColor = c.track,
                     )
-                },
-            )
-        },
-    ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            if (isBusy) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primary)
+                }
+
+                outcome?.let { result ->
+                    ResultBanner(result = result, onDismiss = viewModel::onOutcomeShown)
+                }
+
+                Text(
+                    text = stringResource(R.string.ig_intro),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.text2,
+                    modifier = Modifier.padding(horizontal = spacing.xxs).riseIn(0),
+                )
+
+                FormatSection(
+                    title = stringResource(R.string.ig_csv_title),
+                    icon = VellutoIcons.Cake,
+                    fileType = ".csv",
+                    description = stringResource(R.string.ig_csv_desc),
+                    fields = csvFields(),
+                    example = CSV_EXAMPLE,
+                    importLabel = stringResource(R.string.ig_csv_import),
+                    onImport = { csvLauncher.launch(CSV_TYPES) },
+                    modifier = Modifier.riseIn(1),
+                )
+
+                FormatSection(
+                    title = stringResource(R.string.ig_person_title),
+                    icon = VellutoIcons.UserPlus,
+                    fileType = ".json",
+                    description = stringResource(R.string.ig_person_desc),
+                    fields = personFields(),
+                    example = PERSON_EXAMPLE,
+                    importLabel = stringResource(R.string.ig_person_import),
+                    onImport = { personLauncher.launch(JSON_TYPES) },
+                    modifier = Modifier.riseIn(2),
+                )
+
+                FormatSection(
+                    title = stringResource(R.string.ig_backup_title),
+                    icon = VellutoIcons.Archive,
+                    fileType = ".json",
+                    description = stringResource(R.string.ig_backup_desc),
+                    fields = backupFields(),
+                    example = BACKUP_EXAMPLE,
+                    importLabel = stringResource(R.string.ig_backup_import),
+                    onImport = { backupLauncher.launch(JSON_TYPES) },
+                    modifier = Modifier.riseIn(3),
+                )
             }
-
-            outcome?.let { result ->
-                ResultBanner(result = result, onDismiss = viewModel::onOutcomeShown)
-            }
-
-            Text(
-                text = stringResource(R.string.ig_intro),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            FormatSection(
-                title = stringResource(R.string.ig_csv_title),
-                fileType = ".csv",
-                description = stringResource(R.string.ig_csv_desc),
-                fields = csvFields(),
-                example = CSV_EXAMPLE,
-                importLabel = stringResource(R.string.ig_csv_import),
-                onImport = { csvLauncher.launch(CSV_TYPES) },
-            )
-
-            FormatSection(
-                title = stringResource(R.string.ig_person_title),
-                fileType = ".json",
-                description = stringResource(R.string.ig_person_desc),
-                fields = personFields(),
-                example = PERSON_EXAMPLE,
-                importLabel = stringResource(R.string.ig_person_import),
-                onImport = { personLauncher.launch(JSON_TYPES) },
-            )
-
-            FormatSection(
-                title = stringResource(R.string.ig_backup_title),
-                fileType = ".json",
-                description = stringResource(R.string.ig_backup_desc),
-                fields = backupFields(),
-                example = BACKUP_EXAMPLE,
-                importLabel = stringResource(R.string.ig_backup_import),
-                onImport = { backupLauncher.launch(JSON_TYPES) },
-            )
         }
     }
 
@@ -166,105 +198,161 @@ fun ImportGuideScreen(
     }
 }
 
+/** The import result: a soft success or error panel with its status icon and a dismiss action. */
 @Composable
 private fun ResultBanner(result: ImportOutcome, onDismiss: () -> Unit) {
-    val container = if (result.success) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.errorContainer
-    val onContainer = if (result.success) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onErrorContainer
-    Surface(color = container, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(text = result.message, style = MaterialTheme.typography.bodyMedium, color = onContainer, modifier = Modifier.weight(1f))
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.ig_result_dismiss)) }
-        }
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    val tint = if (result.success) c.ok else c.err
+    val container = if (result.success) c.okSoft else c.errSoft
+    val edge = if (result.success) c.line else c.errEdge
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(container, VellutoShapes.Inner)
+                .lightEdge(VellutoShapes.Inner, Color.Transparent, edge)
+                .padding(start = spacing.l, top = spacing.xxs, bottom = spacing.xxs, end = spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (result.success) VellutoIcons.CircleCheck else VellutoIcons.CircleAlert,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = result.message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = c.text,
+            modifier = Modifier.weight(1f).padding(vertical = spacing.m),
+        )
+        TextAction(label = stringResource(R.string.ig_result_dismiss), onClick = onDismiss, color = tint)
     }
 }
 
+/** One import format: icon tile + serif title + file-type chip, description, fields, example, import. */
 @Composable
 private fun FormatSection(
     title: String,
+    icon: ImageVector,
     fileType: String,
     description: String,
     fields: List<FieldDoc>,
     example: String,
     importLabel: String,
     onImport: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    GlassPanel(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    GlassPanel(modifier = modifier.fillMaxWidth(), shape = VellutoShapes.CardLarge, shadow = VellutoElevation.Raised) {
+        Column(modifier = Modifier.padding(spacing.xl), verticalArrangement = Arrangement.spacedBy(spacing.ml)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.m)) {
+                IconTile(icon)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = c.text,
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                )
                 CategoryChip(label = fileType)
             }
-            Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(description, style = MaterialTheme.typography.bodyMedium, color = c.text2)
 
-            GoldDivider()
-            CapsLabel(text = stringResource(R.string.ig_fields))
-            fields.forEach { FieldRow(it) }
+            CapsLabel(text = stringResource(R.string.ig_fields), modifier = Modifier.padding(top = spacing.xs))
+            GroupedRows {
+                fields.forEachIndexed { index, field ->
+                    if (index > 0) Hairline(modifier = Modifier.padding(horizontal = spacing.ml))
+                    FieldRow(field)
+                }
+            }
 
-            GoldDivider()
-            CapsLabel(text = stringResource(R.string.ig_example))
+            CapsLabel(text = stringResource(R.string.ig_example), modifier = Modifier.padding(top = spacing.xs))
             CodeBlock(example)
 
-            PrimaryGoldButton(text = importLabel, onClick = onImport, modifier = Modifier.fillMaxWidth())
+            VellutoButton(
+                text = importLabel,
+                onClick = onImport,
+                icon = VellutoIcons.Upload,
+                modifier = Modifier.fillMaxWidth().padding(top = spacing.xs),
+            )
         }
     }
 }
 
+/** A documented field: monospace name in accent and its type/requirement, then the description. */
 @Composable
 private fun FieldRow(field: FieldDoc) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
     val requiredLabel = if (field.required) stringResource(R.string.ig_required) else stringResource(R.string.ig_optional)
-    val requiredColor = if (field.required) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(modifier = Modifier.weight(0.42f)) {
+    val requiredColor = if (field.required) c.accentText else c.text2
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.ml, vertical = spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(spacing.m),
+    ) {
+        Column(modifier = Modifier.weight(0.42f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                field.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.primary,
+                text = field.name,
+                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium),
+                color = c.accentText,
             )
-            Text("${field.type} · $requiredLabel", style = MaterialTheme.typography.labelSmall, color = requiredColor)
+            Text(
+                text = "${field.type} · $requiredLabel",
+                style = MaterialTheme.typography.labelSmall,
+                color = requiredColor,
+            )
         }
         Text(
             text = field.description,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = c.text2,
             modifier = Modifier.weight(0.58f),
         )
     }
 }
 
+/** A monospace example on the inner surface, scrolling sideways for long lines. */
 @Composable
 private fun CodeBlock(code: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(
-            text = code,
-            style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier =
-                Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(16.dp),
-        )
-    }
+    val c = PeopleHubTheme.colors
+    Text(
+        text = code,
+        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+        color = c.text,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface2, VellutoShapes.Inner)
+                .lightEdge(VellutoShapes.Inner, Color.Transparent, c.line)
+                .clip(VellutoShapes.Inner)
+                .horizontalScroll(rememberScrollState())
+                .padding(PeopleHubTheme.spacing.l),
+    )
 }
 
 @Composable
 private fun BackupStrategyDialog(onMerge: () -> Unit, onReplace: () -> Unit, onDismiss: () -> Unit) {
-    androidx.compose.material3.AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.vault_import_title)) },
-        text = { Text(stringResource(R.string.vault_import_message)) },
-        confirmButton = { TextButton(onClick = onMerge) { Text(stringResource(R.string.vault_import_merge)) } },
-        dismissButton = { TextButton(onClick = onReplace) { Text(stringResource(R.string.vault_import_replace)) } },
+        text = { Text(stringResource(R.string.vault_import_message), color = PeopleHubTheme.colors.text2) },
+        confirmButton = {
+            VellutoButton(
+                text = stringResource(R.string.vault_import_merge),
+                onClick = onMerge,
+                height = PeopleHubTheme.spacing.touchTarget,
+            )
+        },
+        dismissButton = {
+            VellutoButton(
+                text = stringResource(R.string.vault_import_replace),
+                onClick = onReplace,
+                style = VellutoButtonStyle.Ghost,
+            )
+        },
     )
 }
 
