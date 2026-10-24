@@ -33,6 +33,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Robolectric Compose tests read strings, fonts and drawables from the merged resources.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 kotlin {
@@ -68,4 +73,10 @@ dependencies {
 
     testImplementation(libs.bundles.unit.test)
     testRuntimeOnly(libs.junit5.engine)
+
+    // JVM Compose UI tests (Robolectric, JUnit4 run through the vintage engine).
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testRuntimeOnly(libs.junit5.vintage.engine)
 }

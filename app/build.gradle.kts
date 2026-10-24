@@ -16,7 +16,7 @@ plugins {
 // the installed build against the latest GitHub release tag (X.Y.Z). The release CI auto-increments
 // the version and injects it via APP_VERSION_NAME, so a plain push cuts a new release with no manual
 // edit here; the literal below is only the fallback used for local/offline builds.
-val appVersionName = System.getenv("APP_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.7.0"
+val appVersionName = System.getenv("APP_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: "1.7.1"
 
 fun versionCodeOf(name: String): Int {
     val parts = name.split(".").map { it.toIntOrNull() ?: 0 }

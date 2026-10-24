@@ -35,6 +35,12 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 
+/**
+ * 1970-01-01, the same value as `LocalDate.EPOCH`, which only exists from API 34 (minSdk is 26 and the
+ * app does not use core library desugaring, so referencing it crashes older devices).
+ */
+private val EPOCH_DAY: LocalDate = LocalDate.of(1970, 1, 1)
+
 /** Immutable state for the global reminders screen. */
 data class RemindersScreenState(
     val listState: UiState<List<ReminderListItem>>,
@@ -62,7 +68,7 @@ data class ReminderListItem(
     val lastDoneOn: LocalDate? = null,
     val timesDone: Int = 0,
     val doneHistory: List<DoneMoment> = emptyList(),
-    val today: LocalDate = LocalDate.EPOCH,
+    val today: LocalDate = EPOCH_DAY,
 ) {
     /** Whether the reminder is due now (its next fire is today or already passed). */
     val isDue: Boolean get() = daysUntil <= 0L
