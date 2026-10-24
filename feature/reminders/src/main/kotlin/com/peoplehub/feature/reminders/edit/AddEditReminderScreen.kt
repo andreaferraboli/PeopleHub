@@ -1,35 +1,34 @@
 package com.peoplehub.feature.reminders.edit
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,8 +36,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,12 +53,20 @@ import com.peoplehub.core.domain.model.ReminderCategory
 import com.peoplehub.core.domain.reminder.ReminderPreset
 import com.peoplehub.core.domain.util.ReminderScheduling
 import com.peoplehub.core.ui.components.CapsLabel
-import com.peoplehub.core.ui.components.GhostButton
+import com.peoplehub.core.ui.components.GlassIconButton
 import com.peoplehub.core.ui.components.GlassPanel
-import com.peoplehub.core.ui.components.GoldDivider
-import com.peoplehub.core.ui.components.PrimaryGoldButton
+import com.peoplehub.core.ui.components.PeopleHubTopBar
+import com.peoplehub.core.ui.components.StatusPill
 import com.peoplehub.core.ui.components.TagChip
-import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.core.ui.components.VellutoBackground
+import com.peoplehub.core.ui.components.VellutoButton
+import com.peoplehub.core.ui.components.VellutoButtonStyle
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.lightEdge
+import com.peoplehub.core.ui.modifier.riseIn
+import com.peoplehub.core.ui.modifier.safeBottomBarPadding
+import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoShapes
 import com.peoplehub.feature.reminders.R
 import com.peoplehub.feature.reminders.descriptionRes
 import com.peoplehub.feature.reminders.labelRes
@@ -85,99 +99,111 @@ fun AddEditReminderScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text =
-                            if (viewModel.isEditing) {
-                                stringResource(R.string.edit_reminder_title_edit)
-                            } else {
-                                stringResource(R.string.edit_reminder_title_new)
-                            },
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                },
-                navigationIcon = {
-                    TooltipIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        description = stringResource(R.string.action_back),
-                        onClick = onBack,
-                    )
-                },
-                actions = {
-                    TooltipIconButton(
-                        icon = Icons.Outlined.Science,
-                        description = stringResource(R.string.reminders_why),
-                        onClick = onOpenScience,
-                    )
-                },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            if (!viewModel.isEditing) {
-                GhostButton(
-                    text = stringResource(R.string.reminder_choose_preset),
-                    onClick = { showPresets = true },
-                    icon = Icons.Outlined.AutoAwesome,
-                    modifier = Modifier.fillMaxWidth(),
+    val spacing = PeopleHubTheme.spacing
+    VellutoBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                PeopleHubTopBar(
+                    title =
+                        if (viewModel.isEditing) {
+                            stringResource(R.string.edit_reminder_title_edit)
+                        } else {
+                            stringResource(R.string.edit_reminder_title_new)
+                        },
+                    navigationIcon = {
+                        GlassIconButton(
+                            icon = VellutoIcons.ArrowLeft,
+                            description = stringResource(R.string.action_back),
+                            onClick = onBack,
+                            modifier = Modifier.padding(start = spacing.s),
+                        )
+                    },
+                    actions = {
+                        GlassIconButton(
+                            icon = VellutoIcons.Flask,
+                            description = stringResource(R.string.reminders_why),
+                            onClick = onOpenScience,
+                            modifier = Modifier.padding(end = spacing.s),
+                        )
+                    },
                 )
-            }
-
-            if (!viewModel.personLocked) {
-                PersonPicker(
-                    people = people,
-                    selectedId = form.personId,
-                    onPersonChange = viewModel::onPersonChange,
+            },
+            bottomBar = {
+                VellutoButton(
+                    text = stringResource(R.string.action_save),
+                    onClick = viewModel::onSave,
+                    enabled = form.canSave,
+                    icon = VellutoIcons.Check,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .safeBottomBarPadding()
+                            .padding(horizontal = spacing.heroInset, vertical = spacing.l),
                 )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+        ) { innerPadding ->
+            Column(
+                modifier =
+                    Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = spacing.gutter, vertical = spacing.s),
+                verticalArrangement = Arrangement.spacedBy(spacing.ml),
+            ) {
+                if (!viewModel.isEditing) {
+                    VellutoButton(
+                        text = stringResource(R.string.reminder_choose_preset),
+                        onClick = { showPresets = true },
+                        style = VellutoButtonStyle.Soft,
+                        icon = VellutoIcons.Sparkles,
+                        modifier = Modifier.fillMaxWidth().riseIn(0),
+                    )
+                }
+
+                FormSection(modifier = Modifier.riseIn(1)) {
+                    if (!viewModel.personLocked) {
+                        PersonPicker(
+                            people = people,
+                            selectedId = form.personId,
+                            onPersonChange = viewModel::onPersonChange,
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = form.title,
+                        onValueChange = viewModel::onTitleChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.reminder_field_title)) },
+                        isError = form.title.isBlank(),
+                    )
+
+                    OutlinedTextField(
+                        value = form.note,
+                        onValueChange = viewModel::onNoteChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2,
+                        label = { Text(stringResource(R.string.reminder_field_note)) },
+                    )
+                }
+
+                FormSection(title = stringResource(R.string.reminder_field_category), modifier = Modifier.riseIn(2)) {
+                    CategorySelector(selected = form.category, onSelect = viewModel::onCategoryChange)
+                }
+
+                FormSection(title = stringResource(R.string.reminder_cadence_label), modifier = Modifier.riseIn(3)) {
+                    CadenceSection(
+                        targetIntervalDays = form.targetIntervalDays,
+                        jitterPercent = form.jitterPercent,
+                        window = form.window,
+                        onTargetChange = viewModel::onTargetChange,
+                        onJitterChange = viewModel::onJitterChange,
+                    )
+                }
             }
-
-            OutlinedTextField(
-                value = form.title,
-                onValueChange = viewModel::onTitleChange,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                label = { Text(stringResource(R.string.reminder_field_title)) },
-                isError = form.title.isBlank(),
-                shape = RoundedCornerShape(6.dp),
-            )
-
-            OutlinedTextField(
-                value = form.note,
-                onValueChange = viewModel::onNoteChange,
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 2,
-                label = { Text(stringResource(R.string.reminder_field_note)) },
-                shape = RoundedCornerShape(6.dp),
-            )
-
-            CategorySelector(selected = form.category, onSelect = viewModel::onCategoryChange)
-
-            CadenceSection(
-                targetIntervalDays = form.targetIntervalDays,
-                jitterPercent = form.jitterPercent,
-                window = form.window,
-                onTargetChange = viewModel::onTargetChange,
-                onJitterChange = viewModel::onJitterChange,
-            )
-
-            PrimaryGoldButton(
-                text = stringResource(R.string.action_save),
-                onClick = viewModel::onSave,
-                enabled = form.canSave,
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 
@@ -193,20 +219,50 @@ fun AddEditReminderScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/** A form group: glass card with an optional serif title over its fields. */
 @Composable
-private fun CategorySelector(selected: ReminderCategory, onSelect: (ReminderCategory) -> Unit) {
-    Column {
-        CapsLabel(text = stringResource(R.string.reminder_field_category))
-        Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ReminderCategory.entries.forEach { category ->
-                TagChip(
-                    label = stringResource(category.labelRes()),
-                    selected = selected == category,
-                    onClick = { onSelect(category) },
+private fun FormSection(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val spacing = PeopleHubTheme.spacing
+    GlassPanel(modifier = modifier.fillMaxWidth(), shape = VellutoShapes.CardLarge) {
+        Column(
+            modifier = Modifier.padding(spacing.l),
+            verticalArrangement = Arrangement.spacedBy(spacing.m),
+        ) {
+            if (title != null) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = PeopleHubTheme.colors.text,
+                    modifier = Modifier.padding(horizontal = spacing.xxs).semantics { heading() },
                 )
             }
+            content()
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CategorySelector(
+    selected: ReminderCategory,
+    onSelect: (ReminderCategory) -> Unit,
+) {
+    val spacing = PeopleHubTheme.spacing
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(spacing.s),
+        verticalArrangement = Arrangement.spacedBy(spacing.s),
+    ) {
+        ReminderCategory.entries.forEach { category ->
+            TagChip(
+                label = stringResource(category.labelRes()),
+                selected = selected == category,
+                onClick = { onSelect(category) },
+                icon = category.icon(),
+            )
         }
     }
 }
@@ -219,41 +275,57 @@ private fun CadenceSection(
     onTargetChange: (Int) -> Unit,
     onJitterChange: (Int) -> Unit,
 ) {
-    GlassPanel(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            CapsLabel(text = stringResource(R.string.reminder_cadence_label))
-            GoldDivider(modifier = Modifier.padding(vertical = 12.dp))
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    val sliderColors = SliderDefaults.colors(inactiveTrackColor = c.track)
 
-            Text(
-                text = stringResource(R.string.reminder_interval_value, targetIntervalDays),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Slider(
-                value = targetIntervalDays.toFloat(),
-                onValueChange = { onTargetChange(it.roundToInt()) },
-                valueRange = MIN_INTERVAL..MAX_INTERVAL,
-            )
+    Column(modifier = Modifier.padding(horizontal = spacing.xxs)) {
+        Text(
+            text = stringResource(R.string.reminder_interval_value, targetIntervalDays),
+            style = MaterialTheme.typography.titleMedium,
+            color = c.text,
+        )
+        Slider(
+            value = targetIntervalDays.toFloat(),
+            onValueChange = { onTargetChange(it.roundToInt()) },
+            valueRange = MIN_INTERVAL..MAX_INTERVAL,
+            colors = sliderColors,
+        )
+    }
 
-            Text(
-                text = stringResource(R.string.reminder_jitter_value, jitterPercent),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Slider(
-                value = jitterPercent.toFloat(),
-                onValueChange = { onJitterChange(it.roundToInt()) },
-                valueRange = 0f..ReminderScheduling.MAX_JITTER_PERCENT.toFloat(),
-            )
+    Column(modifier = Modifier.padding(horizontal = spacing.xxs)) {
+        Text(
+            text = stringResource(R.string.reminder_jitter_value, jitterPercent),
+            style = MaterialTheme.typography.titleMedium,
+            color = c.text,
+        )
+        Slider(
+            value = jitterPercent.toFloat(),
+            onValueChange = { onJitterChange(it.roundToInt()) },
+            valueRange = 0f..ReminderScheduling.MAX_JITTER_PERCENT.toFloat(),
+            colors = sliderColors,
+        )
+    }
 
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.reminder_window_explain, window.first, window.last),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium,
-            )
-        }
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(VellutoShapes.Inner)
+                .background(c.accentSoft)
+                .lightEdge(VellutoShapes.Inner, Color.Transparent, c.accentEdge)
+                .padding(horizontal = spacing.ml, vertical = spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+    ) {
+        Icon(VellutoIcons.Sparkles, contentDescription = null, tint = c.accentOnSoft, modifier = Modifier.size(18.dp))
+        Text(
+            text = stringResource(R.string.reminder_window_explain, window.first, window.last),
+            style = MaterialTheme.typography.bodyMedium,
+            color = c.accentOnSoft,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -264,28 +336,38 @@ private fun PresetSheet(
     onSelect: (ReminderPreset, String, String) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
     val sheetState = rememberModalBottomSheetState()
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = c.surface) {
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = spacing.heroInset)
+                    .padding(bottom = spacing.section),
+            verticalArrangement = Arrangement.spacedBy(spacing.sm),
         ) {
             Text(
                 text = stringResource(R.string.reminder_presets_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.headlineMedium,
+                color = c.text,
+                modifier = Modifier.semantics { heading() },
             )
             ReminderCategory.entries
                 .filter { it != ReminderCategory.CUSTOM }
                 .forEach { category ->
                     val group = presets.filter { it.category == category }
                     if (group.isNotEmpty()) {
-                        CapsLabel(text = stringResource(category.labelRes()))
+                        Row(
+                            modifier = Modifier.padding(top = spacing.m, start = spacing.xxs),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(spacing.s),
+                        ) {
+                            Icon(category.icon(), contentDescription = null, tint = c.accentTextSurface, modifier = Modifier.size(16.dp))
+                            CapsLabel(text = stringResource(category.labelRes()))
+                        }
                         group.forEach { preset ->
                             val name = stringResource(preset.nameRes())
                             val description = stringResource(preset.descriptionRes())
@@ -303,25 +385,43 @@ private fun PresetSheet(
 }
 
 @Composable
-private fun PresetRow(name: String, description: String, intervalDays: Int, onClick: () -> Unit) {
-    GlassPanel(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.reminder_interval_value, intervalDays),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+private fun PresetRow(
+    name: String,
+    description: String,
+    intervalDays: Int,
+    onClick: () -> Unit,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clip(VellutoShapes.Inner)
+                .background(c.surface2)
+                .lightEdge(VellutoShapes.Inner, Color.Transparent, c.line)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(spacing.l),
+        verticalArrangement = Arrangement.spacedBy(spacing.xs),
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleMedium,
+            color = c.text,
+        )
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodySmall,
+            color = c.text2,
+        )
+        StatusPill(
+            label = stringResource(R.string.reminder_interval_value, intervalDays),
+            content = c.accentOnSoft,
+            container = c.accentSoft,
+            icon = VellutoIcons.Clock,
+            modifier = Modifier.padding(top = spacing.xxs),
+        )
     }
 }
 
@@ -343,11 +443,17 @@ private fun PersonPicker(
             readOnly = true,
             modifier =
                 Modifier
-                    .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable)
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth(),
             label = { Text(stringResource(R.string.reminder_field_person)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            shape = RoundedCornerShape(6.dp),
+            leadingIcon = { Icon(VellutoIcons.Users, contentDescription = null, modifier = Modifier.size(20.dp)) },
+            trailingIcon = {
+                Icon(
+                    if (expanded) VellutoIcons.ChevronUp else VellutoIcons.ChevronDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+            },
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             people.forEach { option ->
@@ -362,6 +468,15 @@ private fun PersonPicker(
         }
     }
 }
+
+/** The Lucide glyph of a relationship category (same mapping as the reminders list). */
+private fun ReminderCategory.icon(): ImageVector =
+    when (this) {
+        ReminderCategory.LOVE -> VellutoIcons.Heart
+        ReminderCategory.FRIENDSHIP -> VellutoIcons.Users
+        ReminderCategory.FAMILY -> VellutoIcons.House
+        ReminderCategory.CUSTOM -> VellutoIcons.Sparkle
+    }
 
 private const val MIN_INTERVAL = 1f
 private const val MAX_INTERVAL = 90f

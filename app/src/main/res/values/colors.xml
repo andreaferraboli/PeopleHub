@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="onyx">#131313</color>
-    <color name="champagne_gold">#F2CA50</color>
+    <!-- Window and splash background before Compose draws: the Velluto light background (bg). -->
+    <color name="onyx">#F4F1EC</color>
+    <!-- The Velluto accent (VellutoAccent in core:ui), for XML-only surfaces. -->
+    <color name="champagne_gold">#FFC83D</color>
 </resources>

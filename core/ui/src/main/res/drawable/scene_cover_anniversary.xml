@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da tools/scenes/build_scenes.py (accento FFC83D). Non modificare a mano: cambia il sorgente in tools/scenes/src e rilancia lo script. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="358dp"
+    android:height="196dp"
+    android:viewportWidth="358"
+    android:viewportHeight="196">
+    <path
+        android:name="bg_0"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="126.564" android:startY="-46.066" android:endX="231.436" android:endY="242.066" android:tileMode="clamp">
+                <item android:offset="0" android:color="#2A0F1C"/>
+                <item android:offset="0.5" android:color="#6A2840"/>
+                <item android:offset="0.85" android:color="#B8606A"/>
+                <item android:offset="1" android:color="#E09A86"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:name="bg_1"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="171.84" android:centerY="35.28" android:gradientRadius="20" android:tileMode="clamp">
+                <item android:offset="0" android:color="#47FFD2BE"/>
+                <item android:offset="0.5" android:color="#47FFD2BE"/>
+                <item android:offset="1" android:color="#00FFD2BE"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:name="bg_2"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="315.04" android:centerY="113.68" android:gradientRadius="24" android:tileMode="clamp">
+                <item android:offset="0" android:color="#4DFFC8AA"/>
+                <item android:offset="0.583" android:color="#4DFFC8AA"/>
+                <item android:offset="1" android:color="#00FFC8AA"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:name="bg_3"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="250.6" android:centerY="50.96" android:gradientRadius="34" android:tileMode="clamp">
+                <item android:offset="0" android:color="#59FFAAAA"/>
+                <item android:offset="0.588" android:color="#59FFAAAA"/>
+                <item android:offset="1" android:color="#00FFAAAA"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:name="bg_4"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="71.6" android:centerY="156.8" android:gradientRadius="72" android:tileMode="clamp">
+                <item android:offset="0" android:color="#CCFFC47C"/>
+                <item android:offset="0.083" android:color="#CCFFC47C"/>
+                <item android:offset="0.361" android:color="#59FFA05A"/>
+                <item android:offset="1" android:color="#00FFA05A"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M66,196 L66,158 L78,158 L78,196 Z"
+        android:fillColor="#E6F3E6D2" />
+    <group android:name="flame_group" android:pivotX="72" android:pivotY="152">
+        <path
+            android:name="flame"
+            android:pathData="M72,152 C68,146 71,140 72,136 C74,140 77,145 72,152 Z"
+            android:fillColor="#FFD58A" />
+    </group>
+</vector>

@@ -10,11 +10,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,15 +28,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
 import com.peoplehub.core.domain.model.EventFilter
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.ui.components.CapsLabel
+import com.peoplehub.core.ui.components.DateTile
+import com.peoplehub.core.ui.components.EmptyView
 import com.peoplehub.core.ui.components.GlassPanel
+import com.peoplehub.core.ui.components.PeopleHubTopBar
+import com.peoplehub.core.ui.components.VellutoBackground
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.riseIn
 import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoShapes
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
@@ -88,35 +103,43 @@ class EventWidgetConfigActivity : ComponentActivity() {
 }
 
 private val EventDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
+private val TileMonthFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM")
 
+/** Rows that play the cascading entrance; the rest of a long list appears in place. */
+private const val ENTRANCE_ROWS = 8
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventPicker(events: List<PersonEvent>, onPick: (PersonEvent) -> Unit) {
-    Scaffold { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.widget_event_config_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+    val spacing = PeopleHubTheme.spacing
+    VellutoBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = { PeopleHubTopBar(title = stringResource(R.string.widget_event_config_title)) },
+        ) { innerPadding ->
             if (events.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = stringResource(R.string.widget_event_config_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Box(
+                    modifier = Modifier.padding(innerPadding).fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EmptyView(
+                        title = stringResource(R.string.widget_event_config_empty),
+                        description = "",
+                        icon = VellutoIcons.CalendarX,
                     )
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(events, key = { it.id }) { event ->
-                        EventRow(event = event, onClick = { onPick(event) })
+                LazyColumn(
+                    modifier = Modifier.padding(innerPadding).fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = spacing.gutter, vertical = spacing.m),
+                    verticalArrangement = Arrangement.spacedBy(spacing.sm),
+                ) {
+                    itemsIndexed(events, key = { _, event -> event.id }) { index, event ->
+                        EventRow(
+                            event = event,
+                            onClick = { onPick(event) },
+                            modifier = if (index < ENTRANCE_ROWS) Modifier.riseIn(index) else Modifier,
+                        )
                     }
                 }
             }
@@ -124,23 +147,43 @@ private fun EventPicker(events: List<PersonEvent>, onPick: (PersonEvent) -> Unit
     }
 }
 
+/** A glass row: date tile, category caps, title and full date, with a chevron. */
 @Composable
-private fun EventRow(event: PersonEvent, onClick: () -> Unit) {
-    GlassPanel(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+private fun EventRow(event: PersonEvent, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    val date = event.dateTime.toLocalDate()
+    GlassPanel(modifier = modifier.fillMaxWidth(), shape = VellutoShapes.Card) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .padding(spacing.ml),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.ml),
         ) {
-            event.category?.let { CapsLabel(text = it) }
-            Text(
-                text = event.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = event.dateTime.toLocalDate().format(EventDateFormat),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            DateTile(month = date.format(TileMonthFormat), day = date.dayOfMonth.toString())
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+                event.category?.let { CapsLabel(text = it) }
+                Text(
+                    text = event.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = c.text,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = date.format(EventDateFormat),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = c.text2,
+                )
+            }
+            Icon(
+                imageVector = VellutoIcons.ChevronRight,
+                contentDescription = null,
+                tint = c.text2,
+                modifier = Modifier.size(18.dp),
             )
         }
     }

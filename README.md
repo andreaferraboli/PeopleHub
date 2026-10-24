@@ -35,12 +35,12 @@ self‑updater, which checks GitHub Releases for a newer APK; your data never le
 - **Self‑documenting UI** — every icon button shows a tooltip describing what it does.
 - **Automatic backups** — export/import the full dataset (JSON) or just birthdays (CSV).
 
-## Design — "Midnight Gold"
+## Design — "Velluto"
 
-A neo‑luxury, dark‑first identity: an onyx background (`#131313`), champagne‑gold accent
-(`#f2ca50`), an editorial serif for display/headlines and a clean sans for body text, glassmorphic
-panels, and a gold "fade" divider. Dynamic Color is supported on Android 12+ but off by default so
-the gold‑on‑onyx brand is preserved.
+Velvet-dark and warm-paper themes with a single gold accent (`#FFC83D`), Instrument Serif titles
+over Geist text (both bundled, SIL OFL), Lucide stroke icons, floating glass panels and navigation,
+floating gold 3D objects in every tab, and calm motion that stops when the system removes
+animations. Full rules in [DESIGN.md](DESIGN.md).
 
 ## Tech stack
 
@@ -69,7 +69,7 @@ the gold‑on‑onyx brand is preserved.
                       WorkManager workers, AlarmManager scheduler, BroadcastReceivers, per-app locale
 :core:domain   (JVM)  Models, repository interfaces, use cases, pure date math, deep-link constants
 :core:database        Room entities/DAOs/migrations, repository impls, mappers, DataStore settings
-:core:ui              Compose theme (Midnight Gold), design-system components, UiState, RelativeTime
+:core:ui              Compose theme (Velluto), design-system components, icons, scenes, UiState
 :core:notifications   Notification channels + PeopleHubNotifier + action constants
 :core:dataio   (JVM)  JSON (kotlinx.serialization) + CSV import/export, DTOs, mappers
 :feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import

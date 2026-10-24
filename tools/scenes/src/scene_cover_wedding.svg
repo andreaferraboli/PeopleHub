@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 358 196" data-bg="radial-gradient(circle at 30% 40%, rgba(255,250,235,0.95) 0 10px, rgba(255,240,210,0.32) 44px, rgba(255,240,210,0) 104px), linear-gradient(180deg, #9FC9D6 0%, #D9E6DF 40%, #F3E3C6 46%, #2E8C9A 47%, #1D6A7E 65%, #0E3F52 100%)">
+              <path d="M92 100h30M97 108h22M102 116h14" stroke="rgba(255,250,235,0.85)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M0 126q20-4 40 0t40 0 40 0 40 0 40 0M0 146q20-4 40 0t40 0 40 0 40 0 40 0" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+              <path d="M236 196V104l14-6 18 4 10-10 20 2 14-8 46 4v106z" fill="#3E2C1E"/>
+              <path d="M250 98h14V88h-14zM268 94h16V82h-16zM288 90h12V80h-12zM304 86h18V74h-18zM326 88h14V78h-14z" fill="#EFE6D4"/>
+            </svg>

@@ -1,6 +1,5 @@
 package com.peoplehub.core.ui.theme
 
-import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -9,42 +8,30 @@ import androidx.compose.ui.graphics.Color
 import com.peoplehub.core.domain.model.CheckInStatus
 
 /**
- * Semantic colour pair used to render a check-in status as a filled container with readable
- * foreground text.
+ * Semantic colours for a check-in status: a soft translucent [container], the readable
+ * [onContainer] text/dot colour, and the solid [ring] drawn around the person's avatar.
  */
 @Immutable
-data class StatusColors(val container: Color, val onContainer: Color)
-
-/**
- * Brand colours that fall outside the Material 3 [ColorScheme] — currently the green "fresh" status
- * used by the frequency tracker. Provided through [LocalExtendedColors] so composables can read them
- * the same way they read [androidx.compose.material3.MaterialTheme].
- */
-@Immutable
-data class ExtendedColors(
-    val fresh: StatusColors,
+data class StatusColors(
+    val container: Color,
+    val onContainer: Color,
+    val ring: Color = onContainer,
 )
 
-internal val LocalExtendedColors =
-    staticCompositionLocalOf {
-        ExtendedColors(
-            fresh = StatusColors(MidnightGold.FreshContainerDark, MidnightGold.OnFreshContainerDark),
-        )
-    }
+internal val LocalVellutoColors = staticCompositionLocalOf { vellutoColors(dark = true) }
 
 /**
- * Resolves the [StatusColors] for a [CheckInStatus] against the active [ColorScheme] and
- * [ExtendedColors]. FRESH is green, DUE is amber (secondary container), OVERDUE/NEVER are error.
+ * Resolves the [StatusColors] for a [CheckInStatus]: FRESH is green ("seen recently"), DUE is amber
+ * ("to see soon"), OVERDUE is red, NEVER is the neutral track ("not tracked yet").
  */
 @Composable
 @ReadOnlyComposable
 fun statusColorsFor(status: CheckInStatus): StatusColors {
-    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
-    val extended = LocalExtendedColors.current
+    val c = LocalVellutoColors.current
     return when (status) {
-        CheckInStatus.FRESH -> extended.fresh
-        CheckInStatus.DUE -> StatusColors(scheme.secondaryContainer, scheme.onSecondaryContainer)
-        CheckInStatus.OVERDUE -> StatusColors(scheme.errorContainer, scheme.onErrorContainer)
-        CheckInStatus.NEVER -> StatusColors(scheme.surfaceContainerHighest, scheme.onSurfaceVariant)
+        CheckInStatus.FRESH -> StatusColors(c.okSoft, c.ok)
+        CheckInStatus.DUE -> StatusColors(c.warnSoft, c.warn)
+        CheckInStatus.OVERDUE -> StatusColors(c.errSoft, c.err)
+        CheckInStatus.NEVER -> StatusColors(c.surface2, c.text2, ring = c.track)
     }
 }

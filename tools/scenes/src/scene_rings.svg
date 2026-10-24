@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120">
+          <defs>
+            <linearGradient id="cerRingA" gradientUnits="userSpaceOnUse" x1="20" y1="20" x2="140" y2="100">
+<stop offset="0" stop-color="{{g1}}"/>
+<stop offset=".35" stop-color="{{g3}}"/>
+<stop offset=".7" stop-color="{{g4}}"/>
+<stop offset="1" stop-color="{{g2}}"/>
+</linearGradient>
+            <linearGradient id="cerRingB" gradientUnits="userSpaceOnUse" x1="140" y1="20" x2="40" y2="100">
+<stop offset="0" stop-color="{{g1}}"/>
+<stop offset=".4" stop-color="{{g3}}"/>
+<stop offset="1" stop-color="{{g5}}"/>
+</linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="36" fill="none" stroke="url(#cerRingA)" stroke-width="12"/>
+          <circle cx="60" cy="60" r="31" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1.2"/>
+          <circle cx="100" cy="60" r="36" fill="none" stroke="url(#cerRingB)" stroke-width="12"/>
+          <circle cx="100" cy="60" r="41" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+          <path d="M72.3 26.2A36 36 0 0 1 87.6 36.9" fill="none" stroke="url(#cerRingA)" stroke-width="12"/>
+          <path d="M50 32a30 30 0 0 1 14-6" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M112 32a30 30 0 0 1 10 8" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"/>
+        </svg>

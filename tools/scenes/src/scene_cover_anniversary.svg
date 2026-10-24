@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 358 196" data-bg="radial-gradient(circle at 20% 80%, rgba(255,196,124,0.8) 0 6px, rgba(255,160,90,0.35) 26px, rgba(0,0,0,0) 72px), radial-gradient(circle at 70% 26%, rgba(255,170,170,0.35) 0 20px, rgba(0,0,0,0) 34px), radial-gradient(circle at 88% 58%, rgba(255,200,170,0.3) 0 14px, rgba(0,0,0,0) 24px), radial-gradient(circle at 48% 18%, rgba(255,210,190,0.28) 0 10px, rgba(0,0,0,0) 20px), linear-gradient(160deg, #2A0F1C 0%, #6A2840 50%, #B8606A 85%, #E09A86 100%)">
+              <path d="M66 196v-38h12v38z" fill="rgba(243,230,210,0.9)"/>
+              <path d="M72 152c-4-6-1-12 0-16 2 4 5 9 0 16z" fill="#FFD58A" data-name="flame" data-pivot="72 152"/>
+            </svg>

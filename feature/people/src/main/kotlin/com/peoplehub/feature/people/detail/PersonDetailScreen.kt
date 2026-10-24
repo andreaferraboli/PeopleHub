@@ -1,45 +1,40 @@
 package com.peoplehub.feature.people.detail
 
+import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FileDownload
-import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,40 +45,79 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.core.domain.model.CheckIn
+import com.peoplehub.core.domain.model.CheckInStatus
+import com.peoplehub.core.domain.model.CheckInThreshold
+import com.peoplehub.core.domain.model.Interest
+import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.Reminder
+import com.peoplehub.core.domain.model.UpcomingBirthday
 import com.peoplehub.core.domain.util.DateCalculations
+import com.peoplehub.core.ui.components.AmbientGlow
 import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.CategoryChip
 import com.peoplehub.core.ui.components.CheckInStatusBadge
+import com.peoplehub.core.ui.components.DateTile
+import com.peoplehub.core.ui.components.DisplayTitle
 import com.peoplehub.core.ui.components.EmptyView
-import com.peoplehub.core.ui.components.GhostButton
+import com.peoplehub.core.ui.components.GlassIconButton
 import com.peoplehub.core.ui.components.GlassPanel
-import com.peoplehub.core.ui.components.GoldDivider
+import com.peoplehub.core.ui.components.Hairline
+import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PersonAvatar
-import com.peoplehub.core.ui.components.PrimaryGoldButton
-import com.peoplehub.core.ui.components.TooltipIconButton
+import com.peoplehub.core.ui.components.SegmentedPill
+import com.peoplehub.core.ui.components.SettingsCard
+import com.peoplehub.core.ui.components.StatusPill
+import com.peoplehub.core.ui.components.SurfaceCard
+import com.peoplehub.core.ui.components.TextAction
+import com.peoplehub.core.ui.components.ToggleChip
 import com.peoplehub.core.ui.components.UiStateContent
+import com.peoplehub.core.ui.components.VellutoBackground
+import com.peoplehub.core.ui.components.VellutoButton
+import com.peoplehub.core.ui.components.VellutoButtonStyle
+import com.peoplehub.core.ui.icon.VellutoIcons
+import com.peoplehub.core.ui.modifier.riseIn
 import com.peoplehub.core.ui.state.UiState
+import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.theme.VellutoShapes
+import com.peoplehub.core.ui.theme.statusColorsFor
 import com.peoplehub.core.ui.util.RelativeTime
 import com.peoplehub.feature.people.R
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 private val BirthdayFormatter = DateTimeFormatter.ofPattern("MMMM d")
-private val HistoryFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy • HH:mm")
+private val MonthFormatter = DateTimeFormatter.ofPattern("MMM")
+private val HistoryCaptionFormatter = DateTimeFormatter.ofPattern("EEEE • yyyy • HH:mm")
 
-private fun Instant.formatHistory(): String =
-    atZone(ZoneId.systemDefault()).format(HistoryFormatter)
+/** Names up to this length get the big display serif; longer ones drop to the cover size. */
+private const val DISPLAY_NAME_MAX_LENGTH = 14
+
+/** Entrance cascade indices are capped here so deep list rows do not replay a long delay. */
+private const val MAX_RISE_INDEX = 6
+
+private fun Instant.localDate(): LocalDate = atZone(ZoneId.systemDefault()).toLocalDate()
+
+private fun Instant.formatHistoryCaption(): String = atZone(ZoneId.systemDefault()).format(HistoryCaptionFormatter)
+
+private fun LocalDate.monthLabel(): String = format(MonthFormatter).trimEnd('.')
+
+private fun LocalDateTime.monthLabel(): String = format(MonthFormatter).trimEnd('.')
 
 /** Builds a safe, lowercase JSON filename from a person's name (e.g. "Eleanor Vance" → "eleanor-vance.json"). */
 private fun suggestedExportName(fullName: String): String {
@@ -113,6 +147,8 @@ fun PersonDetailScreen(
     val importMessage by viewModel.importMessage.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
 
     LaunchedEffect(closed) {
         if (closed) onBack()
@@ -157,58 +193,68 @@ fun PersonDetailScreen(
             }
         }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    TooltipIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        description = stringResource(R.string.action_back),
-                        onClick = onBack,
-                    )
-                },
-                actions = {
-                    val data = (state as? UiState.Success)?.data
-                    if (data != null) {
-                        TooltipIconButton(
-                            icon = Icons.Outlined.FileDownload,
-                            description = stringResource(R.string.detail_import_json),
-                            onClick = { importLauncher.launch(arrayOf("application/json")) },
+    VellutoBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                PeopleHubTopBar(
+                    title = "",
+                    navigationIcon = {
+                        GlassIconButton(
+                            icon = VellutoIcons.ArrowLeft,
+                            description = stringResource(R.string.action_back),
+                            onClick = onBack,
+                            modifier = Modifier.padding(start = spacing.s),
                         )
-                        TooltipIconButton(
-                            icon = Icons.Outlined.FileUpload,
-                            description = stringResource(R.string.detail_export_json),
-                            onClick = { exportLauncher.launch(suggestedExportName(data.person.fullName)) },
-                        )
-                        TooltipIconButton(
-                            icon = Icons.Outlined.Edit,
-                            description = stringResource(R.string.detail_edit),
-                            onClick = { onEdit(data.person.id) },
-                        )
-                        TooltipIconButton(
-                            icon = Icons.Outlined.Delete,
-                            description = stringResource(R.string.detail_delete),
-                            onClick = { showDeleteDialog = true },
-                        )
-                    }
-                },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { innerPadding ->
-        UiStateContent(state = state) { data ->
-            PersonDetailBody(
-                data = data,
-                modifier = Modifier.padding(innerPadding),
-                onCheckIn = viewModel::onCheckIn,
-                onEditCheckIn = viewModel::onEditCheckIn,
-                onDeleteCheckIns = viewModel::onDeleteCheckIns,
-                onAppendNote = viewModel::onAppendNote,
-                onEventClick = onEventClick,
-                onAddReminder = onAddReminder,
-                onEditReminder = onEditReminder,
-            )
+                    },
+                    actions = {
+                        val data = (state as? UiState.Success)?.data
+                        if (data != null) {
+                            Row(
+                                modifier = Modifier.padding(end = spacing.s),
+                                horizontalArrangement = Arrangement.spacedBy(spacing.s),
+                            ) {
+                                GlassIconButton(
+                                    icon = VellutoIcons.Download,
+                                    description = stringResource(R.string.detail_import_json),
+                                    onClick = { importLauncher.launch(arrayOf("application/json")) },
+                                )
+                                GlassIconButton(
+                                    icon = VellutoIcons.Upload,
+                                    description = stringResource(R.string.detail_export_json),
+                                    onClick = { exportLauncher.launch(suggestedExportName(data.person.fullName)) },
+                                )
+                                GlassIconButton(
+                                    icon = VellutoIcons.Pencil,
+                                    description = stringResource(R.string.detail_edit),
+                                    onClick = { onEdit(data.person.id) },
+                                )
+                                GlassIconButton(
+                                    icon = VellutoIcons.Trash2,
+                                    description = stringResource(R.string.detail_delete),
+                                    onClick = { showDeleteDialog = true },
+                                    tint = c.err,
+                                )
+                            }
+                        }
+                    },
+                )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+        ) { innerPadding ->
+            UiStateContent(state = state) { data ->
+                PersonDetailContent(
+                    data = data,
+                    modifier = Modifier.padding(innerPadding),
+                    onCheckIn = viewModel::onCheckIn,
+                    onEditCheckIn = viewModel::onEditCheckIn,
+                    onDeleteCheckIns = viewModel::onDeleteCheckIns,
+                    onAppendNote = viewModel::onAppendNote,
+                    onEventClick = onEventClick,
+                    onAddReminder = onAddReminder,
+                    onEditReminder = onEditReminder,
+                )
+            }
         }
     }
 
@@ -221,7 +267,7 @@ fun PersonDetailScreen(
                 TextButton(onClick = {
                     showDeleteDialog = false
                     viewModel.onDelete()
-                }) { Text(stringResource(R.string.detail_delete)) }
+                }) { Text(stringResource(R.string.detail_delete), color = c.err) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
@@ -254,8 +300,12 @@ fun PersonDetailScreen(
     }
 }
 
+/**
+ * The stateless body of the person detail screen: the portrait hero, the "I saw them today" action,
+ * the segmented tab switch and the selected tab. Only local UI state (tab, open dialogs) lives here.
+ */
 @Composable
-private fun PersonDetailBody(
+internal fun PersonDetailContent(
     data: PersonDetailData,
     onCheckIn: (String?, LocalDate, LocalDate) -> Unit,
     onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
@@ -269,26 +319,31 @@ private fun PersonDetailBody(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showCheckInDialog by remember { mutableStateOf(false) }
     var showAppendNoteDialog by remember { mutableStateOf(false) }
+    val spacing = PeopleHubTheme.spacing
 
     Column(modifier = modifier.fillMaxSize()) {
-        DetailHero(data)
-        PrimaryGoldButton(
+        DetailHero(data = data, modifier = Modifier.riseIn(0))
+        VellutoButton(
             text = stringResource(R.string.detail_seen_today_button, data.person.firstName),
             onClick = { showCheckInDialog = true },
+            icon = VellutoIcons.Check,
+            breathing = data.status == CheckInStatus.OVERDUE,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.gutter, vertical = spacing.m)
+                    .riseIn(1),
         )
-        TabRow(selectedTabIndex = selectedTab, containerColor = MaterialTheme.colorScheme.surface) {
-            detailTabs().forEachIndexed { index, titleRes ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(stringResource(titleRes), style = MaterialTheme.typography.labelLarge) },
-                )
-            }
-        }
+        SegmentedPill(
+            options = detailTabs().map { stringResource(it) },
+            selectedIndex = selectedTab,
+            onSelect = { selectedTab = it },
+            modifier =
+                Modifier
+                    .padding(horizontal = spacing.gutter)
+                    .padding(bottom = spacing.xs)
+                    .riseIn(2),
+        )
         when (selectedTab) {
             0 -> InfoTab(data, onAddNote = { showAppendNoteDialog = true }, Modifier.weight(1f))
             1 -> CheckInTab(data, onEditCheckIn, onDeleteCheckIns, Modifier.weight(1f))
@@ -325,111 +380,196 @@ private fun PersonDetailBody(
     }
 }
 
+/** Padding shared by the scrolling tab bodies: gutter at the sides, room to breathe at the bottom. */
 @Composable
-private fun DetailHero(data: PersonDetailData) {
+private fun tabContentPadding(): PaddingValues {
+    val spacing = PeopleHubTheme.spacing
+    return PaddingValues(start = spacing.gutter, end = spacing.gutter, top = spacing.ml, bottom = spacing.section)
+}
+
+/**
+ * The portrait hero: a large avatar ringed in the check-in status colour (gold for family) on a soft
+ * accent glow, the name as a two-tone serif title (surname in italic accent), tags and the status pill.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DetailHero(
+    data: PersonDetailData,
+    modifier: Modifier = Modifier,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    val person = data.person
+    val status = statusColorsFor(data.status)
     Column(
         modifier =
-            Modifier
+            modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = spacing.heroInset, vertical = spacing.s),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PersonAvatar(
-            initials = data.person.initials,
-            photoPath = data.person.photoPath,
-            size = 120.dp,
-            shape = RoundedCornerShape(12.dp),
+        Box(contentAlignment = Alignment.Center) {
+            AmbientGlow(size = 220.dp, strong = false, modifier = Modifier.matchParentSize())
+            PersonAvatar(
+                initials = person.initials,
+                photoPath = person.photoPath,
+                size = 112.dp,
+                ringColor = if (person.isFamily) c.accent else status.ring,
+                ringGlow = if (person.isFamily) c.glowSoft else Color.Transparent,
+            )
+        }
+        val nameStyle =
+            if (person.fullName.length <= DISPLAY_NAME_MAX_LENGTH) {
+                MaterialTheme.typography.displayMedium
+            } else {
+                MaterialTheme.typography.headlineLarge
+            }
+        // An empty accent leaves the title plain: a lone first name is not split in two.
+        DisplayTitle(
+            text = person.fullName,
+            accent = person.lastName.trim(),
+            style = nameStyle.copy(textAlign = TextAlign.Center),
+            modifier = Modifier.padding(top = spacing.l),
         )
-        Text(
-            text = data.person.fullName,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 16.dp),
-        )
-        if (data.person.tags.isNotEmpty()) {
-            Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                data.person.tags
+        if (person.tags.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier.padding(top = spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(spacing.xs, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            ) {
+                person.tags
                     .take(3)
                     .forEach { tag -> CategoryChip(label = tag) }
             }
         }
-        if (data.person.isFamily) {
-            CapsLabel(
-                text = stringResource(R.string.label_family),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 12.dp),
+        if (person.isFamily) {
+            StatusPill(
+                label = stringResource(R.string.label_family),
+                content = c.accentOnSoft,
+                container = c.accentSoft,
+                icon = VellutoIcons.Heart,
+                border = c.accentEdge,
+                modifier = Modifier.padding(top = spacing.m),
             )
         } else {
             CheckInStatusBadge(
                 label = RelativeTime.seenLabel(data.daysSince),
                 status = data.status,
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = spacing.m),
             )
         }
     }
 }
 
 @Composable
-private fun InfoTab(data: PersonDetailData, onAddNote: () -> Unit, modifier: Modifier = Modifier) {
+private fun InfoTab(
+    data: PersonDetailData,
+    onAddNote: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = tabContentPadding(),
+        verticalArrangement = Arrangement.spacedBy(spacing.ml),
     ) {
         data.nextBirthday?.let { birthday ->
             item(key = "birthday") {
-                InfoPanel(label = stringResource(R.string.detail_birthday)) {
-                    Text(birthday.birthday.format(BirthdayFormatter), style = MaterialTheme.typography.headlineSmall)
-                    birthday.turningAge?.let { age ->
-                        Text(
-                            text = stringResource(R.string.detail_turns, age),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                SettingsCard(
+                    title = stringResource(R.string.detail_birthday),
+                    icon = VellutoIcons.Cake,
+                    modifier = Modifier.riseIn(3),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(spacing.ml),
+                    ) {
+                        DateTile(
+                            month = birthday.birthday.monthLabel(),
+                            day = birthday.birthday.dayOfMonth.toString(),
                         )
+                        Column(verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+                            Text(
+                                text = birthday.birthday.format(BirthdayFormatter),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = c.text,
+                            )
+                            birthday.turningAge?.let { age ->
+                                Text(
+                                    text = stringResource(R.string.detail_turns, age),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = c.text2,
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
         if (data.person.interests.isNotEmpty()) {
             item(key = "interests") {
-                InfoPanel(label = stringResource(R.string.detail_interests)) {
-                    data.person.interests.forEach { interest ->
-                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                            Text(
-                                text = interest.key,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Text(
-                                text = interest.value,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f),
-                            )
+                SettingsCard(
+                    title = stringResource(R.string.detail_interests),
+                    icon = VellutoIcons.Sparkles,
+                    modifier = Modifier.riseIn(4),
+                ) {
+                    Column {
+                        data.person.interests.forEachIndexed { index, interest ->
+                            if (index > 0) Hairline()
+                            InterestRow(interest)
                         }
                     }
                 }
             }
         }
         item(key = "notes") {
-            InfoPanel(label = stringResource(R.string.detail_notes)) {
+            SettingsCard(
+                title = stringResource(R.string.detail_notes),
+                icon = VellutoIcons.Pencil,
+                modifier = Modifier.riseIn(5),
+            ) {
                 if (data.person.notes.isNotBlank()) {
-                    Text(data.person.notes, style = MaterialTheme.typography.bodyLarge)
+                    Text(data.person.notes, style = MaterialTheme.typography.bodyLarge, color = c.text)
                 } else {
                     Text(
                         text = stringResource(R.string.detail_notes_empty),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = c.text2,
                     )
                 }
-                GhostButton(
+                VellutoButton(
                     text = stringResource(R.string.detail_add_note),
                     onClick = onAddNote,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    style = VellutoButtonStyle.Soft,
+                    icon = VellutoIcons.Plus,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun InterestRow(interest: Interest) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(spacing.m),
+    ) {
+        Text(
+            text = interest.key,
+            style = MaterialTheme.typography.bodyMedium,
+            color = c.text2,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = interest.value,
+            style = MaterialTheme.typography.bodyLarge,
+            color = c.text,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -444,6 +584,7 @@ private fun CheckInTab(
     var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
     var editing by remember { mutableStateOf<CheckIn?>(null) }
     var pendingDelete by remember { mutableStateOf<List<Long>?>(null) }
+    val spacing = PeopleHubTheme.spacing
 
     // Selection is keyed by id; drop any ids that no longer exist (e.g. after a deletion).
     val historyIds = data.history.map { it.id }.toSet()
@@ -469,21 +610,20 @@ private fun CheckInTab(
         }
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = tabContentPadding(),
+            verticalArrangement = Arrangement.spacedBy(spacing.sm),
         ) {
-            item(key = "cadence") { CadencePanel(data) }
+            item(key = "cadence") { CadencePanel(data, Modifier.riseIn(3)) }
             if (data.history.isEmpty()) {
                 item(key = "history-empty") {
-                    Text(
-                        text = stringResource(R.string.detail_history_empty_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
+                    EmptyView(
+                        title = stringResource(R.string.detail_history_empty_title),
+                        description = stringResource(R.string.detail_history_empty_desc),
+                        icon = VellutoIcons.CalendarX,
                     )
                 }
             } else {
-                items(data.history, key = { it.id }) { checkIn ->
+                itemsIndexed(data.history, key = { _, checkIn -> checkIn.id }) { index, checkIn ->
                     CheckInRow(
                         checkIn = checkIn,
                         selectionMode = selectionMode,
@@ -500,6 +640,7 @@ private fun CheckInTab(
                             selectionMode = true
                             selectedIds = selectedIds + checkIn.id
                         },
+                        modifier = Modifier.riseIn((index + 4).coerceAtMost(MAX_RISE_INDEX + 2)),
                     )
                 }
             }
@@ -531,7 +672,7 @@ private fun CheckInTab(
                     pendingDelete = null
                     clearSelection()
                     onDeleteCheckIns(ids)
-                }) { Text(stringResource(R.string.checkin_delete_confirm)) }
+                }) { Text(stringResource(R.string.checkin_delete_confirm), color = PeopleHubTheme.colors.err) }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
@@ -540,58 +681,84 @@ private fun CheckInTab(
     }
 }
 
+/** The multi-select toolbar: a glass pill with the count, a cancel link and the delete action. */
 @Composable
-private fun SelectionBar(count: Int, onDelete: () -> Unit, onCancel: () -> Unit) {
-    Row(
+private fun SelectionBar(
+    count: Int,
+    onDelete: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    GlassPanel(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = spacing.gutter, vertical = spacing.s),
+        shape = VellutoShapes.Pill,
+        shadow = null,
     ) {
-        Text(
-            text = stringResource(R.string.checkin_selected_count, count),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
-            TooltipIconButton(
-                icon = Icons.Outlined.Delete,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = spacing.xl, end = spacing.xs, top = spacing.xxs, bottom = spacing.xxs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+        ) {
+            Text(
+                text = stringResource(R.string.checkin_selected_count, count),
+                style = MaterialTheme.typography.labelLarge,
+                color = c.text,
+                modifier = Modifier.weight(1f),
+            )
+            TextAction(label = stringResource(R.string.action_cancel), onClick = onCancel)
+            GlassIconButton(
+                icon = VellutoIcons.Trash2,
                 description = stringResource(R.string.checkin_delete_selected),
                 onClick = onDelete,
+                tint = c.err,
             )
         }
     }
 }
 
 @Composable
-private fun CadencePanel(data: PersonDetailData) {
-    InfoPanel(label = stringResource(R.string.detail_cadence)) {
+private fun CadencePanel(
+    data: PersonDetailData,
+    modifier: Modifier = Modifier,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    SettingsCard(
+        title = stringResource(R.string.detail_cadence),
+        icon = VellutoIcons.Clock,
+        modifier = modifier.padding(bottom = spacing.xs),
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(spacing.m),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.detail_cadence_value, data.threshold.warningDays, data.threshold.criticalDays),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                color = c.text,
                 modifier = Modifier.weight(1f),
             )
-            CategoryChip(
-                label =
-                    if (data.isCustomThreshold) {
-                        stringResource(R.string.detail_cadence_custom)
-                    } else {
-                        stringResource(R.string.detail_cadence_default)
-                    },
-            )
+            if (data.isCustomThreshold) {
+                StatusPill(
+                    label = stringResource(R.string.detail_cadence_custom),
+                    content = c.accentOnSoft,
+                    container = c.accentSoft,
+                    border = c.accentEdge,
+                    dot = false,
+                )
+            } else {
+                CategoryChip(label = stringResource(R.string.detail_cadence_default))
+            }
         }
     }
 }
 
+/** One meetup of the person's own history: date tile, weekday/year/time caption and the note. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CheckInRow(
@@ -600,27 +767,40 @@ private fun CheckInRow(
     selected: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    GlassPanel(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    val day = checkIn.timestamp.localDate()
+    SurfaceCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = VellutoShapes.CardSmall,
+        borderColor = if (selected) c.accentEdge else c.line,
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                    .heightIn(min = spacing.touchTarget)
+                    .padding(spacing.ml),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.ml),
+        ) {
             if (selectionMode) {
                 Checkbox(checked = selected, onCheckedChange = { onClick() })
-                Spacer(modifier = Modifier.width(12.dp))
             }
-            Column(modifier = Modifier.weight(1f)) {
-                CapsLabel(text = checkIn.timestamp.formatHistory())
+            DateTile(month = day.monthLabel(), day = day.dayOfMonth.toString())
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+                CapsLabel(text = checkIn.timestamp.formatHistoryCaption())
                 val note = checkIn.note
                 if (!note.isNullOrBlank()) {
                     Text(
                         text = note,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = 4.dp),
+                        color = c.text,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -629,32 +809,61 @@ private fun CheckInRow(
 }
 
 @Composable
-private fun RelatedTab(data: PersonDetailData, onEventClick: (Long) -> Unit, modifier: Modifier = Modifier) {
+private fun RelatedTab(
+    data: PersonDetailData,
+    onEventClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     if (data.relatedEvents.isEmpty()) {
         EmptyView(
             title = stringResource(R.string.detail_related_empty_title),
             description = stringResource(R.string.detail_related_empty_desc),
+            icon = VellutoIcons.CalendarDays,
             modifier = modifier,
         )
         return
     }
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = tabContentPadding(),
+        verticalArrangement = Arrangement.spacedBy(PeopleHubTheme.spacing.sm),
     ) {
-        items(data.relatedEvents, key = { it.id }) { event -> RelatedEventRow(event, onEventClick) }
+        itemsIndexed(data.relatedEvents, key = { _, event -> event.id }) { index, event ->
+            RelatedEventRow(event, onEventClick, Modifier.riseIn((index + 3).coerceAtMost(MAX_RISE_INDEX + 2)))
+        }
     }
 }
 
 @Composable
-private fun RelatedEventRow(event: PersonEvent, onEventClick: (Long) -> Unit) {
-    GlassPanel(modifier = Modifier.fillMaxWidth().clickable { onEventClick(event.id) }) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
+private fun RelatedEventRow(
+    event: PersonEvent,
+    onEventClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
+    GlassPanel(modifier = modifier.fillMaxWidth(), shape = VellutoShapes.Card) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button) { onEventClick(event.id) }
+                    .padding(spacing.ml),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.ml),
+        ) {
+            DateTile(month = event.dateTime.monthLabel(), day = event.dateTime.dayOfMonth.toString())
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
                 event.category?.let { CapsLabel(text = it) }
-                Text(event.title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    text = event.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = c.text,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
+            Icon(VellutoIcons.ChevronRight, contentDescription = null, tint = c.text2, modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -666,16 +875,20 @@ private fun RemindersTab(
     onEditReminder: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = tabContentPadding(),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm),
     ) {
         item(key = "add-reminder") {
-            GhostButton(
+            VellutoButton(
                 text = stringResource(R.string.detail_reminders_add),
                 onClick = onAddReminder,
-                modifier = Modifier.fillMaxWidth(),
+                style = VellutoButtonStyle.Soft,
+                icon = VellutoIcons.Plus,
+                modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xs).riseIn(3),
             )
         }
         if (data.reminders.isEmpty()) {
@@ -683,48 +896,75 @@ private fun RemindersTab(
                 Text(
                     text = stringResource(R.string.detail_reminders_empty_desc),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
+                    color = c.text2,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.xl, vertical = spacing.s),
                 )
             }
         } else {
-            items(data.reminders, key = { it.id }) { reminder -> ReminderRow(reminder, onEditReminder) }
+            itemsIndexed(data.reminders, key = { _, reminder -> reminder.id }) { index, reminder ->
+                ReminderRow(reminder, onEditReminder, Modifier.riseIn((index + 4).coerceAtMost(MAX_RISE_INDEX + 2)))
+            }
         }
     }
 }
 
 @Composable
-private fun ReminderRow(reminder: Reminder, onEditReminder: (Long) -> Unit) {
+private fun ReminderRow(
+    reminder: Reminder,
+    onEditReminder: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val c = PeopleHubTheme.colors
+    val spacing = PeopleHubTheme.spacing
     val nextDate = reminder.nextFireAt.atZone(ZoneId.systemDefault()).toLocalDate()
     val days = DateCalculations.signedDaysFromToday(nextDate, LocalDate.now())
-    GlassPanel(modifier = Modifier.fillMaxWidth().clickable { onEditReminder(reminder.id) }) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    GlassPanel(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button) { onEditReminder(reminder.id) }
+                    .padding(horizontal = spacing.xl, vertical = spacing.l),
+            verticalArrangement = Arrangement.spacedBy(spacing.xs),
+        ) {
             Text(
                 text = reminder.title,
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = c.text,
             )
             reminder.note?.takeIf { it.isNotBlank() }?.let { note ->
-                Text(text = note, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = note, style = MaterialTheme.typography.bodyMedium, color = c.text2)
             }
-            val schedule =
-                when {
-                    !reminder.enabled -> stringResource(R.string.detail_reminder_paused)
-                    days <= 0L -> stringResource(R.string.detail_reminder_due)
-                    else -> stringResource(R.string.detail_reminder_in_days, days.toInt())
-                }
-            CapsLabel(text = schedule)
-        }
-    }
-}
-
-@Composable
-private fun InfoPanel(label: String, content: @Composable () -> Unit) {
-    GlassPanel(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            CapsLabel(text = label)
-            GoldDivider(modifier = Modifier.padding(vertical = 8.dp))
-            content()
+            when {
+                !reminder.enabled ->
+                    StatusPill(
+                        label = stringResource(R.string.detail_reminder_paused),
+                        content = c.text2,
+                        container = c.surface2,
+                        icon = VellutoIcons.BellOff,
+                        border = c.line,
+                        modifier = Modifier.padding(top = spacing.xxs),
+                    )
+                days <= 0L ->
+                    StatusPill(
+                        label = stringResource(R.string.detail_reminder_due),
+                        content = c.accentOnSoft,
+                        container = c.accentSoft,
+                        icon = VellutoIcons.BellRing,
+                        border = c.accentEdge,
+                        modifier = Modifier.padding(top = spacing.xxs),
+                    )
+                else ->
+                    StatusPill(
+                        label = stringResource(R.string.detail_reminder_in_days, days.toInt()),
+                        content = c.text2,
+                        container = c.surface2,
+                        icon = VellutoIcons.Clock,
+                        border = c.line,
+                        modifier = Modifier.padding(top = spacing.xxs),
+                    )
+            }
         }
     }
 }
@@ -743,44 +983,29 @@ private fun CheckInDialog(
     var multiDay by remember { mutableStateOf(false) }
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
+    val spacing = PeopleHubTheme.spacing
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.checkin_dialog_title, personName)) },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.m)) {
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(stringResource(R.string.checkin_note_hint)) },
-                    shape = RoundedCornerShape(6.dp),
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                multiDay = !multiDay
-                                if (!multiDay) endDate = startDate
-                            },
-                ) {
-                    Checkbox(
-                        checked = multiDay,
-                        onCheckedChange = {
-                            multiDay = it
-                            if (!it) endDate = startDate
-                        },
-                    )
-                    Text(
-                        text = stringResource(R.string.checkin_multiday_toggle),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                GhostButton(
+                ToggleChip(
+                    label = stringResource(R.string.checkin_multiday_toggle),
+                    checked = multiDay,
+                    onCheckedChange = {
+                        multiDay = it
+                        if (!it) endDate = startDate
+                    },
+                    checkIcon = VellutoIcons.Check,
+                )
+                VellutoButton(
                     text =
                         when {
                             multiDay ->
@@ -790,13 +1015,16 @@ private fun CheckInDialog(
                                 stringResource(R.string.checkin_date_on, startDate.format(CHECK_IN_DATE_FORMAT))
                         },
                     onClick = { showStartPicker = true },
+                    style = VellutoButtonStyle.Neutral,
+                    icon = VellutoIcons.Calendar,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (multiDay) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    GhostButton(
+                    VellutoButton(
                         text = stringResource(R.string.checkin_date_to, endDate.format(CHECK_IN_DATE_FORMAT)),
                         onClick = { showEndPicker = true },
+                        style = VellutoButtonStyle.Neutral,
+                        icon = VellutoIcons.Calendar,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -892,21 +1120,20 @@ private fun CheckInEditDialog(
     var note by remember(checkIn.id) { mutableStateOf(checkIn.note.orEmpty()) }
     var selectedDate by remember(checkIn.id) { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(false) }
+    val spacing = PeopleHubTheme.spacing
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.checkin_edit_title)) },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.m)) {
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(stringResource(R.string.checkin_note_hint)) },
-                    shape = RoundedCornerShape(6.dp),
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                GhostButton(
+                VellutoButton(
                     text =
                         if (selectedDate == today) {
                             stringResource(R.string.checkin_date_today)
@@ -914,18 +1141,17 @@ private fun CheckInEditDialog(
                             stringResource(R.string.checkin_date_on, selectedDate.format(CHECK_IN_DATE_FORMAT))
                         },
                     onClick = { showDatePicker = true },
+                    style = VellutoButtonStyle.Neutral,
+                    icon = VellutoIcons.Calendar,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                TextButton(
+                VellutoButton(
+                    text = stringResource(R.string.checkin_delete_action),
                     onClick = onDelete,
+                    style = VellutoButtonStyle.Danger,
+                    icon = VellutoIcons.Trash2,
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        text = stringResource(R.string.checkin_delete_action),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
+                )
             }
         },
         confirmButton = {
@@ -963,7 +1189,10 @@ private fun CheckInEditDialog(
 }
 
 @Composable
-private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+private fun AppendNoteDialog(
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var phrase by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -976,7 +1205,6 @@ private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit)
                 minLines = 3,
                 maxLines = 12,
                 placeholder = { Text(stringResource(R.string.detail_add_note_hint)) },
-                shape = RoundedCornerShape(6.dp),
             )
         },
         confirmButton = {
@@ -991,5 +1219,99 @@ private fun AppendNoteDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit)
     )
 }
 
-private fun detailTabs(): List<Int> =
-    listOf(R.string.tab_info, R.string.tab_checkin, R.string.tab_related, R.string.tab_reminders)
+private fun detailTabs(): List<Int> = listOf(R.string.tab_info, R.string.tab_checkin, R.string.tab_related, R.string.tab_reminders)
+
+// region Previews (sample data lives only here)
+
+private fun previewDetailData(): PersonDetailData {
+    val zone = ZoneId.systemDefault()
+    val today = LocalDate.of(2026, 10, 24)
+    val birthday = LocalDate.of(1994, 11, 3)
+    val person =
+        Person(
+            id = 7L,
+            firstName = "Francesca",
+            lastName = "Lombardi",
+            birthday = birthday,
+            tags = listOf("Amici", "Università"),
+            interests = listOf(Interest("Libro preferito", "Le città invisibili"), Interest("Caffè", "Macchiato, poca schiuma")),
+            notes = "Si è trasferita a Torino a settembre. Chiedere del nuovo lavoro.",
+            lastCheckInAt = today.minusDays(42).atStartOfDay(zone).toInstant(),
+        )
+    return PersonDetailData(
+        person = person,
+        status = CheckInStatus.OVERDUE,
+        daysSince = 42L,
+        threshold = CheckInThreshold.Default,
+        isCustomThreshold = false,
+        nextBirthday =
+            UpcomingBirthday(
+                personId = person.id,
+                fullName = person.fullName,
+                photoPath = null,
+                birthday = birthday,
+                nextOccurrence = LocalDate.of(2026, 11, 3),
+                daysUntil = 10,
+                turningAge = 32,
+            ),
+        history =
+            listOf(
+                CheckIn(
+                    id = 1L,
+                    personId = 7L,
+                    timestamp =
+                        today
+                            .minusDays(42)
+                            .atTime(20, 30)
+                            .atZone(zone)
+                            .toInstant(),
+                    note = "Cena da Sciamadda",
+                ),
+                CheckIn(
+                    id = 2L,
+                    personId = 7L,
+                    timestamp =
+                        today
+                            .minusDays(80)
+                            .atTime(18, 0)
+                            .atZone(zone)
+                            .toInstant(),
+                ),
+            ),
+        relatedEvents = emptyList(),
+        reminders = emptyList(),
+    )
+}
+
+@Composable
+private fun PersonDetailPreview(dark: Boolean) {
+    PeopleHubTheme(darkTheme = dark) {
+        VellutoBackground {
+            PersonDetailContent(
+                data = previewDetailData(),
+                onCheckIn = { _, _, _ -> },
+                onEditCheckIn = { _, _, _ -> },
+                onDeleteCheckIns = {},
+                onAppendNote = {},
+                onEventClick = {},
+                onAddReminder = {},
+                onEditReminder = {},
+                modifier = Modifier.statusBarsPadding().padding(top = 64.dp),
+            )
+        }
+    }
+}
+
+@Preview(name = "Person detail, light", widthDp = 390, heightDp = 844)
+@Composable
+private fun PersonDetailLightPreview() {
+    PersonDetailPreview(dark = false)
+}
+
+@Preview(name = "Person detail, dark", widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PersonDetailDarkPreview() {
+    PersonDetailPreview(dark = true)
+}
+
+// endregion

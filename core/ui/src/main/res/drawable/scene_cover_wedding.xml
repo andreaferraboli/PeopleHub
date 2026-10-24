@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generato da tools/scenes/build_scenes.py (accento FFC83D). Non modificare a mano: cambia il sorgente in tools/scenes/src e rilancia lo script. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="358dp"
+    android:height="196dp"
+    android:viewportWidth="358"
+    android:viewportHeight="196">
+    <path
+        android:name="bg_0"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="179" android:startY="0" android:endX="179" android:endY="196" android:tileMode="clamp">
+                <item android:offset="0" android:color="#9FC9D6"/>
+                <item android:offset="0.4" android:color="#D9E6DF"/>
+                <item android:offset="0.46" android:color="#F3E3C6"/>
+                <item android:offset="0.47" android:color="#2E8C9A"/>
+                <item android:offset="0.65" android:color="#1D6A7E"/>
+                <item android:offset="1" android:color="#0E3F52"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:name="bg_1"
+        android:pathData="M0,0 L358,0 L358,196 L0,196 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="107.4" android:centerY="78.4" android:gradientRadius="104" android:tileMode="clamp">
+                <item android:offset="0" android:color="#F2FFFAEB"/>
+                <item android:offset="0.096" android:color="#F2FFFAEB"/>
+                <item android:offset="0.423" android:color="#52FFF0D2"/>
+                <item android:offset="1" android:color="#00FFF0D2"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M92,100 L122,100 M97,108 L119,108 M102,116 L116,116"
+        android:strokeColor="#D9FFFAEB"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M0,126 Q20,122 40,126 Q60,130 80,126 Q100,122 120,126 Q140,130 160,126 Q180,122 200,126 M0,146 Q20,142 40,146 Q60,150 80,146 Q100,142 120,146 Q140,150 160,146 Q180,142 200,146"
+        android:strokeColor="#4DFFFFFF"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M236,196 L236,104 L250,98 L268,102 L278,92 L298,94 L312,86 L358,90 L358,196 Z"
+        android:fillColor="#3E2C1E" />
+    <path
+        android:pathData="M250,98 L264,98 L264,88 L250,88 Z M268,94 L284,94 L284,82 L268,82 Z M288,90 L300,90 L300,80 L288,80 Z M304,86 L322,86 L322,74 L304,74 Z M326,88 L340,88 L340,78 L326,78 Z"
+        android:fillColor="#EFE6D4" />
+</vector>
