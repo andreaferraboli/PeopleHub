@@ -79,7 +79,7 @@
     <string name="vault_diag_check_now_sent">Notification check started</string>
 
     <string name="vault_import_title">Import backup</string>
-    <string name="vault_import_message">Replace all current data, or merge in only new records?</string>
+    <string name="vault_import_message">Replace all current data, or merge in only new records? With cloud sync on, the result is synced to the cloud too: replacing also deletes the old data there.</string>
     <string name="vault_import_merge">Merge</string>
     <string name="vault_import_replace">Replace all</string>
 
@@ -104,7 +104,7 @@
     <string name="vault_delete_all">Delete all people</string>
     <string name="vault_delete_all_desc">Remove every person and their meetups. Events are kept but become unlinked. This cannot be undone.</string>
     <string name="vault_delete_all_confirm_title">Delete all people?</string>
-    <string name="vault_delete_all_confirm_message">This permanently removes everyone you\'ve added, along with their meetups. This cannot be undone.</string>
+    <string name="vault_delete_all_confirm_message">This permanently removes everyone you\'ve added, along with their meetups. With cloud sync on, they are deleted from the cloud too. This cannot be undone.</string>
 
     <!-- Vault: import guide entry -->
     <string name="vault_guide_title">How to import</string>
@@ -145,4 +145,29 @@
     <string name="ig_backup_title">Full backup · JSON</string>
     <string name="ig_backup_desc">The complete snapshot — people, meetups and events. After choosing the file, pick Merge to add only new records or Replace to overwrite everything.</string>
     <string name="ig_backup_import">Choose backup file</string>
+
+    <!-- Cloud sync (Vault) -->
+    <string name="vault_sync_title">Cloud sync</string>
+    <string name="vault_sync_desc">Keep a copy of your data in your own Firebase and in step with it, so it survives a new phone and can be read by your assistant. Photos stay on this phone.</string>
+    <string name="vault_sync_sign_in">Sign in with Google</string>
+    <string name="vault_sync_signed_in_as">Signed in as %1$s</string>
+    <string name="vault_sync_checking">Looking at what is in the cloud…</string>
+    <string name="vault_sync_retry">Try again</string>
+    <string name="vault_sync_upload">Upload to Firebase</string>
+    <string name="vault_sync_upload_hint">The cloud is empty. Upload everything on this phone once; from then on every change syncs on its own.</string>
+    <string name="vault_sync_download">Download from the cloud</string>
+    <string name="vault_sync_download_hint">This account already has data in the cloud. Download it to replace what is on this phone; from then on every change syncs on its own.</string>
+    <string name="vault_sync_download_confirm_title">Replace this phone\'s data?</string>
+    <string name="vault_sync_download_confirm_message">Everything on this phone (people, meetups, events, reminders) is replaced by the data in the cloud. Photos and event backgrounds on this phone are not in the cloud and will be lost.</string>
+    <string name="vault_sync_active">Automatic sync is on</string>
+    <string name="vault_sync_running">Syncing…</string>
+    <string name="vault_sync_last">Last sync: %1$s</string>
+    <string name="vault_sync_never">Not synced yet</string>
+    <string name="vault_sync_pending">Changes waiting to be sent: %1$d</string>
+    <string name="vault_sync_error">Last error: %1$s</string>
+    <string name="vault_sync_now">Sync now</string>
+    <string name="vault_sync_sign_out">Sign out</string>
+    <string name="vault_sync_sign_in_failed">Google sign-in did not complete</string>
+    <string name="vault_sync_done">Sync complete</string>
+    <string name="vault_sync_failed">Sync failed: %1$s</string>
 </resources>

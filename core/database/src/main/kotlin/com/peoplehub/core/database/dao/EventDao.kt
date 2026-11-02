@@ -52,6 +52,10 @@ interface EventDao {
     @Query("UPDATE event SET pinned_to_widget = :pinned WHERE id = :id")
     suspend fun setPinned(id: Long, pinned: Boolean)
 
+    /** The cloud identity of a stored event, carried over by updates (see `RemoteIds.kt`). */
+    @Query("SELECT remote_id FROM event WHERE id = :id")
+    suspend fun remoteIdOf(id: Long): String?
+
     @Query("DELETE FROM event")
     suspend fun deleteAll()
 }

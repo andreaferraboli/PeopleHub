@@ -63,6 +63,7 @@ dependencies {
 
     testImplementation(libs.bundles.unit.test)
     testRuntimeOnly(libs.junit5.engine)
+    testImplementation(libs.sqlite.jdbc)
 
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.androidx.test.ext.junit)

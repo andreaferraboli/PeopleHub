@@ -20,7 +20,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.SET_NULL,
         ),
     ],
-    indices = [Index("person_id"), Index("pinned_to_widget")],
+    indices = [Index("person_id"), Index("pinned_to_widget"), Index(value = ["remote_id"], unique = true)],
 )
 data class EventEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
@@ -35,4 +35,5 @@ data class EventEntity(
     @ColumnInfo(name = "background_pan_y", defaultValue = "0.0") val backgroundPanY: Float = 0f,
     @ColumnInfo(name = "person_id") val personId: Long?,
     @ColumnInfo(name = "pinned_to_widget") val pinnedToWidget: Boolean,
+    @ColumnInfo(name = "remote_id", defaultValue = "''") val remoteId: String = newRemoteId(),
 )

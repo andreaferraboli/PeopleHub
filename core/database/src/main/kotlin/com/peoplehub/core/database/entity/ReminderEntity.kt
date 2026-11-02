@@ -23,7 +23,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("person_id"), Index("next_fire_epoch_millis")],
+    indices = [Index("person_id"), Index("next_fire_epoch_millis"), Index(value = ["remote_id"], unique = true)],
 )
 data class ReminderEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
@@ -38,4 +38,5 @@ data class ReminderEntity(
     @ColumnInfo(name = "next_fire_epoch_millis") val nextFireEpochMillis: Long,
     @ColumnInfo(name = "created_epoch_millis") val createdEpochMillis: Long,
     @ColumnInfo(name = "preset_key") val presetKey: String?,
+    @ColumnInfo(name = "remote_id", defaultValue = "''") val remoteId: String = newRemoteId(),
 )

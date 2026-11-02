@@ -23,7 +23,7 @@ workManager = "2.10.0"
 glance = "1.1.1"
 # Serialization & coroutines
 kotlinxSerialization = "1.7.3"
-kotlinxCoroutines = "1.9.0"
+kotlinxCoroutines = "1.10.2"
 kotlinxDatetime = "0.6.1"
 javaxInject = "1"
 # Image loading
@@ -34,6 +34,14 @@ haze = "1.1.1"
 accompanistPermissions = "0.36.0"
 # Core library desugaring
 desugar = "2.1.3"
+# Cloud sync (only :core:sync and the google-services plugin in :app). Newer Firebase BoMs (35.x, and
+# firebase-auth >= 24.1) and googleid >= 1.2 ship Kotlin 2.3/2.4 metadata, unreadable by Kotlin 2.1:
+# move these up together with Kotlin.
+firebaseBom = "34.12.0"
+googleServices = "4.5.0"
+credentials = "1.6.0"
+googleId = "1.1.1"
+lifecycleProcess = "2.8.7"
 # Testing
 junit5 = "5.11.3"
 junit5Plugin = "1.11.3.0"
@@ -43,6 +51,7 @@ androidxTestExt = "1.2.1"
 androidxTestRunner = "1.6.2"
 espresso = "3.6.1"
 robolectric = "4.14.1"
+sqliteJdbc = "3.53.4.0"
 # Quality
 ktlint = "12.1.2"
 detekt = "1.23.7"
@@ -51,6 +60,7 @@ detekt = "1.23.7"
 # Kotlin / coroutines / serialization
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
@@ -116,6 +126,15 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 # Core library desugaring
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
 
+# Firebase (cloud sync) + Credential Manager (Google sign-in)
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+
 # Testing
 junit5-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
 junit5-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit5" }
@@ -123,6 +142,8 @@ junit5-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", ve
 # Runs the JUnit4 Robolectric/Compose UI tests on the JUnit5 platform.
 junit5-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version.ref = "junit5" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+# Plain SQLite on the JVM, to run migration SQL and triggers in unit tests.
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqliteJdbc" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
@@ -164,3 +185,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 junit5 = { id = "de.mannodermaus.android-junit5", version.ref = "junit5Plugin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

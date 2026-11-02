@@ -69,7 +69,7 @@ internal class PeopleRepositoryImpl
                     if (person.id == 0L) {
                         dao.insertPerson(entity)
                     } else {
-                        dao.updatePerson(entity)
+                        dao.updatePerson(entity.copy(remoteId = dao.remoteIdOf(person.id) ?: entity.remoteId))
                         person.id
                     }
                 dao.deleteTagsFor(id)

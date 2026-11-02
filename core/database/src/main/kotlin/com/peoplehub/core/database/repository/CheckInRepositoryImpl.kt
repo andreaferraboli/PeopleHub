@@ -24,7 +24,19 @@ internal class CheckInRepositoryImpl
         override suspend fun recordCheckIns(checkIns: List<CheckIn>) =
             dao.insertAll(checkIns.map { it.toEntity() })
 
-        override suspend fun updateCheckIn(checkIn: CheckIn) = dao.update(checkIn.toEntity())
+        /**
+         * Keeps the row's cloud identity, and takes the cloud identity of the outing it now belongs to
+         * (`null` for a new outing, which the trigger fills with a fresh one).
+         */
+        override suspend fun updateCheckIn(checkIn: CheckIn) {
+            val entity = checkIn.toEntity()
+            dao.update(
+                entity.copy(
+                    remoteId = dao.remoteIdOf(checkIn.id) ?: entity.remoteId,
+                    outingRemoteId = dao.outingRemoteIdOf(checkIn.outingId),
+                ),
+            )
+        }
 
         override suspend fun deleteCheckIns(ids: List<Long>) = dao.deleteByIds(ids)
 

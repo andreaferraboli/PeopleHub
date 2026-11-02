@@ -12,8 +12,12 @@ import androidx.room.Relation
 /**
  * Room entity for a person. Dates and timestamps are stored as primitives (ISO strings / epoch
  * millis) so no [androidx.room.TypeConverter]s are required and mapping stays explicit.
+ *
+ * [remoteId] (v11) is the row's identity in the cloud: the Firestore document id. It is a UUID drawn
+ * once when the row is inserted and never changed, because the local [id] is only meaningful on this
+ * phone. Updates must carry the stored value over (see `RemoteIds.kt`).
  */
-@Entity(tableName = "person")
+@Entity(tableName = "person", indices = [Index(value = ["remote_id"], unique = true)])
 data class PersonEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     @ColumnInfo(name = "first_name") val firstName: String,
@@ -29,6 +33,7 @@ data class PersonEntity(
     @ColumnInfo(name = "birthday_only", defaultValue = "0") val birthdayOnly: Boolean = false,
     @ColumnInfo(name = "check_in_disabled", defaultValue = "0") val checkInDisabled: Boolean = false,
     @ColumnInfo(name = "is_family", defaultValue = "0") val isFamily: Boolean = false,
+    @ColumnInfo(name = "remote_id", defaultValue = "''") val remoteId: String = newRemoteId(),
 )
 
 /**

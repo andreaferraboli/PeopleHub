@@ -94,6 +94,10 @@ interface PeopleDao {
     @Query("DELETE FROM person_fts WHERE rowid = :rowId")
     suspend fun deleteFts(rowId: Long)
 
+    /** The cloud identity of a stored person, carried over by updates (see `RemoteIds.kt`). */
+    @Query("SELECT remote_id FROM person WHERE id = :id")
+    suspend fun remoteIdOf(id: Long): String?
+
     @Query("DELETE FROM person_fts")
     suspend fun deleteAllFts()
 }

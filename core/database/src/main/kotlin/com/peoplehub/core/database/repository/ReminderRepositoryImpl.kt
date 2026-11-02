@@ -48,7 +48,7 @@ internal class ReminderRepositoryImpl
             return if (reminder.id == 0L) {
                 dao.insert(entity)
             } else {
-                dao.update(entity)
+                dao.update(entity.copy(remoteId = dao.remoteIdOf(reminder.id) ?: entity.remoteId))
                 reminder.id
             }
         }

@@ -92,6 +92,15 @@ object VellutoIcons {
     /** Lucide `clock`. */
     val Clock: ImageVector by lazy { lucideIcon("Clock", ClockPaths) }
 
+    /** Lucide `cloud`. */
+    val Cloud: ImageVector by lazy { lucideIcon("Cloud", CloudPaths) }
+
+    /** Lucide `cloud-download`. */
+    val CloudDownload: ImageVector by lazy { lucideIcon("CloudDownload", CloudDownloadPaths) }
+
+    /** Lucide `cloud-upload`. */
+    val CloudUpload: ImageVector by lazy { lucideIcon("CloudUpload", CloudUploadPaths) }
+
     /** Lucide `crop`. */
     val Crop: ImageVector by lazy { lucideIcon("Crop", CropPaths) }
 
@@ -139,6 +148,9 @@ object VellutoIcons {
 
     /** Lucide `list-checks`. */
     val ListChecks: ImageVector by lazy { lucideIcon("ListChecks", ListChecksPaths) }
+
+    /** Lucide `log-out`. */
+    val LogOut: ImageVector by lazy { lucideIcon("LogOut", LogOutPaths) }
 
     /** Lucide `lock`. */
     val Lock: ImageVector by lazy { lucideIcon("Lock", LockPaths) }
@@ -413,6 +425,25 @@ private val ClockPaths =
         "M12 6v6l4 2",
     )
 
+private val CloudPaths =
+    listOf(
+        "M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z",
+    )
+
+private val CloudDownloadPaths =
+    listOf(
+        "M12 13v8l-4-4",
+        "m12 21 4-4",
+        "M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284",
+    )
+
+private val CloudUploadPaths =
+    listOf(
+        "M12 13v8",
+        "M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242",
+        "m8 17 4-4 4 4",
+    )
+
 private val CropPaths =
     listOf(
         "M6 2v14a2 2 0 0 0 2 2h14",
@@ -538,6 +569,13 @@ private val ListChecksPaths =
         "M13 19h8",
         "m3 17 2 2 4-4",
         "m3 7 2 2 4-4",
+    )
+
+private val LogOutPaths =
+    listOf(
+        "m16 17 5-5-5-5",
+        "M21 12H9",
+        "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4",
     )
 
 private val LockPaths =
