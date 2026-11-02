@@ -1,0 +1,53 @@
+[Unit]
+Description=Server MCP remoto di PeopleHub (OAuth + Firestore peoplehub-af26)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=peoplemcp
+Group=peoplemcp
+EnvironmentFile=/etc/peoplehub-mcp/env
+# Secret letti come file da $CREDENTIALS_DIRECTORY: i file in /etc restano root 600.
+LoadCredential=google-sa.json:/etc/peoplehub-mcp/google-sa.json
+LoadCredential=admin-token:/etc/peoplehub-mcp/admin-token
+WorkingDirectory=/opt/peoplehub-mcp/app
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning --enable-source-maps /opt/peoplehub-mcp/app/server.mjs
+# Stato OAuth (client, grant, token) in /var/lib/peoplehub-mcp/oauth-kv.sqlite
+StateDirectory=peoplehub-mcp
+StateDirectoryMode=0700
+Restart=always
+RestartSec=3
+Nice=5
+MemoryMax=512M
+TasksMax=64
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateIPC=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

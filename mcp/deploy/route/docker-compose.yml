@@ -1,0 +1,19 @@
+# Solo una rotta per il Traefik gia' presente sulla macchina (provider docker, rete host),
+# stesso schema del coach di HealthManager. Il container non fa niente: porta le etichette.
+# Traefik, che usa la rete host, instrada a 127.0.0.1:18750, dove ascolta il servizio systemd peoplehub-mcp.
+# Per togliere la rotta: docker compose -p peoplehub-mcp-route -f <questo file> down
+services:
+  route:
+    image: busybox:1.37
+    container_name: peoplehub-mcp-route
+    command: ["sleep", "2147483647"]
+    network_mode: host
+    restart: unless-stopped
+    read_only: true
+    mem_limit: 16m
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.peoplehub-mcp.entrypoints: "websecure"
+      traefik.http.routers.peoplehub-mcp.rule: "Host(`people-mcp.2-24-13-98.sslip.io`)"
+      traefik.http.routers.peoplehub-mcp.tls.certresolver: "letsencrypt"
+      traefik.http.services.peoplehub-mcp.loadbalancer.server.port: "18750"
