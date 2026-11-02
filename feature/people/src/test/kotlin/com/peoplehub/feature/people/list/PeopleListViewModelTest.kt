@@ -49,7 +49,7 @@ class PeopleListViewModelTest {
             val getSettings = mockk<GetSettingsUseCase>()
             val importPerson = mockk<ImportPersonUseCase>(relaxed = true)
             val bulkUpdatePeople = mockk<BulkUpdatePeopleUseCase>(relaxed = true)
-            every { getPeople(any()) } returns flowOf(listOf(Person(id = 1, firstName = "Eleanor", lastName = "Vance")))
+            every { getPeople(any()) } returns flowOf(listOf(Person(id = "1", firstName = "Eleanor", lastName = "Vance")))
             every { observeAllTags() } returns flowOf(listOf("Family"))
             every { getSettings() } returns flowOf(AppSettings())
 

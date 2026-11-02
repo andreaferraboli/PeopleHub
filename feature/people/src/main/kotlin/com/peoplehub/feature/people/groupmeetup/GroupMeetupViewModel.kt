@@ -30,7 +30,7 @@ import javax.inject.Inject
 
 /** A person shown in the group-meetup picker, with whether they are currently selected. */
 data class SelectablePerson(
-    val id: Long,
+    val id: String,
     val fullName: String,
     val initials: String,
     val photoPath: String?,
@@ -82,16 +82,16 @@ class GroupMeetupViewModel
         private val today = LocalDate.now(clock)
 
         /** The outing being edited, or `null` while recording a new one. */
-        private val outingId: Long? = savedStateHandle.get<Long>(OUTING_ID_KEY)?.takeIf { it > 0L }
+        private val outingId: String? = savedStateHandle.get<String>(OUTING_ID_KEY)?.takeIf { it.isNotEmpty() }
 
         private val query = MutableStateFlow("")
-        private val selectedIds = MutableStateFlow<Set<Long>>(emptySet())
+        private val selectedIds = MutableStateFlow<Set<String>>(emptySet())
 
         /**
          * Who the edited outing was recorded with, as stored — unaffected by the user then unticking
          * them, so an attendee never disappears from the picker mid-edit and can always be put back.
          */
-        private val attendeeIds = MutableStateFlow<Set<Long>>(emptySet())
+        private val attendeeIds = MutableStateFlow<Set<String>>(emptySet())
         private val startDate = MutableStateFlow(today)
         private val endDate = MutableStateFlow(today)
         private val multiDay = MutableStateFlow(false)
@@ -187,7 +187,7 @@ class GroupMeetupViewModel
 
         fun onQueryChange(value: String) = query.update { value }
 
-        fun onToggle(personId: Long) =
+        fun onToggle(personId: String) =
             selectedIds.update { current ->
                 if (personId in current) current - personId else current + personId
             }
@@ -240,7 +240,7 @@ class GroupMeetupViewModel
             }
         }
 
-        private fun saveEdit(editedId: Long, personIds: List<Long>) {
+        private fun saveEdit(editedId: String, personIds: List<String>) {
             viewModelScope.launch {
                 updateOuting(
                     outingId = editedId,

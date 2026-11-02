@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.peoplehub.core.domain.model.ReminderOffset
+import com.peoplehub.core.domain.repository.AuthRepository
 import com.peoplehub.core.domain.repository.ReminderStateRepository
 import com.peoplehub.core.domain.usecase.GetDueBirthdayRemindersUseCase
 import com.peoplehub.core.notifications.PeopleHubNotifier
@@ -27,6 +28,9 @@ import java.time.LocalDate
  * backstop, and an app-launch catch-up — so one missed alarm cannot swallow a birthday. The sweep
  * therefore claims the day in [ReminderStateRepository] and later triggers no-op, unless the request
  * carries [INPUT_FORCE] (the manual "check now" in Settings).
+ *
+ * The birthdays and the offsets are read from the cloud: signed out there is nothing to notify, and
+ * without an answer from the server in time the sweep retries without claiming the day.
  */
 @HiltWorker
 class BirthdayReminderWorker
@@ -37,14 +41,17 @@ class BirthdayReminderWorker
         private val getDueBirthdayReminders: GetDueBirthdayRemindersUseCase,
         private val reminderState: ReminderStateRepository,
         private val notifier: PeopleHubNotifier,
+        private val auth: AuthRepository,
         private val clock: Clock,
     ) : CoroutineWorker(appContext, params) {
         override suspend fun doWork(): Result {
             val today = LocalDate.now(clock)
             val forced = inputData.getBoolean(INPUT_FORCE, false)
             if (!forced && reminderState.lastBirthdaySweepDate() == today) return Result.success()
+            if (auth.currentAccount() == null) return Result.success()
 
-            getDueBirthdayReminders().forEach { due ->
+            val dueToday = readCloudOrNull { getDueBirthdayReminders() } ?: return Result.retry()
+            dueToday.forEach { due ->
                 if (due.isToday) {
                     notifier.showBirthdayToday(due.personId, due.fullName)
                 } else {

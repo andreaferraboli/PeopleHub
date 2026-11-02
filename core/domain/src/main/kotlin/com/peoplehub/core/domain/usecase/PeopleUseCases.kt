@@ -22,7 +22,7 @@ class ObservePersonUseCase
     constructor(
         private val repository: PeopleRepository,
     ) {
-        operator fun invoke(id: Long): Flow<Person?> = repository.observePerson(id)
+        operator fun invoke(id: String): Flow<Person?> = repository.observePerson(id)
     }
 
 /** Observes every distinct tag for the filter chips. */
@@ -44,7 +44,7 @@ class UpsertPersonUseCase
     constructor(
         private val repository: PeopleRepository,
     ) {
-        suspend operator fun invoke(person: Person): Result<Long> =
+        suspend operator fun invoke(person: Person): Result<String> =
             runCatching {
                 require(person.firstName.isNotBlank()) { "A name is required" }
                 repository.upsertPerson(
@@ -66,7 +66,7 @@ class UpsertPersonUseCase
  * Applies a notification / check-in change to a whole selection of people at once, used by the
  * directory's multi-select action bar.
  *
- * Each operation is a single bulk statement:
+ * Each operation is one bulk write:
  * - [setNotificationsEnabled] toggles per-person reminder opt-in.
  * - [setBirthdayOnly] turns the selected entries into bare birthdays (or back into tracked people).
  * - [setCheckInThreshold] applies a custom cadence (and re-enables check-in tracking); a `null`
@@ -78,16 +78,16 @@ class BulkUpdatePeopleUseCase
     constructor(
         private val repository: PeopleRepository,
     ) {
-        suspend fun setNotificationsEnabled(personIds: List<Long>, enabled: Boolean): Result<Unit> =
+        suspend fun setNotificationsEnabled(personIds: List<String>, enabled: Boolean): Result<Unit> =
             runCatching { repository.bulkSetNotificationsEnabled(personIds, enabled) }
 
-        suspend fun setBirthdayOnly(personIds: List<Long>, birthdayOnly: Boolean): Result<Unit> =
+        suspend fun setBirthdayOnly(personIds: List<String>, birthdayOnly: Boolean): Result<Unit> =
             runCatching { repository.bulkSetBirthdayOnly(personIds, birthdayOnly) }
 
-        suspend fun setCheckInThreshold(personIds: List<Long>, threshold: CheckInThreshold?): Result<Unit> =
+        suspend fun setCheckInThreshold(personIds: List<String>, threshold: CheckInThreshold?): Result<Unit> =
             runCatching { repository.bulkSetCheckInThreshold(personIds, threshold) }
 
-        suspend fun disableCheckIn(personIds: List<Long>): Result<Unit> =
+        suspend fun disableCheckIn(personIds: List<String>): Result<Unit> =
             runCatching { repository.bulkSetCheckInDisabled(personIds, disabled = true) }
     }
 
@@ -97,12 +97,12 @@ class DeletePersonUseCase
     constructor(
         private val repository: PeopleRepository,
     ) {
-        suspend operator fun invoke(id: Long) = repository.deletePerson(id)
+        suspend operator fun invoke(id: String) = repository.deletePerson(id)
     }
 
 /**
- * Deletes every person and their dependent rows (tags, interests, check-ins). Events are kept but
- * become unlinked. Irreversible — intended for the Settings "danger zone".
+ * Deletes every person and what depends on them (check-ins, reminders and their history), in the
+ * cloud. Events are kept but become unlinked. Irreversible — intended for the Settings "danger zone".
  */
 class DeleteAllPeopleUseCase
     @Inject

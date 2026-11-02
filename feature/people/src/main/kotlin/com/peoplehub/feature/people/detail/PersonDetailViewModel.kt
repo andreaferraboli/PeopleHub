@@ -76,7 +76,7 @@ class PersonDetailViewModel
         private val exportPerson: ExportPersonUseCase,
         private val clock: Clock,
     ) : ViewModel() {
-        private val personId: Long = savedStateHandle.toRoute<PersonDetailRoute>().personId
+        private val personId: String = savedStateHandle.toRoute<PersonDetailRoute>().personId
 
         private val closedSignal = MutableStateFlow(false)
 
@@ -158,7 +158,7 @@ class PersonDetailViewModel
         }
 
         /** Deletes the check-ins identified by [ids] (one tap-to-delete or a batch selection). */
-        fun onDeleteCheckIns(ids: List<Long>) {
+        fun onDeleteCheckIns(ids: List<String>) {
             if (ids.isEmpty()) return
             viewModelScope.launch { deleteCheckIns(personId, ids) }
         }

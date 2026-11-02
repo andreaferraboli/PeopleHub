@@ -6,7 +6,8 @@ import com.peoplehub.core.domain.model.ReminderOffset
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Read/write access to user preferences, backed by DataStore.
+ * Read/write access to user preferences. The thresholds, the birthday offsets and the reminder hour
+ * live in the cloud (`settings/main`); exact alarms is a device preference.
  */
 interface SettingsRepository {
     /** Reactive stream of the current [AppSettings]. */

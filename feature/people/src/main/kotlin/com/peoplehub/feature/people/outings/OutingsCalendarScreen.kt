@@ -77,7 +77,7 @@ private val DayTitleFormatter: DateTimeFormatter
 @Composable
 fun OutingsCalendarScreen(
     onBack: () -> Unit,
-    onEditOuting: (Long) -> Unit,
+    onEditOuting: (String) -> Unit,
     viewModel: OutingsCalendarViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -144,7 +144,7 @@ internal fun OutingsCalendarContent(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectDate: (LocalDate?) -> Unit,
-    onEditOuting: (Long) -> Unit,
+    onEditOuting: (String) -> Unit,
 ) {
     val c = PeopleHubTheme.colors
     val spacing = PeopleHubTheme.spacing

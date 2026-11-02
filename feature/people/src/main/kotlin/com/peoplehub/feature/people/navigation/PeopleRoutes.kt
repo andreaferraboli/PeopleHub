@@ -18,13 +18,13 @@ data object PeopleListRoute
 
 /** Person detail route. [personId] is read back via `SavedStateHandle.toRoute()` in the ViewModel. */
 @Serializable
-data class PersonDetailRoute(val personId: Long)
+data class PersonDetailRoute(val personId: String)
 
 /** Add/edit route; [personId] is [NEW_PERSON] when creating a new person. */
 @Serializable
-data class AddEditPersonRoute(val personId: Long = NEW_PERSON) {
+data class AddEditPersonRoute(val personId: String = NEW_PERSON) {
     companion object {
-        const val NEW_PERSON: Long = -1L
+        const val NEW_PERSON: String = "new"
     }
 }
 
@@ -45,21 +45,21 @@ data object OutingsCalendarRoute
  * outing, so the day, description and attendee list are edited for every attendee at once.
  */
 @Serializable
-data class EditOutingRoute(val outingId: Long)
+data class EditOutingRoute(val outingId: String)
 
 /**
  * Registers the people screens into the host graph. Navigation out of these screens is delegated to
  * the supplied callbacks so the feature stays decoupled from the rest of the app.
  */
 fun NavGraphBuilder.peopleSection(
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onAddPerson: () -> Unit,
-    onEditPerson: (Long) -> Unit,
-    onEventClick: (Long) -> Unit,
+    onEditPerson: (String) -> Unit,
+    onEventClick: (String) -> Unit,
     onRecordMeetup: () -> Unit,
-    onEditOuting: (Long) -> Unit,
-    onAddReminder: (Long) -> Unit,
-    onEditReminder: (Long) -> Unit,
+    onEditOuting: (String) -> Unit,
+    onAddReminder: (String) -> Unit,
+    onEditReminder: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     composable<PeopleListRoute> {

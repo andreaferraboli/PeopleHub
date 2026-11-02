@@ -68,7 +68,7 @@ class GetUpcomingBirthdaysUseCase
  * an advance reminder.
  */
 data class DueBirthdayReminder(
-    val personId: Long,
+    val personId: String,
     val fullName: String,
     val daysUntil: Int,
 ) {

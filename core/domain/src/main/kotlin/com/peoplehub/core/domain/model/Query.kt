@@ -13,7 +13,8 @@ enum class PeopleSort {
 }
 
 /**
- * Combined query for the people list: full-text [query], the set of [tags] to filter by, and the
+ * Combined query for the people list: free-text [query] (matched against name, notes, tags and
+ * interests), the set of [tags] to filter by, and the
  * desired [sort] order.
  */
 data class PeopleFilter(
@@ -39,7 +40,7 @@ enum class EventTimeFilter {
 data class EventFilter(
     val timeFilter: EventTimeFilter = EventTimeFilter.ALL,
     val category: String? = null,
-    val personId: Long? = null,
+    val personId: String? = null,
 )
 
 /**
@@ -50,7 +51,7 @@ data class EventFilter(
  * @property onlyEnabled when `true`, drop reminders the user has paused.
  */
 data class ReminderFilter(
-    val personId: Long? = null,
+    val personId: String? = null,
     val category: ReminderCategory? = null,
     val onlyEnabled: Boolean = false,
 )

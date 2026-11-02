@@ -6,7 +6,6 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequest
@@ -30,8 +29,6 @@ import javax.inject.Singleton
  * - a daily relationship-reminder sweep,
  * - a daily birthday sweep (a WorkManager backstop for the exact alarm below),
  * - a periodic widget refresh (every 6 hours),
- * - a periodic cloud sync pass (every 6 hours, network required), so changes made in the cloud (by
- *   the MCP server) reach notifications and widgets even when the app is never opened,
  * - the daily birthday alarm (delegated to [BirthdayAlarmScheduler]).
  *
  * Both notification sweeps (birthdays and per-person relationship reminders) have three triggers on
@@ -72,11 +69,9 @@ class PeopleHubWorkScheduler
             val widgetRequest = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(WIDGET_INTERVAL_HOURS, TimeUnit.HOURS).build()
             workManager.enqueueUniquePeriodicWork(WIDGET_WORK, ExistingPeriodicWorkPolicy.KEEP, widgetRequest)
 
-            val syncRequest =
-                PeriodicWorkRequestBuilder<SyncWorker>(SYNC_INTERVAL_HOURS, TimeUnit.HOURS)
-                    .setConstraints(networkConstraint())
-                    .build()
-            workManager.enqueueUniquePeriodicWork(SYNC_PERIODIC_WORK, ExistingPeriodicWorkPolicy.KEEP, syncRequest)
+            // The old sync engine's jobs: their worker no longer exists.
+            workManager.cancelUniqueWork(LEGACY_SYNC_ONCE_WORK)
+            workManager.cancelUniqueWork(LEGACY_SYNC_PERIODIC_WORK)
 
             reminderState.setScheduledReminderHour(hour)
             birthdayAlarmScheduler.scheduleDailyCheck(hour, preferExact = settings.useExactAlarms)
@@ -107,23 +102,6 @@ class PeopleHubWorkScheduler
                     .build()
             enqueueSweep(REMINDER_SWEEP_WORK, request, force)
         }
-
-        /**
-         * Asks for a cloud sync shortly (network required). Unique work with `KEEP`, so the burst of
-         * requests a single edit produces (outbox, settings, listeners) collapses into one run; the
-         * short delay lets a multi-row edit land before it starts.
-         */
-        fun enqueueSync() {
-            val request =
-                OneTimeWorkRequestBuilder<SyncWorker>()
-                    .setInitialDelay(SYNC_DEBOUNCE_SECONDS, TimeUnit.SECONDS)
-                    .setConstraints(networkConstraint())
-                    .build()
-            WorkManager.getInstance(context).enqueueUniqueWork(SYNC_ONCE_WORK, ExistingWorkPolicy.KEEP, request)
-        }
-
-        private fun networkConstraint(): Constraints =
-            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
         /** Enqueues a one-off widget refresh after a significant data change. */
         fun updateWidgetsNow() {
@@ -174,10 +152,8 @@ class PeopleHubWorkScheduler
             const val REMINDER_SWEEP_WORK = "relationship_sweep_once"
             const val WIDGET_WORK = "widget_update_periodic"
             const val WIDGET_INTERVAL_HOURS = 6L
-            const val SYNC_ONCE_WORK = "cloud_sync_once"
-            const val SYNC_PERIODIC_WORK = "cloud_sync_periodic"
-            const val SYNC_INTERVAL_HOURS = 6L
-            const val SYNC_DEBOUNCE_SECONDS = 3L
+            const val LEGACY_SYNC_ONCE_WORK = "cloud_sync_once"
+            const val LEGACY_SYNC_PERIODIC_WORK = "cloud_sync_periodic"
             const val MAX_HOUR = 23
         }
     }

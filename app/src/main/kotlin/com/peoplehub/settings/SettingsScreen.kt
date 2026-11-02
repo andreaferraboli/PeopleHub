@@ -63,10 +63,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.R
+import com.peoplehub.account.AccountCard
+import com.peoplehub.account.AccountState
+import com.peoplehub.account.AccountViewModel
+import com.peoplehub.account.GoogleSignIn
+import com.peoplehub.core.domain.model.Account
 import com.peoplehub.core.domain.model.AppSettings
 import com.peoplehub.core.domain.model.ImportStrategy
 import com.peoplehub.core.domain.model.ReminderOffset
-import com.peoplehub.core.domain.model.SyncStatus
 import com.peoplehub.core.ui.components.BarSegment
 import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.GlassPanel
@@ -112,34 +116,19 @@ fun SettingsScreen(
     onOpenLanguage: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel(),
-    syncViewModel: SyncViewModel = hiltViewModel(),
+    accountViewModel: AccountViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val syncStatus by syncViewModel.status.collectAsStateWithLifecycle()
+    val accountState by accountViewModel.state.collectAsStateWithLifecycle()
     val updateState by updateViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
-    var showDownloadDialog by remember { mutableStateOf(false) }
     var diagnostics by remember { mutableStateOf(readNotificationDiagnostics(context)) }
     val languageTag = remember { AppLocale.currentTag(context) }
     val checkNowMessage = stringResource(R.string.vault_diag_check_now_sent)
-    val signInFailedMessage = stringResource(R.string.vault_sync_sign_in_failed)
-    val syncDoneMessage = stringResource(R.string.vault_sync_done)
-    val syncFailedTemplate = stringResource(R.string.vault_sync_failed, "%s")
-
-    LaunchedEffect(syncViewModel) {
-        syncViewModel.events.collect { event ->
-            val text =
-                when (event) {
-                    SyncEvent.Done -> syncDoneMessage
-                    is SyncEvent.Failed -> syncFailedTemplate.replace("%s", event.message)
-                }
-            snackbarHostState.showSnackbar(text)
-        }
-    }
 
     // Re-read on every resume so returning from a system settings screen reflects the new grant.
     LifecycleResumeEffect(Unit) {
@@ -229,44 +218,12 @@ fun SettingsScreen(
                 },
                 onDeleteAll = { showDeleteAllDialog = true },
             ),
-        syncStatus = syncStatus,
-        syncActions =
-            SyncActions(
-                onSignIn = {
-                    scope.launch {
-                        GoogleSignIn
-                            .requestIdToken(context)
-                            .onSuccess(syncViewModel::onIdToken)
-                            .onFailure { snackbarHostState.showSnackbar(signInFailedMessage) }
-                    }
-                },
-                onUpload = syncViewModel::upload,
-                onDownload = { showDownloadDialog = true },
-                onSyncNow = syncViewModel::syncNow,
-                onRetryCheck = syncViewModel::retryCloudCheck,
-                onSignOut = {
-                    syncViewModel.signOut()
-                    scope.launch { GoogleSignIn.clear(context) }
-                },
-            ),
+        account = (accountState as? AccountState.SignedIn)?.account,
+        onSignOut = {
+            accountViewModel.signOut()
+            scope.launch { GoogleSignIn.clear(context) }
+        },
     )
-
-    if (showDownloadDialog) {
-        AlertDialog(
-            onDismissRequest = { showDownloadDialog = false },
-            title = { Text(stringResource(R.string.vault_sync_download_confirm_title)) },
-            text = { Text(stringResource(R.string.vault_sync_download_confirm_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDownloadDialog = false
-                    syncViewModel.download()
-                }) { Text(stringResource(R.string.vault_sync_download)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDownloadDialog = false }) { Text(stringResource(R.string.action_cancel)) }
-            },
-        )
-    }
 
     if (showDeleteAllDialog) {
         AlertDialog(
@@ -339,8 +296,8 @@ internal fun SettingsContent(
     snackbarHostState: SnackbarHostState,
     actions: SettingsActions,
     modifier: Modifier = Modifier,
-    syncStatus: SyncStatus = SyncStatus(),
-    syncActions: SyncActions = SyncActions(),
+    account: Account? = null,
+    onSignOut: () -> Unit = {},
 ) {
     val c = PeopleHubTheme.colors
     val spacing = PeopleHubTheme.spacing
@@ -380,9 +337,9 @@ internal fun SettingsContent(
                     modifier = cardModifier.riseIn(1),
                 )
 
-                SyncCard(
-                    status = syncStatus,
-                    actions = syncActions,
+                AccountCard(
+                    account = account,
+                    onSignOut = onSignOut,
                     modifier = cardModifier.riseIn(2),
                 )
 

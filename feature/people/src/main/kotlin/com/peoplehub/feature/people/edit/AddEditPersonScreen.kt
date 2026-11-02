@@ -572,7 +572,7 @@ private fun ThresholdEditor(
 private fun AddEditPersonPreview(dark: Boolean) {
     val form =
         PersonForm(
-            id = 7L,
+            id = "7",
             firstName = "Francesca",
             lastName = "Lombardi",
             birthday = LocalDate.of(1994, 11, 3),

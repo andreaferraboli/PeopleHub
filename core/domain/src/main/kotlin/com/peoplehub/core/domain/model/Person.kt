@@ -10,9 +10,11 @@ import java.time.LocalDate
  * (birthday, photo), free-form personalisation ([tags], [interests], [notes]) and the denormalised
  * [lastCheckInAt] used to drive the "seen X days ago" frequency tracker.
  *
- * @property id stable database identifier; `0` denotes a not-yet-persisted person.
+ * @property id the person's Firestore document id (a UUID); empty for a not-yet-persisted person.
  * @property checkInThreshold per-person override of the global check-in thresholds, or `null` to
  * fall back to [AppSettings.defaultCheckInThreshold].
+ * @property photoPath the local file of the profile photo. Photos never leave the phone: only
+ * `hasPhoto` is stored in the cloud, and the path comes from the phone's own photo map.
  * @property notificationsEnabled whether this person may trigger check-in and birthday
  * notifications. Defaults to `false`, so a new (or migrated) profile is silent until the user opts
  * in explicitly.
@@ -28,7 +30,7 @@ import java.time.LocalDate
  * simply shows a "Family" label.
  */
 data class Person(
-    val id: Long = 0L,
+    val id: String = "",
     val firstName: String,
     val lastName: String,
     val photoPath: String? = null,
@@ -64,5 +66,4 @@ data class Person(
 data class Interest(
     val key: String,
     val value: String,
-    val id: Long = 0L,
 )

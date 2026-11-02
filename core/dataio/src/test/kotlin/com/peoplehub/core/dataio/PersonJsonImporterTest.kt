@@ -16,7 +16,7 @@ class PersonJsonImporterTest {
 
     private val existing =
         Person(
-            id = 42L,
+            id = "42",
             firstName = "Ada",
             lastName = "Lovelace",
             photoPath = "/photos/ada.jpg",
@@ -37,7 +37,7 @@ class PersonJsonImporterTest {
 
         val person = importer.parse(json).getOrThrow()
 
-        assertEquals(0L, person.id)
+        assertEquals("", person.id)
         assertEquals("Grace", person.firstName)
         assertFalse(person.notificationsEnabled)
         assertFalse(person.birthdayOnly)
@@ -50,7 +50,7 @@ class PersonJsonImporterTest {
         val merged = importer.merge(json, existing).getOrThrow()
 
         // id is never changed
-        assertEquals(42L, merged.id)
+        assertEquals("42", merged.id)
         // present keys overwrite
         assertEquals("Updated notes", merged.notes)
         assertTrue(merged.notificationsEnabled)

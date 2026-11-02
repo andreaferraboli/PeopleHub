@@ -5,19 +5,20 @@ import java.time.Instant
 /**
  * A single recorded interaction with a [Person] ("Ho visto [Nome] oggi").
  *
+ * @property id the check-in's Firestore document id (a UUID); empty before it is written.
  * @property timestamp the instant the check-in was recorded.
  * @property note optional free-text note attached to the interaction.
  * @property outingId groups the check-ins that belong to the same real-world outing: seeing four
  * friends on one evening writes four check-ins sharing one [outingId], so each person keeps their own
- * history while the outing can still be shown — and edited — as a single [Outing]. `0` means "not yet
- * assigned"; the data layer allocates a fresh id on insert.
+ * history while the outing can still be shown — and edited — as a single [Outing]. A UUID string, empty
+ * when not yet assigned.
  */
 data class CheckIn(
-    val id: Long = 0L,
-    val personId: Long,
+    val id: String = "",
+    val personId: String,
     val timestamp: Instant,
     val note: String? = null,
-    val outingId: Long = 0L,
+    val outingId: String = "",
 )
 
 /**

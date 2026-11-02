@@ -14,11 +14,13 @@ import kotlinx.coroutines.flow.first
 class BirthdayWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val birthdays =
-            widgetEntryPoint(context)
-                .getUpcomingBirthdays()
-                .invoke()
-                .first()
-                .take(MAX_ROWS)
+            widgetRead(emptyList()) {
+                widgetEntryPoint(context)
+                    .getUpcomingBirthdays()
+                    .invoke()
+                    .first()
+                    .take(MAX_ROWS)
+            }
         provideContent { BirthdayWidgetContent(context, birthdays) }
     }
 

@@ -19,7 +19,7 @@ class GetPersonRemindersUseCase
     constructor(
         private val repository: ReminderRepository,
     ) {
-        operator fun invoke(personId: Long): Flow<List<Reminder>> = repository.observeRemindersForPerson(personId)
+        operator fun invoke(personId: String): Flow<List<Reminder>> = repository.observeRemindersForPerson(personId)
     }
 
 /** Observes the filtered list of reminders across all people, soonest-due first. */
@@ -38,7 +38,7 @@ class GetReminderUseCase
     constructor(
         private val repository: ReminderRepository,
     ) {
-        suspend operator fun invoke(id: Long): Reminder? = repository.getReminder(id)
+        suspend operator fun invoke(id: String): Reminder? = repository.getReminder(id)
     }
 
 /**
@@ -53,10 +53,10 @@ class AddReminderUseCase
         private val clock: Clock,
         private val random: Random,
     ) {
-        suspend operator fun invoke(reminder: Reminder): Result<Long> =
+        suspend operator fun invoke(reminder: Reminder): Result<String> =
             runCatching {
                 require(reminder.title.isNotBlank()) { "Reminder title is required" }
-                require(reminder.personId > 0L) { "Reminder must belong to a person" }
+                require(reminder.personId.isNotBlank()) { "Reminder must belong to a person" }
                 val target = reminder.targetIntervalDays.coerceAtLeast(ReminderScheduling.MIN_INTERVAL_DAYS)
                 val jitter = reminder.jitterPercent.coerceIn(0, ReminderScheduling.MAX_JITTER_PERCENT)
                 val now = Instant.now(clock)
@@ -85,7 +85,7 @@ class UpdateReminderUseCase
         private val clock: Clock,
         private val random: Random,
     ) {
-        suspend operator fun invoke(reminder: Reminder): Result<Long> =
+        suspend operator fun invoke(reminder: Reminder): Result<String> =
             runCatching {
                 require(reminder.title.isNotBlank()) { "Reminder title is required" }
                 val existing = repository.getReminder(reminder.id)
@@ -114,13 +114,13 @@ class UpdateReminderUseCase
             }
     }
 
-/** Deletes a reminder by id. */
+/** Deletes a reminder and its completion history. */
 class DeleteReminderUseCase
     @Inject
     constructor(
         private val repository: ReminderRepository,
     ) {
-        suspend operator fun invoke(id: Long) = repository.deleteReminder(id)
+        suspend operator fun invoke(id: String) = repository.deleteReminder(id)
     }
 
 /** Pauses or resumes a reminder. */
@@ -129,7 +129,7 @@ class SetReminderEnabledUseCase
     constructor(
         private val repository: ReminderRepository,
     ) {
-        suspend operator fun invoke(id: Long, enabled: Boolean) = repository.setEnabled(id, enabled)
+        suspend operator fun invoke(id: String, enabled: Boolean) = repository.setEnabled(id, enabled)
     }
 
 /**
@@ -167,7 +167,7 @@ class MarkReminderFiredUseCase
         private val clock: Clock,
         private val random: Random,
     ) {
-        suspend operator fun invoke(reminderId: Long) {
+        suspend operator fun invoke(reminderId: String) {
             val reminder = repository.getReminder(reminderId) ?: return
             val now = Instant.now(clock)
             val next =
@@ -197,7 +197,7 @@ class MarkReminderDoneUseCase
         private val clock: Clock,
         private val random: Random,
     ) {
-        suspend operator fun invoke(reminderId: Long): Result<Unit> =
+        suspend operator fun invoke(reminderId: String): Result<Unit> =
             runCatching {
                 val reminder = repository.getReminder(reminderId) ?: return@runCatching
                 val now = Instant.now(clock)
@@ -214,5 +214,5 @@ class ObserveReminderCompletionsUseCase
     constructor(
         private val repository: ReminderRepository,
     ) {
-        operator fun invoke(): Flow<Map<Long, ReminderCompletion>> = repository.observeCompletions()
+        operator fun invoke(): Flow<Map<String, ReminderCompletion>> = repository.observeCompletions()
     }

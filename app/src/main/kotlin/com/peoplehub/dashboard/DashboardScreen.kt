@@ -114,14 +114,14 @@ private const val MAX_RISE_INDEX = 8
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    onPersonClick: (Long) -> Unit,
-    onEventClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
+    onEventClick: (String) -> Unit,
     onSeeAllPeople: () -> Unit,
     onSeeAllBirthdays: () -> Unit,
     onAddPerson: () -> Unit,
     onRecordMeetup: () -> Unit,
     onOpenOutings: () -> Unit,
-    onEditOuting: (Long) -> Unit,
+    onEditOuting: (String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -212,14 +212,14 @@ private fun DashboardTopBar(
 internal fun DashboardContent(
     data: DashboardData,
     contentPadding: PaddingValues,
-    onPersonClick: (Long) -> Unit,
-    onEventClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
+    onEventClick: (String) -> Unit,
     onSeeAllPeople: () -> Unit,
     onSeeAllBirthdays: () -> Unit,
-    onQuickCheckIn: (Long) -> Unit,
+    onQuickCheckIn: (String) -> Unit,
     onRecordMeetup: () -> Unit,
     onOpenOutings: () -> Unit,
-    onEditOuting: (Long) -> Unit,
+    onEditOuting: (String) -> Unit,
     today: LocalDate = LocalDate.now(),
 ) {
     val spacing = PeopleHubTheme.spacing
@@ -464,8 +464,8 @@ private fun VitalityCard(
 @Composable
 private fun UrgentCheckInCard(
     urgency: CheckInUrgency,
-    onPersonClick: (Long) -> Unit,
-    onQuickCheckIn: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
+    onQuickCheckIn: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = PeopleHubTheme.colors
@@ -539,7 +539,7 @@ private fun UrgentCheckInCard(
 @Composable
 private fun MilestonesSection(
     birthdays: List<UpcomingBirthday>,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onSeeAllBirthdays: () -> Unit,
 ) {
     val spacing = PeopleHubTheme.spacing
@@ -578,7 +578,7 @@ private fun MilestonesSection(
 @Composable
 private fun MilestoneRow(
     birthday: UpcomingBirthday,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
 ) {
     val c = PeopleHubTheme.colors
     val spacing = PeopleHubTheme.spacing
@@ -639,7 +639,7 @@ private fun MilestoneRow(
 private fun PinnedEventSection(
     event: PersonEvent,
     today: LocalDate,
-    onEventClick: (Long) -> Unit,
+    onEventClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val spacing = PeopleHubTheme.spacing
@@ -705,7 +705,7 @@ private val PreviewData =
             listOf(
                 CheckInUrgency(
                     Person(
-                        id = 1,
+                        id = "1",
                         firstName = "Giulia",
                         lastName = "Ferri",
                         tags = listOf("Università", "Milano"),
@@ -714,12 +714,16 @@ private val PreviewData =
                     42,
                     CheckInStatus.OVERDUE,
                 ),
-                CheckInUrgency(Person(id = 2, firstName = "Davide", lastName = "Russo", tags = listOf("Calcetto")), 19, CheckInStatus.DUE),
+                CheckInUrgency(
+                    Person(id = "2", firstName = "Davide", lastName = "Russo", tags = listOf("Calcetto")),
+                    19,
+                    CheckInStatus.DUE,
+                ),
             ),
         upcomingBirthdays =
             listOf(
                 UpcomingBirthday(
-                    personId = 3,
+                    personId = "3",
                     fullName = "Sofia Bianchi",
                     photoPath = null,
                     birthday = LocalDate.of(1997, 10, 23),
@@ -728,7 +732,7 @@ private val PreviewData =
                     turningAge = 29,
                 ),
                 UpcomingBirthday(
-                    personId = 4,
+                    personId = "4",
                     fullName = "Luca Martini",
                     photoPath = null,
                     birthday = LocalDate.of(1993, 10, 30),
@@ -739,7 +743,7 @@ private val PreviewData =
             ),
         pinnedEvent =
             PersonEvent(
-                id = 5,
+                id = "5",
                 title = "Weekend a Lisbona",
                 dateTime = LocalDateTime.of(2026, 11, 6, 7, 15),
                 category = "Viaggio",
@@ -748,15 +752,15 @@ private val PreviewData =
         recentOutings =
             listOf(
                 Outing(
-                    id = 6,
+                    id = "6",
                     date = PreviewToday,
                     timestamp = Instant.EPOCH,
                     note = "Colazione da Marchesi prima del lavoro, abbiamo chiuso i biglietti per Lisbona.",
                     attendees =
                         listOf(
-                            OutingAttendee(checkInId = 7, personId = 8, fullName = "Marta Colombo", initials = "MC", photoPath = null),
+                            OutingAttendee(checkInId = "7", personId = "8", fullName = "Marta Colombo", initials = "MC", photoPath = null),
                         ),
-                    checkInIds = listOf(7),
+                    checkInIds = listOf("7"),
                 ),
             ),
     )

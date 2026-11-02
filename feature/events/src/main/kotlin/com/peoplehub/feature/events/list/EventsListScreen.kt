@@ -62,7 +62,7 @@ import kotlin.math.absoluteValue
 /** Stateful entry point for the events timeline ("Cronologia"). */
 @Composable
 fun EventsListScreen(
-    onEventClick: (Long) -> Unit,
+    onEventClick: (String) -> Unit,
     onAddEvent: () -> Unit,
     viewModel: EventsListViewModel = hiltViewModel(),
 ) {
@@ -103,8 +103,8 @@ internal fun EventsListContent(
     contentPadding: PaddingValues,
     onTimeFilterChange: (EventTimeFilter) -> Unit,
     onCategoryChange: (String?) -> Unit,
-    onEventClick: (Long) -> Unit,
-    onTogglePin: (Long, Boolean) -> Unit,
+    onEventClick: (String) -> Unit,
+    onTogglePin: (String, Boolean) -> Unit,
     today: LocalDate = rememberToday(),
 ) {
     val spacing = PeopleHubTheme.spacing
@@ -206,8 +206,8 @@ private fun CategoryFilterRow(
 private fun LazyListScope.eventsListBody(
     listState: UiState<List<EventListItem>>,
     today: LocalDate,
-    onEventClick: (Long) -> Unit,
-    onTogglePin: (Long, Boolean) -> Unit,
+    onEventClick: (String) -> Unit,
+    onTogglePin: (String, Boolean) -> Unit,
 ) {
     when (listState) {
         UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
@@ -256,8 +256,8 @@ private fun LazyListScope.eventSection(
     firstIndex: Int,
     today: LocalDate,
     topPadding: Dp,
-    onEventClick: (Long) -> Unit,
-    onTogglePin: (Long, Boolean) -> Unit,
+    onEventClick: (String) -> Unit,
+    onTogglePin: (String, Boolean) -> Unit,
 ) {
     if (events.isEmpty()) return
     item(key = "header-$key") {
@@ -389,12 +389,12 @@ private val PreviewState =
         listState =
             UiState.Success(
                 listOf(
-                    EventListItem(4, "Le chiavi di casa nuova", "Casa", -133, isPast = true, pinned = false),
-                    EventListItem(5, "Tre anni con Marta", "Anniversario", -21, isPast = true, pinned = false),
-                    EventListItem(6, "Matrimonio di Giacomo e Irene", "Matrimonio", -13, isPast = true, pinned = false),
-                    EventListItem(1, "Weekend a Lisbona", "Viaggio", 14, isPast = false, pinned = true),
-                    EventListItem(2, "Laurea di Matteo", "Traguardo", 28, isPast = false, pinned = false),
-                    EventListItem(3, "Cena di Natale del calcetto", "Cena", 56, isPast = false, pinned = false),
+                    EventListItem("4", "Le chiavi di casa nuova", "Casa", -133, isPast = true, pinned = false),
+                    EventListItem("5", "Tre anni con Marta", "Anniversario", -21, isPast = true, pinned = false),
+                    EventListItem("6", "Matrimonio di Giacomo e Irene", "Matrimonio", -13, isPast = true, pinned = false),
+                    EventListItem("1", "Weekend a Lisbona", "Viaggio", 14, isPast = false, pinned = true),
+                    EventListItem("2", "Laurea di Matteo", "Traguardo", 28, isPast = false, pinned = false),
+                    EventListItem("3", "Cena di Natale del calcetto", "Cena", 56, isPast = false, pinned = false),
                 ),
             ),
         categories = listOf("Anniversario", "Casa", "Cena", "Matrimonio", "Traguardo", "Viaggio"),

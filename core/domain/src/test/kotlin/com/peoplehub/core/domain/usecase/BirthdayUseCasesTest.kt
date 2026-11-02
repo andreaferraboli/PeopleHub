@@ -25,10 +25,10 @@ class BirthdayUseCasesTest {
     fun `upcoming birthdays keeps only those within the window and sorts by soonest`() =
         runTest {
             val peopleRepository = mockk<PeopleRepository>()
-            val soon = Person(id = 1, firstName = "Soon", lastName = "A", birthday = LocalDate.of(1990, 6, 20))
-            val sooner = Person(id = 2, firstName = "Sooner", lastName = "B", birthday = LocalDate.of(1985, 6, 14))
-            val far = Person(id = 3, firstName = "Far", lastName = "C", birthday = LocalDate.of(1990, 12, 1))
-            val noBirthday = Person(id = 4, firstName = "None", lastName = "D", birthday = null)
+            val soon = Person(id = "1", firstName = "Soon", lastName = "A", birthday = LocalDate.of(1990, 6, 20))
+            val sooner = Person(id = "2", firstName = "Sooner", lastName = "B", birthday = LocalDate.of(1985, 6, 14))
+            val far = Person(id = "3", firstName = "Far", lastName = "C", birthday = LocalDate.of(1990, 12, 1))
+            val noBirthday = Person(id = "4", firstName = "None", lastName = "D", birthday = null)
             every { peopleRepository.observePeople(any()) } returns flowOf(listOf(soon, sooner, far, noBirthday))
 
             val getAll = GetAllBirthdaysUseCase(peopleRepository, clock)
@@ -36,7 +36,7 @@ class BirthdayUseCasesTest {
 
             useCase(withinDays = 30).test {
                 val upcoming = awaitItem()
-                assertEquals(listOf(2L, 1L), upcoming.map { it.personId })
+                assertEquals(listOf("2", "1"), upcoming.map { it.personId })
                 assertEquals(4, upcoming.first().daysUntil)
                 awaitComplete()
             }
@@ -49,7 +49,7 @@ class BirthdayUseCasesTest {
             // every profile added or imported without deliberately flipping the switch.
             val optedOut =
                 Person(
-                    id = 7,
+                    id = "7",
                     firstName = "Daniela",
                     lastName = "Zia",
                     birthday = LocalDate.of(1960, 6, 10),
@@ -59,16 +59,16 @@ class BirthdayUseCasesTest {
 
             val due = useCase()
 
-            assertEquals(listOf(7L), due.map { it.personId })
+            assertEquals(listOf("7"), due.map { it.personId })
             assertTrue(due.single().isToday)
         }
 
     @Test
     fun `due reminders only include distances matching an enabled offset`() =
         runTest {
-            val today = Person(id = 1, firstName = "Today", lastName = "A", birthday = LocalDate.of(1990, 6, 10))
-            val inSeven = Person(id = 2, firstName = "Week", lastName = "B", birthday = LocalDate.of(1990, 6, 17))
-            val inThree = Person(id = 3, firstName = "Three", lastName = "C", birthday = LocalDate.of(1990, 6, 13))
+            val today = Person(id = "1", firstName = "Today", lastName = "A", birthday = LocalDate.of(1990, 6, 10))
+            val inSeven = Person(id = "2", firstName = "Week", lastName = "B", birthday = LocalDate.of(1990, 6, 17))
+            val inThree = Person(id = "3", firstName = "Three", lastName = "C", birthday = LocalDate.of(1990, 6, 13))
             val useCase =
                 dueRemindersUseCase(
                     listOf(today, inSeven, inThree),
@@ -77,14 +77,14 @@ class BirthdayUseCasesTest {
 
             val due = useCase()
 
-            assertEquals(listOf(1L, 2L), due.map { it.personId })
+            assertEquals(listOf("1", "2"), due.map { it.personId })
             assertEquals(listOf(true, false), due.map { it.isToday })
         }
 
     @Test
     fun `due reminders are empty when every offset is disabled`() =
         runTest {
-            val person = Person(id = 1, firstName = "Today", lastName = "A", birthday = LocalDate.of(1990, 6, 10))
+            val person = Person(id = "1", firstName = "Today", lastName = "A", birthday = LocalDate.of(1990, 6, 10))
 
             assertTrue(dueRemindersUseCase(listOf(person), emptySet())().isEmpty())
         }

@@ -14,11 +14,13 @@ import kotlinx.coroutines.flow.first
 class CheckInWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val urgent =
-            widgetEntryPoint(context)
-                .getUrgentCheckIns()
-                .invoke()
-                .first()
-                .take(MAX_ROWS)
+            widgetRead(emptyList()) {
+                widgetEntryPoint(context)
+                    .getUrgentCheckIns()
+                    .invoke()
+                    .first()
+                    .take(MAX_ROWS)
+            }
         provideContent { CheckInWidgetContent(context, urgent) }
     }
 

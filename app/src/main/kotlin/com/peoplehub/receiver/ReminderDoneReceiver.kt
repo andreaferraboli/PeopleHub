@@ -9,6 +9,7 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Handles the "Done" action on a relationship reminder: logs the tap in the reminder's completion history,
@@ -20,15 +21,16 @@ class ReminderDoneReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != NotificationActions.ACTION_REMINDER_DONE) return
 
-        val reminderId = intent.getLongExtra(NotificationActions.EXTRA_REMINDER_ID, INVALID_ID)
+        val reminderId = intent.getStringExtra(NotificationActions.EXTRA_REMINDER_ID)
         val notificationId = intent.getIntExtra(NotificationActions.EXTRA_NOTIFICATION_ID, -1)
-        if (reminderId <= 0L) return
+        if (reminderId.isNullOrEmpty()) return
 
         val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, ReceiverEntryPoint::class.java)
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                entryPoint.markReminderDone().invoke(reminderId)
+                val done = withTimeoutOrNull(CLOUD_TIMEOUT_MILLIS) { entryPoint.markReminderDone().invoke(reminderId) }
+                if (done?.isSuccess != true) return@launch
                 if (notificationId > 0) entryPoint.notifier().cancel(notificationId)
             } finally {
                 pendingResult.finish()
@@ -37,6 +39,7 @@ class ReminderDoneReceiver : BroadcastReceiver() {
     }
 
     private companion object {
-        const val INVALID_ID = -1L
+        /** A broadcast receiver has about ten seconds; the cloud write must fit in it. */
+        const val CLOUD_TIMEOUT_MILLIS = 9_000L
     }
 }

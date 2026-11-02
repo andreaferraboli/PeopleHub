@@ -136,10 +136,10 @@ private fun suggestedExportName(fullName: String): String {
 @Composable
 fun PersonDetailScreen(
     onBack: () -> Unit,
-    onEdit: (Long) -> Unit,
-    onEventClick: (Long) -> Unit,
-    onAddReminder: (Long) -> Unit,
-    onEditReminder: (Long) -> Unit,
+    onEdit: (String) -> Unit,
+    onEventClick: (String) -> Unit,
+    onAddReminder: (String) -> Unit,
+    onEditReminder: (String) -> Unit,
     viewModel: PersonDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -309,11 +309,11 @@ internal fun PersonDetailContent(
     data: PersonDetailData,
     onCheckIn: (String?, LocalDate, LocalDate) -> Unit,
     onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
-    onDeleteCheckIns: (List<Long>) -> Unit,
+    onDeleteCheckIns: (List<String>) -> Unit,
     onAppendNote: (String) -> Unit,
-    onEventClick: (Long) -> Unit,
-    onAddReminder: (Long) -> Unit,
-    onEditReminder: (Long) -> Unit,
+    onEventClick: (String) -> Unit,
+    onAddReminder: (String) -> Unit,
+    onEditReminder: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -577,13 +577,13 @@ private fun InterestRow(interest: Interest) {
 private fun CheckInTab(
     data: PersonDetailData,
     onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
-    onDeleteCheckIns: (List<Long>) -> Unit,
+    onDeleteCheckIns: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectionMode by remember { mutableStateOf(false) }
-    var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
+    var selectedIds by remember { mutableStateOf(emptySet<String>()) }
     var editing by remember { mutableStateOf<CheckIn?>(null) }
-    var pendingDelete by remember { mutableStateOf<List<Long>?>(null) }
+    var pendingDelete by remember { mutableStateOf<List<String>?>(null) }
     val spacing = PeopleHubTheme.spacing
 
     // Selection is keyed by id; drop any ids that no longer exist (e.g. after a deletion).
@@ -811,7 +811,7 @@ private fun CheckInRow(
 @Composable
 private fun RelatedTab(
     data: PersonDetailData,
-    onEventClick: (Long) -> Unit,
+    onEventClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (data.relatedEvents.isEmpty()) {
@@ -837,7 +837,7 @@ private fun RelatedTab(
 @Composable
 private fun RelatedEventRow(
     event: PersonEvent,
-    onEventClick: (Long) -> Unit,
+    onEventClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = PeopleHubTheme.colors
@@ -872,7 +872,7 @@ private fun RelatedEventRow(
 private fun RemindersTab(
     data: PersonDetailData,
     onAddReminder: () -> Unit,
-    onEditReminder: (Long) -> Unit,
+    onEditReminder: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = PeopleHubTheme.colors
@@ -912,7 +912,7 @@ private fun RemindersTab(
 @Composable
 private fun ReminderRow(
     reminder: Reminder,
-    onEditReminder: (Long) -> Unit,
+    onEditReminder: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = PeopleHubTheme.colors
@@ -1229,7 +1229,7 @@ private fun previewDetailData(): PersonDetailData {
     val birthday = LocalDate.of(1994, 11, 3)
     val person =
         Person(
-            id = 7L,
+            id = "7",
             firstName = "Francesca",
             lastName = "Lombardi",
             birthday = birthday,
@@ -1257,8 +1257,8 @@ private fun previewDetailData(): PersonDetailData {
         history =
             listOf(
                 CheckIn(
-                    id = 1L,
-                    personId = 7L,
+                    id = "1",
+                    personId = "7",
                     timestamp =
                         today
                             .minusDays(42)
@@ -1268,8 +1268,8 @@ private fun previewDetailData(): PersonDetailData {
                     note = "Cena da Sciamadda",
                 ),
                 CheckIn(
-                    id = 2L,
-                    personId = 7L,
+                    id = "2",
+                    personId = "7",
                     timestamp =
                         today
                             .minusDays(80)

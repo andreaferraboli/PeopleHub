@@ -429,8 +429,8 @@ private fun PresetRow(
 @Composable
 private fun PersonPicker(
     people: List<PersonOption>,
-    selectedId: Long?,
-    onPersonChange: (Long?) -> Unit,
+    selectedId: String?,
+    onPersonChange: (String?) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val hint = stringResource(R.string.reminder_person_hint)

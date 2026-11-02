@@ -111,7 +111,7 @@ private const val MAX_RISE_INDEX = 8
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleListScreen(
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onAddPerson: () -> Unit,
     onRecordMeetup: () -> Unit,
     viewModel: PeopleListViewModel = hiltViewModel(),
@@ -258,8 +258,8 @@ internal fun PeopleListContent(
     onSortChange: (PeopleSort) -> Unit,
     onRecordMeetup: () -> Unit,
     onImport: () -> Unit,
-    onPersonClick: (Long) -> Unit,
-    onPersonLongClick: (Long) -> Unit = {},
+    onPersonClick: (String) -> Unit,
+    onPersonLongClick: (String) -> Unit = {},
 ) {
     val spacing = PeopleHubTheme.spacing
     LazyColumn(
@@ -345,9 +345,9 @@ internal fun PeopleListContent(
 private fun LazyListScope.peopleListBody(
     listState: UiState<List<PersonListItem>>,
     showBirthday: Boolean,
-    selectedIds: Set<Long>,
-    onPersonClick: (Long) -> Unit,
-    onPersonLongClick: (Long) -> Unit,
+    selectedIds: Set<String>,
+    onPersonClick: (String) -> Unit,
+    onPersonLongClick: (String) -> Unit,
 ) {
     when (listState) {
         UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
@@ -862,13 +862,13 @@ private fun previewState(): PeopleListScreenState =
         listState =
             UiState.Success(
                 listOf(
-                    PersonListItem(1, "Francesca Lombardi", "FL", null, "Amici", CheckInStatus.OVERDUE, 42),
-                    PersonListItem(2, "Matteo Galli", "MG", null, "Università", CheckInStatus.OVERDUE, 37),
-                    PersonListItem(3, "Chiara Conti", "CC", null, "Lavoro", CheckInStatus.DUE, 18),
-                    PersonListItem(4, "Luca Moretti", "LM", null, "Calcetto", CheckInStatus.FRESH, 2),
-                    PersonListItem(5, "Marta Colombo", "MC", null, "Coppia", CheckInStatus.FRESH, 0),
-                    PersonListItem(6, "Davide Ricci", "DR", null, "Amici", CheckInStatus.NEVER, null, checkInDisabled = true),
-                    PersonListItem(7, "Elena Ferraboli", "EF", null, "Famiglia", CheckInStatus.FRESH, 5, isFamily = true),
+                    PersonListItem("1", "Francesca Lombardi", "FL", null, "Amici", CheckInStatus.OVERDUE, 42),
+                    PersonListItem("2", "Matteo Galli", "MG", null, "Università", CheckInStatus.OVERDUE, 37),
+                    PersonListItem("3", "Chiara Conti", "CC", null, "Lavoro", CheckInStatus.DUE, 18),
+                    PersonListItem("4", "Luca Moretti", "LM", null, "Calcetto", CheckInStatus.FRESH, 2),
+                    PersonListItem("5", "Marta Colombo", "MC", null, "Coppia", CheckInStatus.FRESH, 0),
+                    PersonListItem("6", "Davide Ricci", "DR", null, "Amici", CheckInStatus.NEVER, null, checkInDisabled = true),
+                    PersonListItem("7", "Elena Ferraboli", "EF", null, "Famiglia", CheckInStatus.FRESH, 5, isFamily = true),
                 ),
             ),
         allTags = listOf("Famiglia", "Amici", "Università", "Lavoro", "Calcetto", "Coppia"),

@@ -73,8 +73,8 @@ private val DetailCoverHeight = 320.dp
 @Composable
 fun EventDetailScreen(
     onBack: () -> Unit,
-    onEdit: (Long) -> Unit,
-    onPersonClick: (Long) -> Unit,
+    onEdit: (String) -> Unit,
+    onPersonClick: (String) -> Unit,
     viewModel: EventDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -160,7 +160,7 @@ internal fun EventDetailContent(
     data: EventDetailData,
     contentPadding: PaddingValues,
     onTogglePin: (Boolean) -> Unit,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -337,12 +337,12 @@ private fun EventDetailPreview(dark: Boolean) {
         EventDetailData(
             event =
                 PersonEvent(
-                    id = 1,
+                    id = "1",
                     title = "Weekend a Lisbona",
                     dateTime = LocalDateTime.of(2026, 11, 6, 9, 30),
                     description = "Volo alle 9:30 da Linate. Prenotare il tram 28 e la cena al Bairro Alto.",
                     category = "Viaggio",
-                    personId = 7,
+                    personId = "7",
                     pinnedToWidget = true,
                 ),
             personName = "Sofia Bianchi",

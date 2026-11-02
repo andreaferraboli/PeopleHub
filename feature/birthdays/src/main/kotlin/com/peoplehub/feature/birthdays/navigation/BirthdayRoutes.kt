@@ -25,7 +25,7 @@ data object AddBirthdaysRoute
  * decoupled from the rest of the app.
  */
 fun NavGraphBuilder.birthdaysSection(
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onAddBirthdays: () -> Unit,
     onBack: () -> Unit,
 ) {

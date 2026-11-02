@@ -51,8 +51,8 @@ class DashboardViewModelTest {
             every { getPeople(any()) } returns
                 flowOf(
                     listOf(
-                        Person(id = 1, firstName = "Eleanor", lastName = "Vance"),
-                        Person(id = 2, firstName = "Marcus", lastName = "Thorne"),
+                        Person(id = "1", firstName = "Eleanor", lastName = "Vance"),
+                        Person(id = "2", firstName = "Marcus", lastName = "Thorne"),
                     ),
                 )
             every { getUrgentCheckIns() } returns flowOf(emptyList())

@@ -59,7 +59,7 @@ class PeopleHubNotifier
          * `null` the person has never been seen, so a day-less "in a while" title is used instead of
          * the misleading "in 0 days".
          */
-        fun showCheckInReminder(personId: Long, name: String, days: Int?, lastSeenText: String?) {
+        fun showCheckInReminder(personId: String, name: String, days: Int?, lastSeenText: String?) {
             val id = NotificationIds.checkIn(personId)
             val title =
                 if (days == null) {
@@ -78,7 +78,7 @@ class PeopleHubNotifier
         }
 
         /** "Today is [name]'s birthday! 🎂" with a "Mark as seen" action that checks them in directly. */
-        fun showBirthdayToday(personId: Long, name: String) {
+        fun showBirthdayToday(personId: String, name: String) {
             val id = NotificationIds.birthday(personId)
             val builder =
                 baseBuilder(NotificationChannels.BIRTHDAY)
@@ -93,7 +93,7 @@ class PeopleHubNotifier
         }
 
         /** "[name]'s birthday is in [daysUntil] days." */
-        fun showBirthdayUpcoming(personId: Long, name: String, daysUntil: Int) {
+        fun showBirthdayUpcoming(personId: String, name: String, daysUntil: Int) {
             val id = NotificationIds.birthday(personId)
             val builder =
                 baseBuilder(NotificationChannels.BIRTHDAY)
@@ -107,7 +107,7 @@ class PeopleHubNotifier
          * deep-linking to the person and offering a "Done" action that reschedules the reminder from
          * now without opening the app.
          */
-        fun showRelationshipReminder(reminderId: Long, personId: Long, name: String, title: String, note: String?) {
+        fun showRelationshipReminder(reminderId: String, personId: String, name: String, title: String, note: String?) {
             val id = NotificationIds.reminder(reminderId)
             val builder =
                 baseBuilder(NotificationChannels.RELATIONSHIP)
@@ -136,7 +136,7 @@ class PeopleHubNotifier
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        private fun personPendingIntent(personId: Long, requestCode: Int): PendingIntent {
+        private fun personPendingIntent(personId: String, requestCode: Int): PendingIntent {
             val intent =
                 Intent(Intent.ACTION_VIEW, Uri.parse(DeepLinks.person(personId))).apply {
                     `package` = context.packageName
@@ -145,7 +145,7 @@ class PeopleHubNotifier
             return PendingIntent.getActivity(context, requestCode, intent, PENDING_FLAGS)
         }
 
-        private fun markSeenPendingIntent(personId: Long, notificationId: Int): PendingIntent {
+        private fun markSeenPendingIntent(personId: String, notificationId: Int): PendingIntent {
             val intent =
                 Intent(NotificationActions.ACTION_MARK_SEEN).apply {
                     `package` = context.packageName
@@ -155,7 +155,7 @@ class PeopleHubNotifier
             return PendingIntent.getBroadcast(context, notificationId + ACTION_REQUEST_OFFSET, intent, PENDING_FLAGS)
         }
 
-        private fun reminderDonePendingIntent(reminderId: Long, notificationId: Int): PendingIntent {
+        private fun reminderDonePendingIntent(reminderId: String, notificationId: Int): PendingIntent {
             val intent =
                 Intent(NotificationActions.ACTION_REMINDER_DONE).apply {
                     `package` = context.packageName

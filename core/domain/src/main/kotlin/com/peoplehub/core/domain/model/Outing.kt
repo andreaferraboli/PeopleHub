@@ -19,12 +19,12 @@ import java.time.LocalDate
  * @property checkInIds every underlying check-in row, so the whole outing can be deleted or moved.
  */
 data class Outing(
-    val id: Long,
+    val id: String,
     val date: LocalDate,
     val timestamp: Instant,
     val note: String?,
     val attendees: List<OutingAttendee>,
-    val checkInIds: List<Long>,
+    val checkInIds: List<String>,
 )
 
 /**
@@ -34,8 +34,8 @@ data class Outing(
  * @property checkInId the attendee's own check-in row inside the outing.
  */
 data class OutingAttendee(
-    val checkInId: Long,
-    val personId: Long,
+    val checkInId: String,
+    val personId: String,
     val fullName: String,
     val initials: String,
     val photoPath: String?,

@@ -587,8 +587,8 @@ private fun BackgroundImageSection(
 @Composable
 private fun PersonPicker(
     people: List<PersonOption>,
-    selectedId: Long?,
-    onPersonChange: (Long?) -> Unit,
+    selectedId: String?,
+    onPersonChange: (String?) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val noneLabel = stringResource(R.string.event_person_none)

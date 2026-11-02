@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 /** Editable form model backing the add/edit screen. */
 data class PersonForm(
-    val id: Long = 0L,
+    val id: String = "",
     val firstName: String = "",
     val lastName: String = "",
     val birthday: LocalDate? = null,
@@ -51,7 +51,7 @@ class AddEditPersonViewModel
         private val upsertPerson: UpsertPersonUseCase,
         private val clock: Clock,
     ) : ViewModel() {
-        private val personId: Long = savedStateHandle.toRoute<AddEditPersonRoute>().personId
+        private val personId: String = savedStateHandle.toRoute<AddEditPersonRoute>().personId
 
         /** Whether this screen is editing an existing person rather than creating a new one. */
         val isEditing: Boolean = personId != AddEditPersonRoute.NEW_PERSON

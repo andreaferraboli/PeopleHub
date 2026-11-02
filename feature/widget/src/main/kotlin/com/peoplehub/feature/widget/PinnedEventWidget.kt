@@ -38,17 +38,20 @@ import kotlin.math.absoluteValue
  *
  * Which event is shown is chosen per widget instance in [EventWidgetConfigActivity], so several can
  * sit on the home screen at once. Widgets placed before per-instance selection existed carry no
- * choice and fall back to the app's pinned event.
+ * choice (or a numeric id from before the data moved to the cloud) and fall back to the app's pinned
+ * event.
  */
 class PinnedEventWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entry = widgetEntryPoint(context)
         val eventId = readEventId(context, id)
         val event =
-            if (eventId != null) {
-                entry.observeEvent().invoke(eventId).first()
-            } else {
-                entry.getPinnedEvent().invoke().first()
+            widgetRead(null) {
+                if (eventId != null) {
+                    entry.observeEvent().invoke(eventId).first()
+                } else {
+                    entry.getPinnedEvent().invoke().first()
+                }
             }
         val today = LocalDate.now(entry.clock())
         val background = event?.backgroundImagePath?.let { loadEventBackground(it) }

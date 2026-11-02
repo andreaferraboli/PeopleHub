@@ -7,8 +7,10 @@ import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -24,7 +26,7 @@ class OutingUseCasesTest {
     private val day: LocalDate = LocalDate.of(2026, 6, 10)
     private val noon: Instant = day.atTime(NOON_HOUR, 0).toInstant(ZoneOffset.UTC)
 
-    private fun attendee(personId: Long, checkInId: Long) =
+    private fun attendee(personId: String, checkInId: String) =
         OutingAttendee(
             checkInId = checkInId,
             personId = personId,
@@ -48,19 +50,19 @@ class OutingUseCasesTest {
         runTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            coEvery { checkInRepository.newOutingId() } returns 50L
+            every { checkInRepository.newOutingId() } returnsMany listOf("50", "51")
             val recorded = slot<List<CheckIn>>()
             coEvery { checkInRepository.recordCheckIns(capture(recorded)) } returns Unit
             val useCase = RecordMeetupUseCase(checkInRepository, peopleRepository, clock)
 
-            useCase(personIds = listOf(1L, 2L), days = listOf(day.plusDays(1), day), note = "Weekend")
+            useCase(personIds = listOf("1", "2"), days = listOf(day.plusDays(1), day), note = "Weekend")
 
             val byOuting = recorded.captured.groupBy { it.outingId }
-            assertEquals(setOf(50L, 51L), byOuting.keys)
+            assertEquals(setOf("50", "51"), byOuting.keys)
             // Day-ordered ids: the earlier day gets the first reserved id.
-            assertEquals(setOf(day), byOuting.getValue(50L).map { it.timestamp.atZone(ZoneOffset.UTC).toLocalDate() }.toSet())
-            assertEquals(setOf(1L, 2L), byOuting.getValue(50L).map { it.personId }.toSet())
-            assertEquals(setOf(1L, 2L), byOuting.getValue(51L).map { it.personId }.toSet())
+            assertEquals(setOf(day), byOuting.getValue("50").map { it.timestamp.atZone(ZoneOffset.UTC).toLocalDate() }.toSet())
+            assertEquals(setOf("1", "2"), byOuting.getValue("50").map { it.personId }.toSet())
+            assertEquals(setOf("1", "2"), byOuting.getValue("51").map { it.personId }.toSet())
         }
 
     @Test
@@ -69,24 +71,24 @@ class OutingUseCasesTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
             coEvery { checkInRepository.getOuting(OUTING_ID) } returns
-                outing(attendee(personId = 1L, checkInId = 10L), attendee(personId = 2L, checkInId = 11L))
-            coEvery { checkInRepository.recordCheckIn(any()) } returns 12L
+                outing(attendee(personId = "1", checkInId = "10"), attendee(personId = "2", checkInId = "11"))
+            coEvery { checkInRepository.recordCheckIn(any()) } returns "12"
             val moved = day.plusDays(2)
             val useCase = UpdateOutingUseCase(checkInRepository, peopleRepository, clock)
 
-            val result = useCase(outingId = OUTING_ID, day = moved, personIds = listOf(1L, 3L), note = " Brunch ")
+            val result = useCase(outingId = OUTING_ID, day = moved, personIds = listOf("1", "3"), note = " Brunch ")
 
             assertTrue(result.isSuccess)
             val movedNoon = moved.atTime(NOON_HOUR, 0).toInstant(ZoneOffset.UTC)
-            coVerify { checkInRepository.deleteCheckIns(listOf(11L)) }
+            coVerify { checkInRepository.deleteCheckIns(listOf("11")) }
             coVerify {
                 checkInRepository.updateCheckIn(
-                    match { it.id == 10L && it.personId == 1L && it.timestamp == movedNoon && it.note == "Brunch" },
+                    match { it.id == "10" && it.personId == "1" && it.timestamp == movedNoon && it.note == "Brunch" },
                 )
             }
             coVerify {
                 checkInRepository.recordCheckIn(
-                    match { it.personId == 3L && it.outingId == OUTING_ID && it.timestamp == movedNoon },
+                    match { it.personId == "3" && it.outingId == OUTING_ID && it.timestamp == movedNoon },
                 )
             }
         }
@@ -97,17 +99,17 @@ class OutingUseCasesTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
             coEvery { checkInRepository.getOuting(OUTING_ID) } returns
-                outing(attendee(personId = 1L, checkInId = 10L), attendee(personId = 2L, checkInId = 11L))
-            coEvery { checkInRepository.recordCheckIn(any()) } returns 12L
+                outing(attendee(personId = "1", checkInId = "10"), attendee(personId = "2", checkInId = "11"))
+            coEvery { checkInRepository.recordCheckIn(any()) } returns "12"
             coEvery { checkInRepository.latestTimestamp(any()) } returns null
             val useCase = UpdateOutingUseCase(checkInRepository, peopleRepository, clock)
 
-            useCase(outingId = OUTING_ID, day = day, personIds = listOf(1L, 3L))
+            useCase(outingId = OUTING_ID, day = day, personIds = listOf("1", "3"))
 
             // 1 stayed, 2 was removed, 3 was added — all three need their tracker re-derived.
-            coVerify { peopleRepository.updateLastCheckIn(1L, null) }
-            coVerify { peopleRepository.updateLastCheckIn(2L, null) }
-            coVerify { peopleRepository.updateLastCheckIn(3L, null) }
+            coVerify { peopleRepository.updateLastCheckIn("1", null) }
+            coVerify { peopleRepository.updateLastCheckIn("2", null) }
+            coVerify { peopleRepository.updateLastCheckIn("3", null) }
         }
 
     @Test
@@ -132,7 +134,7 @@ class OutingUseCasesTest {
             coEvery { checkInRepository.getOuting(OUTING_ID) } returns null
             val useCase = UpdateOutingUseCase(checkInRepository, peopleRepository, clock)
 
-            val result = useCase(outingId = OUTING_ID, day = day, personIds = listOf(1L))
+            val result = useCase(outingId = OUTING_ID, day = day, personIds = listOf("1"))
 
             assertTrue(result.isFailure)
             coVerify(exactly = 0) { checkInRepository.updateCheckIn(any()) }
@@ -146,15 +148,15 @@ class OutingUseCasesTest {
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
             val survivor = now.minusSeconds(1)
             coEvery { checkInRepository.getOuting(OUTING_ID) } returns
-                outing(attendee(personId = 1L, checkInId = 10L), attendee(personId = 2L, checkInId = 11L))
+                outing(attendee(personId = "1", checkInId = "10"), attendee(personId = "2", checkInId = "11"))
             coEvery { checkInRepository.latestTimestamp(any()) } returns survivor
             val useCase = DeleteOutingUseCase(checkInRepository, peopleRepository)
 
             useCase(OUTING_ID)
 
-            coVerify { checkInRepository.deleteCheckIns(listOf(10L, 11L)) }
-            coVerify { peopleRepository.updateLastCheckIn(1L, survivor.toEpochMilli()) }
-            coVerify { peopleRepository.updateLastCheckIn(2L, survivor.toEpochMilli()) }
+            coVerify { checkInRepository.deleteCheckIns(listOf("10", "11")) }
+            coVerify { peopleRepository.updateLastCheckIn("1", survivor.toEpochMilli()) }
+            coVerify { peopleRepository.updateLastCheckIn("2", survivor.toEpochMilli()) }
         }
 
     @Test
@@ -177,13 +179,13 @@ class OutingUseCasesTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
             coEvery { checkInRepository.getOuting(OUTING_ID) } returns
-                outing(attendee(personId = 1L, checkInId = 10L), attendee(personId = 2L, checkInId = 11L))
-            coEvery { checkInRepository.newOutingId() } returns 99L
+                outing(attendee(personId = "1", checkInId = "10"), attendee(personId = "2", checkInId = "11"))
+            every { checkInRepository.newOutingId() } returns "99"
             val useCase = UpdateCheckInUseCase(checkInRepository, peopleRepository)
 
-            useCase(CheckIn(id = 10L, personId = 1L, timestamp = noon, note = "Just me", outingId = OUTING_ID))
+            useCase(CheckIn(id = "10", personId = "1", timestamp = noon, note = "Just me", outingId = OUTING_ID))
 
-            coVerify { checkInRepository.updateCheckIn(match { it.id == 10L && it.outingId == 99L }) }
+            coVerify { checkInRepository.updateCheckIn(match { it.id == "10" && it.outingId == "99" }) }
         }
 
     @Test
@@ -191,17 +193,17 @@ class OutingUseCasesTest {
         runTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            coEvery { checkInRepository.getOuting(OUTING_ID) } returns outing(attendee(personId = 1L, checkInId = 10L))
+            coEvery { checkInRepository.getOuting(OUTING_ID) } returns outing(attendee(personId = "1", checkInId = "10"))
             val useCase = UpdateCheckInUseCase(checkInRepository, peopleRepository)
 
-            useCase(CheckIn(id = 10L, personId = 1L, timestamp = noon, note = "Coffee", outingId = OUTING_ID))
+            useCase(CheckIn(id = "10", personId = "1", timestamp = noon, note = "Coffee", outingId = OUTING_ID))
 
             coVerify { checkInRepository.updateCheckIn(match { it.outingId == OUTING_ID }) }
-            coVerify(exactly = 0) { checkInRepository.newOutingId() }
+            verify(exactly = 0) { checkInRepository.newOutingId() }
         }
 
     private companion object {
-        const val OUTING_ID = 42L
+        const val OUTING_ID = "42"
         const val NOON_HOUR = 12
     }
 }

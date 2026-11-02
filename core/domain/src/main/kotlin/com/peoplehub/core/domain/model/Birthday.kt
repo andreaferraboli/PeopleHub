@@ -10,7 +10,7 @@ import java.time.LocalDate
  * @property turningAge the age reached on [nextOccurrence], or `null` if the birth year is unknown.
  */
 data class UpcomingBirthday(
-    val personId: Long,
+    val personId: String,
     val fullName: String,
     val photoPath: String?,
     val birthday: LocalDate,

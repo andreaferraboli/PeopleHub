@@ -3,11 +3,10 @@ package com.peoplehub
 import android.app.Application
 import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
-import com.peoplehub.core.domain.repository.CloudSyncRepository
+import com.peoplehub.core.data.legacy.LegacyDataCleanup
+import com.peoplehub.core.domain.usecase.GetSettingsUseCase
+import com.peoplehub.core.domain.usecase.ObserveAccountUseCase
 import com.peoplehub.core.notifications.PeopleHubNotifier
 import com.peoplehub.locale.AppLocale
 import com.peoplehub.work.PeopleHubWorkScheduler
@@ -15,14 +14,18 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Application entry point. Wires Hilt, supplies the [HiltWorkerFactory] to WorkManager, creates the
- * notification channels, and schedules the recurring background work on every launch (scheduling
- * reads the configured reminder hour from DataStore, hence the application-scoped coroutine). It also
- * tells the cloud sync engine when the app comes to the foreground and leaves it.
+ * Application entry point. Wires Hilt, supplies the [HiltWorkerFactory] to WorkManager and creates the
+ * notification channels. It also (re)schedules the recurring background work whenever the reminder
+ * hour or the exact-alarm preference changes — on launch, after sign-in, and when the hour is changed
+ * in the cloud (by the MCP server) — and, once an account is signed in, removes the local database
+ * left by versions that kept the data on the phone ([LegacyDataCleanup]).
  */
 @HiltAndroidApp
 class PeopleHubApplication : Application(), Configuration.Provider {
@@ -40,22 +43,32 @@ class PeopleHubApplication : Application(), Configuration.Provider {
     lateinit var workScheduler: PeopleHubWorkScheduler
 
     @Inject
-    lateinit var cloudSync: CloudSyncRepository
+    lateinit var getSettings: GetSettingsUseCase
+
+    @Inject
+    lateinit var observeAccount: ObserveAccountUseCase
+
+    @Inject
+    lateinit var legacyCleanup: LegacyDataCleanup
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
         notifier.ensureChannels()
-        applicationScope.launch { workScheduler.scheduleRecurringWork() }
-        // Cloud listeners run only while some screen is visible; background changes go through work.
-        ProcessLifecycleOwner.get().lifecycle.addObserver(
-            object : DefaultLifecycleObserver {
-                override fun onStart(owner: LifecycleOwner) = cloudSync.setForeground(true)
-
-                override fun onStop(owner: LifecycleOwner) = cloudSync.setForeground(false)
-            },
-        )
+        applicationScope.launch {
+            getSettings()
+                .map { it.dailyReminderHour to it.useExactAlarms }
+                .distinctUntilChanged()
+                .collect { workScheduler.scheduleRecurringWork() }
+        }
+        applicationScope.launch {
+            observeAccount()
+                .filterNotNull()
+                .map { it.uid }
+                .distinctUntilChanged()
+                .collect { legacyCleanup.runIfNeeded() }
+        }
     }
 
     override val workManagerConfiguration: Configuration
