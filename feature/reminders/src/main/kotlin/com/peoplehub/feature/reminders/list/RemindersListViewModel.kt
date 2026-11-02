@@ -57,8 +57,8 @@ data class RemindersScreenState(
  * clock, instead of each recomposition reaching for the system date.
  */
 data class ReminderListItem(
-    val id: Long,
-    val personId: Long,
+    val id: String,
+    val personId: String,
     val personName: String,
     val title: String,
     val note: String?,
@@ -133,11 +133,11 @@ class RemindersListViewModel
         fun onCategoryChange(value: ReminderCategory?) =
             category.update { current -> if (current == value) null else value }
 
-        fun onToggleEnabled(id: Long, enabled: Boolean) {
+        fun onToggleEnabled(id: String, enabled: Boolean) {
             viewModelScope.launch { setReminderEnabled(id, enabled) }
         }
 
-        fun onDelete(id: Long) {
+        fun onDelete(id: String) {
             viewModelScope.launch { deleteReminder(id) }
         }
 
@@ -145,7 +145,7 @@ class RemindersListViewModel
          * Ticks the reminder off as done: today goes into its history and the next occurrence is drawn
          * afresh, so the list reorders itself to the new (random) distance.
          */
-        fun onMarkDone(id: Long) {
+        fun onMarkDone(id: String) {
             viewModelScope.launch { markReminderDone(id) }
         }
 

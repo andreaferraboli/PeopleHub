@@ -27,12 +27,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** A person available for linking, as shown in the picker. */
-data class PersonOption(val id: Long, val name: String)
+data class PersonOption(val id: String, val name: String)
 
 /** Editable form model backing the add/edit reminder screen. */
 data class ReminderForm(
-    val id: Long = 0L,
-    val personId: Long? = null,
+    val id: String = "",
+    val personId: String? = null,
     val title: String = "",
     val note: String = "",
     val category: ReminderCategory = ReminderCategory.CUSTOM,
@@ -40,7 +40,7 @@ data class ReminderForm(
     val jitterPercent: Int = ReminderScheduling.DEFAULT_JITTER_PERCENT,
     val presetKey: String? = null,
 ) {
-    val canSave: Boolean get() = personId != null && personId > 0L && title.isNotBlank() && targetIntervalDays >= 1
+    val canSave: Boolean get() = !personId.isNullOrEmpty() && title.isNotBlank() && targetIntervalDays >= 1
 
     /** The inclusive day window the current target/jitter resolve to, e.g. `11..17`. */
     val window: IntRange get() = ReminderScheduling.window(targetIntervalDays, jitterPercent)
@@ -62,7 +62,7 @@ class AddEditReminderViewModel
         private val updateReminder: UpdateReminderUseCase,
     ) : ViewModel() {
         private val route = savedStateHandle.toRoute<AddEditReminderRoute>()
-        private val reminderId: Long = route.reminderId
+        private val reminderId: String = route.reminderId
 
         /** Whether this screen is editing an existing reminder rather than creating a new one. */
         val isEditing: Boolean = reminderId != AddEditReminderRoute.NEW_REMINDER
@@ -73,7 +73,7 @@ class AddEditReminderViewModel
         /** The full reminder loaded when editing, kept so non-editable fields survive a save. */
         private var loaded: Reminder? = null
 
-        private val initialPersonId: Long? = route.personId.takeIf { it != AddEditReminderRoute.NO_PERSON }
+        private val initialPersonId: String? = route.personId.takeIf { it != AddEditReminderRoute.NO_PERSON }
 
         private val _form = MutableStateFlow(ReminderForm(personId = initialPersonId))
         val form: StateFlow<ReminderForm> = _form.asStateFlow()
@@ -114,7 +114,7 @@ class AddEditReminderViewModel
 
         fun onCategoryChange(value: ReminderCategory) = _form.update { it.copy(category = value) }
 
-        fun onPersonChange(value: Long?) = _form.update { it.copy(personId = value) }
+        fun onPersonChange(value: String?) = _form.update { it.copy(personId = value) }
 
         fun onTargetChange(value: Int) =
             _form.update { it.copy(targetIntervalDays = value.coerceIn(MIN_INTERVAL, MAX_INTERVAL)) }
@@ -174,7 +174,7 @@ class AddEditReminderViewModel
         private fun ReminderForm.toReminder(): Reminder {
             val base =
                 loaded ?: Reminder(
-                    personId = personId ?: 0L,
+                    personId = personId.orEmpty(),
                     title = title,
                     targetIntervalDays = targetIntervalDays,
                     jitterPercent = jitterPercent,

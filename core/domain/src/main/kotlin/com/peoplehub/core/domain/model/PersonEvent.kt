@@ -10,6 +10,9 @@ import java.time.LocalDateTime
  * widget, and optionally linked to a [personId].
  *
  * @property category free-form tag (e.g. "Gala", "Anniversary") rendered as a coloured chip.
+ * The background image, its original, the crop and [pinnedToWidget] are local to the phone: the cloud
+ * document carries only the title, date, description, category and linked person.
+ *
  * @property backgroundImagePath optional absolute path to the cropped image (in internal storage)
  * rendered behind the event card; `null` falls back to the plain glass panel.
  * @property backgroundSourcePath absolute path to the uncropped original the crop was taken from,
@@ -19,7 +22,7 @@ import java.time.LocalDateTime
  * [backgroundSourcePath], so reopening the crop editor restores what the user last chose.
  */
 data class PersonEvent(
-    val id: Long = 0L,
+    val id: String = "",
     val title: String,
     val dateTime: LocalDateTime,
     val description: String? = null,
@@ -27,7 +30,7 @@ data class PersonEvent(
     val backgroundImagePath: String? = null,
     val backgroundSourcePath: String? = null,
     val backgroundCrop: CropTransform = CropTransform.Default,
-    val personId: Long? = null,
+    val personId: String? = null,
     val pinnedToWidget: Boolean = false,
 )
 

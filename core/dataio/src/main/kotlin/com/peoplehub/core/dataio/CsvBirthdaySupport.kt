@@ -28,7 +28,7 @@ class CsvBirthdaySupport
          * A leading header row (one whose first field contains "nome" or "name", case-insensitive) is
          * skipped. Blank lines are ignored. Each remaining row must have exactly three fields
          * (first name, last name, birthday); the birthday must be a valid `yyyy-MM-dd` or `dd/MM/yyyy`
-         * date. Imported people have their id left at `0`.
+         * date. Imported people have an empty id (a new one is drawn when saved).
          */
         fun parse(csv: String): CsvParseResult {
             val people = mutableListOf<Person>()

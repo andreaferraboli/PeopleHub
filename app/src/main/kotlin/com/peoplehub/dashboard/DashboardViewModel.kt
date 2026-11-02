@@ -87,7 +87,7 @@ class DashboardViewModel
             )
 
         /** Quick "I saw them today" from the home urgent list; refreshes widgets immediately. */
-        fun onQuickCheckIn(personId: Long) {
+        fun onQuickCheckIn(personId: String) {
             viewModelScope.launch {
                 checkInPerson(personId)
                 workScheduler.updateWidgetsNow()

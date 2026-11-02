@@ -44,27 +44,31 @@ class ImportPersonUseCase
             }
 
         /**
-         * Re-keys the imported history onto outing ids this database has never used.
+         * Re-keys the imported history onto freshly drawn outing ids.
          *
          * The ids in the file are meaningless here: they were handed out by whichever install exported
          * it, so keeping them would either fuse the imported check-ins into an unrelated local outing
          * that happens to share a number, or — for files written before outings existed, where every id
-         * is `0` — collapse the person's whole history into one bogus outing spanning every date in it.
-         * Rows that shared an outing in the source still share one here; legacy `0` rows are grouped by
-         * day and description, the same rule the v8 migration and the backup import apply.
+         * is `0` or missing — collapse the person's whole history into one bogus outing spanning every date in it.
+         * Rows that shared an outing in the source still share one here; legacy rows are grouped by
+         * day and description, the same rule the backup import applies.
          */
-        private suspend fun List<CheckIn>.withFreshOutingIds(): List<CheckIn> {
-            var nextOutingId = checkInRepository.newOutingId()
-            val allocated = HashMap<String, Long>()
+        private fun List<CheckIn>.withFreshOutingIds(): List<CheckIn> {
+            val allocated = HashMap<String, String>()
             return map { checkIn ->
                 val groupKey =
-                    if (checkIn.outingId > 0L) {
+                    if (checkIn.outingId.isNotEmpty() && checkIn.outingId != LEGACY_NO_OUTING) {
                         "id:${checkIn.outingId}"
                     } else {
                         val day = checkIn.timestamp.atZone(ZoneId.systemDefault()).toLocalDate()
                         "legacy:$day|${checkIn.note.orEmpty()}"
                     }
-                checkIn.copy(outingId = allocated.getOrPut(groupKey) { nextOutingId++ })
+                checkIn.copy(outingId = allocated.getOrPut(groupKey) { checkInRepository.newOutingId() })
             }
+        }
+
+        private companion object {
+            /** The outing id files written before outings existed carry. */
+            const val LEGACY_NO_OUTING = "0"
         }
     }

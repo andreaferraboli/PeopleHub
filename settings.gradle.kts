@@ -28,11 +28,10 @@ rootProject.name = "PeopleHub"
 
 include(":app")
 include(":core:domain")
-include(":core:database")
+include(":core:data")
 include(":core:ui")
 include(":core:notifications")
 include(":core:dataio")
-include(":core:sync")
 include(":feature:people")
 include(":feature:birthdays")
 include(":feature:events")

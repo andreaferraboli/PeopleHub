@@ -68,10 +68,10 @@ fun Person.toDto(): PersonDto =
     )
 
 /** Converts an [InterestDto] into the domain [Interest]. */
-fun InterestDto.toDomain(): Interest = Interest(key = key, value = value, id = id)
+fun InterestDto.toDomain(): Interest = Interest(key = key, value = value)
 
 /** Converts a domain [Interest] into its serializable [InterestDto]. */
-fun Interest.toDto(): InterestDto = InterestDto(key = key, value = value, id = id)
+fun Interest.toDto(): InterestDto = InterestDto(key = key, value = value)
 
 /** Converts a [CheckInDto] into the domain [CheckIn]. */
 fun CheckInDto.toDomain(): CheckIn =

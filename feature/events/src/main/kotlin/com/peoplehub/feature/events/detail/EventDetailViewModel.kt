@@ -49,7 +49,7 @@ class EventDetailViewModel
         private val widgetRefresher: WidgetRefresher,
         private val clock: Clock,
     ) : ViewModel() {
-        private val eventId: Long = savedStateHandle.toRoute<EventDetailRoute>().eventId
+        private val eventId: String = savedStateHandle.toRoute<EventDetailRoute>().eventId
 
         private val closedSignal = MutableStateFlow(false)
 

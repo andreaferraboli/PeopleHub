@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.peoplehub.core.domain.repository.AuthRepository
 import com.peoplehub.core.domain.repository.ReminderStateRepository
 import com.peoplehub.core.domain.usecase.GetDueRemindersUseCase
 import com.peoplehub.core.domain.usecase.MarkReminderFiredUseCase
@@ -25,6 +26,10 @@ import java.time.LocalDate
  * WorkManager backstop, and an app-launch catch-up — because a lone periodic job is silently dropped
  * by Doze and OEM battery managers. The sweep therefore claims the day in [ReminderStateRepository]
  * and later triggers no-op, unless the request carries [INPUT_FORCE] (the manual check in Settings).
+ *
+ * Reminders are read from the cloud, and firing one writes its `lastFiredAt` / `nextFireAt` back there.
+ * Signed out there is nothing to do; without an answer from the server in time the sweep retries
+ * without claiming the day.
  */
 @HiltWorker
 class RelationshipReminderWorker
@@ -36,14 +41,17 @@ class RelationshipReminderWorker
         private val markReminderFired: MarkReminderFiredUseCase,
         private val reminderState: ReminderStateRepository,
         private val notifier: PeopleHubNotifier,
+        private val auth: AuthRepository,
         private val clock: Clock,
     ) : CoroutineWorker(appContext, params) {
         override suspend fun doWork(): Result {
             val today = LocalDate.now(clock)
             val forced = inputData.getBoolean(INPUT_FORCE, false)
             if (!forced && reminderState.lastRelationshipSweepDate() == today) return Result.success()
+            if (auth.currentAccount() == null) return Result.success()
 
-            getDueReminders().forEach { due ->
+            val dueReminders = readCloudOrNull { getDueReminders() } ?: return Result.retry()
+            dueReminders.forEach { due ->
                 notifier.showRelationshipReminder(
                     reminderId = due.reminderId,
                     personId = due.personId,

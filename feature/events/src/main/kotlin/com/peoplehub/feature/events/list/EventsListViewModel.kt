@@ -40,7 +40,7 @@ data class EventsListScreenState(
 
 /** An event as rendered in the timeline list. */
 data class EventListItem(
-    val id: Long,
+    val id: String,
     val title: String,
     val category: String?,
     val signedDays: Long,
@@ -105,7 +105,7 @@ class EventsListViewModel
 
         fun onCategoryChange(value: String?) = category.update { current -> if (current == value) null else value }
 
-        fun onTogglePin(eventId: Long, pinned: Boolean) {
+        fun onTogglePin(eventId: String, pinned: Boolean) {
             viewModelScope.launch {
                 setEventPinned(eventId, pinned)
                 widgetRefresher.refresh()

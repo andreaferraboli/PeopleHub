@@ -109,7 +109,7 @@ private val DayTitleFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BirthdaysScreen(
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onAddBirthdays: () -> Unit,
     onBack: () -> Unit,
     viewModel: BirthdaysViewModel = hiltViewModel(),
@@ -247,7 +247,7 @@ internal fun BirthdaysContent(
     visibleMonth: YearMonth,
     today: LocalDate,
     contentPadding: PaddingValues,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onAddBirthdays: () -> Unit,
     onViewModeChange: (BirthdayViewMode) -> Unit,
     onPreviousMonth: () -> Unit,
@@ -322,7 +322,7 @@ private fun LazyListScope.birthdaysBody(
     viewMode: BirthdayViewMode,
     visibleMonth: YearMonth,
     today: LocalDate,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onDaySelected: (List<UpcomingBirthday>) -> Unit,
     onMonthChange: (YearMonth) -> Unit,
 ) {
@@ -844,7 +844,7 @@ private fun DayCell(
 @Composable
 private fun BirthdayDayDialog(
     birthdays: List<UpcomingBirthday>,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val c = PeopleHubTheme.colors
@@ -999,7 +999,7 @@ private fun String.toInitials(): String {
 }
 
 private fun previewBirthday(
-    personId: Long,
+    personId: String,
     name: String,
     month: Int,
     day: Int,
@@ -1017,10 +1017,10 @@ private fun previewBirthday(
     )
 
 private fun previewData(): BirthdaysData {
-    val sofia = previewBirthday(1, "Sofia Bianchi", 10, 23, 0, 29)
-    val elena = previewBirthday(2, "Elena Ferraboli", 10, 27, 4, 31)
-    val giulia = previewBirthday(4, "Giulia Rinaldi", 10, 27, 4, null)
-    val luca = previewBirthday(3, "Luca Moretti", 11, 10, 18, 30)
+    val sofia = previewBirthday("1", "Sofia Bianchi", 10, 23, 0, 29)
+    val elena = previewBirthday("2", "Elena Ferraboli", 10, 27, 4, 31)
+    val giulia = previewBirthday("4", "Giulia Rinaldi", 10, 27, 4, null)
+    val luca = previewBirthday("3", "Luca Moretti", 11, 10, 18, 30)
     return BirthdaysData(
         all = listOf(sofia, elena, giulia, luca),
         upcoming30 = listOf(sofia, elena, giulia, luca),
@@ -1029,7 +1029,7 @@ private fun previewData(): BirthdaysData {
                 monthDayKey(10, 23) to listOf(sofia),
                 monthDayKey(10, 27) to listOf(elena, giulia),
                 monthDayKey(11, 10) to listOf(luca),
-                monthDayKey(3, 4) to listOf(previewBirthday(5, "Marco Testa", 3, 4, 132, 41)),
+                monthDayKey(3, 4) to listOf(previewBirthday("5", "Marco Testa", 3, 4, 132, 41)),
             ),
     )
 }

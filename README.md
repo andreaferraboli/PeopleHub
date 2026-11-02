@@ -1,22 +1,25 @@
 # PeopleHub
 
-**Your personal relationship hub — local first, with optional cloud sync.**
+**Your personal relationship hub — your data in the cloud, photos on the phone.**
 
 PeopleHub helps you nurture the relationships that matter. It keeps track of the people in your
 life, their birthdays, the last time you saw them ("check‑ins"), their interests, and the
 significant events around them — with elapsed/remaining day counters that nudge you to stay in
 touch.
 
-The app works entirely from a local database on the phone and needs no account. Two things use the
-network: the self‑updater, which checks GitHub Releases for a newer APK, and **optional cloud sync**
-with your own Firebase project (Vault → Cloud sync, sign in with Google). Until you sign in, nothing
-leaves the phone; there are no analytics.
+The data lives **only in the cloud**: Cloud Firestore in your own Firebase project, under the Google
+account you sign in with. The phone keeps no copy (Firestore runs with a memory-only cache), so a new
+install signs in and finds everything already there; there is nothing to sync. The only things left
+on the phone are the photos (profile pictures and event backgrounds, with their crop) and device
+preferences. The other network use is the self‑updater, which checks GitHub Releases for a newer APK.
+There are no analytics.
 
 ---
 
 ## Features
 
-- **The Circle** — a searchable directory of the people you track (full‑text search, tag filters,
+- **The Circle** — a searchable directory of the people you track (search over name, notes, tags and
+  interests, tag filters,
   and sorting by name, last check‑in, or upcoming birthday). When sorted by upcoming birthday, each
   card shows the next birthday and a countdown.
 - **Check‑ins** — record "I saw them today", keep a history, and get a "seen X days ago" status with
@@ -35,11 +38,11 @@ leaves the phone; there are no analytics.
   (Vault → Language).
 - **Self‑documenting UI** — every icon button shows a tooltip describing what it does.
 - **Automatic backups** — export/import the full dataset (JSON) or just birthdays (CSV).
-- **Cloud sync (optional)** — sign in with Google in the Vault and your data is kept in step, both
-  ways, with Firestore in your own Firebase project (`peoplehub-af26`), so an assistant connected
-  through the MCP server in `mcp/` can read and change it. One upload the first time (or a download,
-  on a new phone), then it is automatic. Photos and event backgrounds stay on the phone; one active
-  phone per account is assumed. Details in [docs/firestore-schema.md](docs/firestore-schema.md).
+- **Cloud data** — sign in with Google (the app shows nothing else until you do) and the app reads and
+  writes Firestore in your own Firebase project (`peoplehub-af26`) directly, so an assistant connected
+  through the MCP server in `mcp/` sees and changes the same data. Export/import (JSON, CSV) work as
+  before and act on the cloud. Photos and event backgrounds stay on the phone; one active phone per
+  account is assumed for reminders. Details in [docs/firestore-schema.md](docs/firestore-schema.md).
 
 ## Design — "Velluto"
 
@@ -55,7 +58,7 @@ animations. Full rules in [DESIGN.md](DESIGN.md).
 | Language | Kotlin 2.1, coroutines, Flow |
 | UI | Jetpack Compose + Material 3 (optional Dynamic Color) |
 | Architecture | Clean Architecture (Presentation / Domain / Data) |
-| Database | Room (FTS4) with versioned migrations |
+| Data | Cloud Firestore (memory-only cache) + Firebase Auth; DataStore for device preferences |
 | DI | Hilt |
 | Navigation | Navigation Compose, type‑safe routes (Kotlin Serialization) |
 | Background | WorkManager (CoroutineWorker) + AlarmManager (exact birthday alarm) |
@@ -63,7 +66,7 @@ animations. Full rules in [DESIGN.md](DESIGN.md).
 | Widgets | Glance |
 | I/O | kotlinx.serialization JSON + hand‑written CSV |
 | Images | Coil 3 (local files in internal storage) |
-| Cloud sync | Firebase Auth (Google, via Credential Manager) + Cloud Firestore, only in `:core:sync` |
+| Sign-in | Google via Credential Manager; Firebase only in `:core:data` |
 | Tests | JUnit 5 + MockK + Turbine |
 | Quality | Ktlint + Detekt, `allWarningsAsErrors = true` |
 
@@ -75,19 +78,19 @@ animations. Full rules in [DESIGN.md](DESIGN.md).
 :app                  Hilt app, MainActivity, type-safe NavHost, bottom nav, Dashboard + Settings,
                       WorkManager workers, AlarmManager scheduler, BroadcastReceivers, per-app locale
 :core:domain   (JVM)  Models, repository interfaces, use cases, pure date math, deep-link constants
-:core:database        Room entities/DAOs/migrations, repository impls, mappers, DataStore settings
+:core:data            Firestore repositories, document mapping, in-memory search, Firebase Auth,
+                      device DataStores (photo map, preferences), one-off cleanup of the old database
 :core:ui              Compose theme (Velluto), design-system components, icons, scenes, UiState
 :core:notifications   Notification channels + PeopleHubNotifier + action constants
 :core:dataio   (JVM)  JSON (kotlinx.serialization) + CSV import/export, DTOs, mappers
-:core:sync            Two-way Firestore sync: outbox pusher, cursor puller, Firebase Auth, settings sync
-:feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import
+:feature:people       People directory (search/filter/sort), tabbed detail, add/edit, JSON import
 :feature:birthdays    Year/Month/List calendar views, CSV/JSON import + export
 :feature:events       Events list with filters, detail, add/edit, pin-to-widget
 :feature:widget       Three Glance widgets (birthdays, urgent check-ins, pinned event) + updater
 ```
 
 Dependency direction: `feature:* → core:domain, core:ui (+ dataio where needed)`;
-`core:database & core:notifications → core:domain`; `app → everything`. The domain module is pure
+`core:data & core:notifications → core:domain`; `app → everything`. The domain module is pure
 JVM with **no Android dependencies**.
 
 ## Architecture rules
@@ -97,8 +100,8 @@ JVM with **no Android dependencies**.
   `android.*` types.
 - **Domain** — one use case per significant action (`operator fun invoke`), repository interfaces,
   models. "Now" is injected as `java.time.Clock` for testability.
-- **Data** — repository impls map Room entities ↔ domain models; DAOs return `Flow` for reads and
-  `suspend fun` for writes. Room types never cross the repository boundary.
+- **Data** — repository impls map Firestore documents ↔ domain models over snapshot listeners
+  (`Flow` for reads, `suspend fun` for writes). Firestore types never cross the repository boundary.
 - Errors surface via `kotlin.Result` / `UiState.Error`, never uncaught exceptions.
 - No hardcoded user‑facing strings — everything lives in a module `strings.xml` (with `values-it`
   Italian translations).
@@ -118,15 +121,15 @@ export JAVA_HOME='/c/Program Files/Android/Android Studio/jbr'   # Git Bash on W
 
 ## Releases & auto‑update
 
-The app self‑updates from **GitHub Releases** — the Release is the single source of truth (cloud sync
-has nothing to do with updates).
+The app self‑updates from **GitHub Releases** — the Release is the single source of truth (the cloud
+data has nothing to do with updates).
 
 - **Versioning** — `app/build.gradle.kts` defines `appVersionName` (`X.Y.Z`); `versionCode` is
   derived as `major*10000 + minor*100 + patch`.
 - **In‑app updater** — on launch the app reads `releases/latest` from the GitHub API, compares the
   tag's version code to the installed one, and offers to download + install the `.apk` via a
-  `FileProvider`. The Vault also has a manual "Check for updates". Apart from the optional cloud
-  sync, this is the app's only network use.
+  `FileProvider`. The Vault also has a manual "Check for updates". Apart from the cloud data,
+  this is the app's only network use.
 - **Publishing** (pick one):
   - Local: `pwsh ./publish-update.ps1 -Version X.Y.Z` — bumps the version, builds the signed APK,
     commits, pushes, and `gh release create`s with the APK attached.
@@ -138,7 +141,8 @@ authentication.
 ## Privacy
 
 PeopleHub is built to be private by design: no telemetry, no ads, no third‑party SDKs that phone
-home, and no account. All relationship data stays in the app's local Room database and DataStore.
+home. The relationship data lives in Firestore in your own Firebase project, readable only by your
+Google account (security rules in `firestore.rules`); photos never leave the phone.
 
 ## License
 

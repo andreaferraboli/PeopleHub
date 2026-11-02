@@ -27,7 +27,7 @@ import javax.inject.Inject
  * [PersonDto] inside a backup file).
  *
  * Two modes are supported:
- * - [parse] treats the document as a brand-new person (id forced to `0`).
+ * - [parse] treats the document as a brand-new person (id cleared).
  * - [merge] updates an existing person in place: every field **present** in the JSON overwrites the
  *   stored value, while keys that are absent keep the value already on the profile. The id is never
  *   changed.
@@ -43,7 +43,7 @@ class PersonJsonImporter
         /**
          * Parses [json] into a new [Person].
          *
-         * @return a successful [Result] with the parsed person (id reset to `0`), or a failure if the
+         * @return a successful [Result] with the parsed person (id cleared), or a failure if the
          * JSON is malformed or the first/last name is blank.
          */
         fun parse(json: String): Result<Person> =
@@ -51,12 +51,12 @@ class PersonJsonImporter
                 val dto = this.json.decodeFromString<PersonDto>(json)
                 require(dto.firstName.isNotBlank()) { "Person firstName must not be blank" }
                 require(dto.lastName.isNotBlank()) { "Person lastName must not be blank" }
-                dto.toDomain().copy(id = 0L)
+                dto.toDomain().copy(id = "")
             }
 
         /**
          * Extracts the meetup history embedded in a person [json] document (the `checkIns` array), with
-         * every id reset to `0` so the caller can reassign them to a freshly-inserted person. Returns an
+         * every id cleared so the caller can reassign them to a freshly-inserted person. Returns an
          * empty list for older files that carry no history. Never throws — a malformed document yields
          * an empty history, matching [parse]'s own failure handling upstream.
          */
@@ -65,7 +65,7 @@ class PersonJsonImporter
                 this.json
                     .decodeFromString<PersonDto>(json)
                     .checkIns
-                    .map { it.toDomain().copy(id = 0L) }
+                    .map { it.toDomain().copy(id = "") }
             }.getOrDefault(emptyList())
 
         /**
@@ -145,7 +145,7 @@ class PersonJsonImporter
             this["interests"]
                 ?.jsonArray
                 ?.map { json.decodeFromJsonElement<InterestDto>(it) }
-                ?.map { Interest(key = it.key, value = it.value, id = it.id) }
+                ?.map { Interest(key = it.key, value = it.value) }
                 ?: emptyList()
 
         private fun thresholdFrom(warningDays: Int?, criticalDays: Int?): CheckInThreshold? =

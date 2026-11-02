@@ -1,7 +1,5 @@
 package com.peoplehub.di
 
-import com.peoplehub.core.domain.sync.CloudSyncScheduler
-import com.peoplehub.core.domain.sync.RecurringWorkRescheduler
 import com.peoplehub.core.domain.widget.WidgetRefresher
 import com.peoplehub.work.PeopleHubWorkScheduler
 import dagger.Module
@@ -24,18 +22,6 @@ object CoreModule {
     @Singleton
     fun provideWidgetRefresher(scheduler: PeopleHubWorkScheduler): WidgetRefresher =
         WidgetRefresher(scheduler::updateWidgetsNow)
-
-    /** Lets the sync engine ask for a background sync without knowing about WorkManager. */
-    @Provides
-    @Singleton
-    fun provideCloudSyncScheduler(scheduler: PeopleHubWorkScheduler): CloudSyncScheduler =
-        CloudSyncScheduler(scheduler::enqueueSync)
-
-    /** Re-schedules the daily sweeps after settings (the reminder hour) arrive from the cloud. */
-    @Provides
-    @Singleton
-    fun provideRecurringWorkRescheduler(scheduler: PeopleHubWorkScheduler): RecurringWorkRescheduler =
-        RecurringWorkRescheduler(scheduler::scheduleRecurringWork)
 
     /**
      * The system clock used by every "now"-dependent use case. Injecting it (rather than calling

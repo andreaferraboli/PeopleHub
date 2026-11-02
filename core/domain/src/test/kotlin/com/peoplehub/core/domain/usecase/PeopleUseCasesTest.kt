@@ -27,7 +27,7 @@ class PeopleUseCasesTest {
     @Test
     fun `upsert trims fields and de-duplicates tags before persisting`() =
         runTest {
-            coEvery { repository.upsertPerson(any()) } returns 42L
+            coEvery { repository.upsertPerson(any()) } returns "42"
             val useCase = UpsertPersonUseCase(repository)
 
             val result =
@@ -35,7 +35,7 @@ class PeopleUseCasesTest {
                     Person(firstName = " Eleanor ", lastName = " Vance ", tags = listOf("Family", "Family", "  ")),
                 )
 
-            assertEquals(42L, result.getOrNull())
+            assertEquals("42", result.getOrNull())
             coVerify {
                 repository.upsertPerson(
                     match { it.firstName == "Eleanor" && it.lastName == "Vance" && it.tags == listOf("Family") },

@@ -42,7 +42,7 @@ data class PeopleListScreenState(
     val sort: PeopleSort,
     val importPreview: Person?,
     val importMessage: String?,
-    val selectedIds: Set<Long> = emptySet(),
+    val selectedIds: Set<String> = emptySet(),
 ) {
     /** Whether the multi-select action bar should be shown. */
     val inSelectionMode: Boolean get() = selectedIds.isNotEmpty()
@@ -50,7 +50,7 @@ data class PeopleListScreenState(
 
 /** A person as rendered in the directory list. */
 data class PersonListItem(
-    val id: Long,
+    val id: String,
     val fullName: String,
     val initials: String,
     val photoPath: String?,
@@ -85,7 +85,7 @@ class PeopleListViewModel
         /** The raw JSON behind [importPreview], kept so confirming also restores the meetup history. */
         private var pendingImportJson: String? = null
         private val importMessage = MutableStateFlow<String?>(null)
-        private val selectedIds = MutableStateFlow<Set<Long>>(emptySet())
+        private val selectedIds = MutableStateFlow<Set<String>>(emptySet())
 
         private val controls = combine(query, selectedTags, sort, ::Controls)
 
@@ -183,7 +183,7 @@ class PeopleListViewModel
         }
 
         /** Adds or removes [id] from the current multi-selection. */
-        fun onToggleSelection(id: Long) =
+        fun onToggleSelection(id: String) =
             selectedIds.update { current -> if (id in current) current - id else current + id }
 
         /** Selects every person currently visible in the directory. */
@@ -220,7 +220,7 @@ class PeopleListViewModel
         fun onBulkDisableCheckIn() =
             runBulk("Check-in disabled") { ids -> bulkUpdatePeople.disableCheckIn(ids) }
 
-        private fun runBulk(successMessage: String, action: suspend (List<Long>) -> Result<Unit>) {
+        private fun runBulk(successMessage: String, action: suspend (List<String>) -> Result<Unit>) {
             val ids = selectedIds.value.toList()
             if (ids.isEmpty()) return
             viewModelScope.launch {

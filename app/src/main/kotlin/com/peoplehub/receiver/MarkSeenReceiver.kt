@@ -9,6 +9,7 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Handles the "Mark as seen" notification action: records a check-in for the person without opening
@@ -18,15 +19,20 @@ class MarkSeenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != NotificationActions.ACTION_MARK_SEEN) return
 
-        val personId = intent.getLongExtra(NotificationActions.EXTRA_PERSON_ID, INVALID_ID)
+        val personId = intent.getStringExtra(NotificationActions.EXTRA_PERSON_ID)
         val notificationId = intent.getIntExtra(NotificationActions.EXTRA_NOTIFICATION_ID, -1)
-        if (personId <= 0L) return
+        if (personId.isNullOrEmpty()) return
 
         val entryPoint = EntryPointAccessors.fromApplication(context.applicationContext, ReceiverEntryPoint::class.java)
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                entryPoint.checkInPerson().invoke(personId)
+                // Signed out or offline: the check-in is not recorded and the notification stays.
+                val recorded =
+                    runCatching {
+                        withTimeoutOrNull(CLOUD_TIMEOUT_MILLIS) { entryPoint.checkInPerson().invoke(personId) }
+                    }.getOrNull()
+                if (recorded == null) return@launch
                 if (notificationId > 0) entryPoint.notifier().cancel(notificationId)
                 entryPoint.workScheduler().updateWidgetsNow()
             } finally {
@@ -36,6 +42,7 @@ class MarkSeenReceiver : BroadcastReceiver() {
     }
 
     private companion object {
-        const val INVALID_ID = -1L
+        /** A broadcast receiver has about ten seconds; the cloud write must fit in it. */
+        const val CLOUD_TIMEOUT_MILLIS = 9_000L
     }
 }

@@ -23,7 +23,7 @@ class ImportPersonUseCaseTest {
     private val checkInRepository = mockk<CheckInRepository>(relaxed = true)
     private val useCase = ImportPersonUseCase(importer, upsertPerson, checkInRepository)
 
-    private val person = Person(id = 0L, firstName = "Marco", lastName = "Rossi")
+    private val person = Person(id = "", firstName = "Marco", lastName = "Rossi")
 
     private fun instantOn(day: String): Instant {
         val noon = Instant.parse(day).atZone(ZoneId.systemDefault()).withHour(12)
@@ -31,8 +31,8 @@ class ImportPersonUseCaseTest {
     }
 
     private suspend fun importHistory(history: List<CheckIn>): List<CheckIn> {
-        coEvery { upsertPerson(any()) } returns Result.success(7L)
-        coEvery { checkInRepository.newOutingId() } returns 100L
+        coEvery { upsertPerson(any()) } returns Result.success("7")
+        every { checkInRepository.newOutingId() } returnsMany listOf("100", "101", "102")
         every { importer.parseCheckIns(any()) } returns history
         val written = slot<List<CheckIn>>()
 
@@ -48,16 +48,16 @@ class ImportPersonUseCaseTest {
         runTest {
             val history =
                 listOf(
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Dinner", outingId = 3L),
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-05-08T00:00:00Z"), note = "Coffee", outingId = 4L),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Dinner", outingId = "3"),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-05-08T00:00:00Z"), note = "Coffee", outingId = "4"),
                 )
 
             val written = importHistory(history)
 
             // Never the source file's ids (3, 4): those belong to whichever install exported it, and
             // reusing them would fuse the import into unrelated local outings.
-            assertEquals(listOf(100L, 101L), written.map { it.outingId })
-            assertTrue(written.all { it.personId == 7L })
+            assertEquals(listOf("100", "101"), written.map { it.outingId })
+            assertTrue(written.all { it.personId == "7" })
         }
 
     @Test
@@ -66,14 +66,14 @@ class ImportPersonUseCaseTest {
             val sameDay = instantOn("2026-05-01T00:00:00Z")
             val history =
                 listOf(
-                    CheckIn(personId = 1L, timestamp = sameDay, note = "Trip", outingId = 3L),
-                    CheckIn(personId = 1L, timestamp = sameDay.plusSeconds(60), note = "Trip", outingId = 3L),
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-06-01T00:00:00Z"), note = "Lunch", outingId = 9L),
+                    CheckIn(personId = "1", timestamp = sameDay, note = "Trip", outingId = "3"),
+                    CheckIn(personId = "1", timestamp = sameDay.plusSeconds(60), note = "Trip", outingId = "3"),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-06-01T00:00:00Z"), note = "Lunch", outingId = "9"),
                 )
 
             val written = importHistory(history)
 
-            assertEquals(listOf(100L, 100L, 101L), written.map { it.outingId })
+            assertEquals(listOf("100", "100", "101"), written.map { it.outingId })
         }
 
     @Test
@@ -83,15 +83,15 @@ class ImportPersonUseCaseTest {
             // history into a single bogus outing spanning every date in it.
             val history =
                 listOf(
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Dinner"),
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Dinner"),
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Cinema"),
-                    CheckIn(personId = 1L, timestamp = instantOn("2026-07-14T00:00:00Z"), note = "Dinner"),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Dinner"),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Dinner"),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-05-01T00:00:00Z"), note = "Cinema"),
+                    CheckIn(personId = "1", timestamp = instantOn("2026-07-14T00:00:00Z"), note = "Dinner"),
                 )
 
             val written = importHistory(history)
 
-            assertEquals(listOf(100L, 100L, 101L, 102L), written.map { it.outingId })
-            assertTrue(written.none { it.outingId == 0L })
+            assertEquals(listOf("100", "100", "101", "102"), written.map { it.outingId })
+            assertTrue(written.none { it.outingId == "0" })
         }
 }

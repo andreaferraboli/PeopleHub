@@ -12,7 +12,7 @@ interface EventRepository {
     fun observeEvents(filter: EventFilter): Flow<List<PersonEvent>>
 
     /** Observes a single event by [id]. */
-    fun observeEvent(id: Long): Flow<PersonEvent?>
+    fun observeEvent(id: String): Flow<PersonEvent?>
 
     /** Observes the single event currently pinned to the widget, if any. */
     fun observePinnedEvent(): Flow<PersonEvent?>
@@ -27,16 +27,16 @@ interface EventRepository {
     suspend fun getAllEvents(): List<PersonEvent>
 
     /** Inserts or updates an event and returns its id. */
-    suspend fun upsertEvent(event: PersonEvent): Long
+    suspend fun upsertEvent(event: PersonEvent): String
 
     /** Deletes an event by id. */
-    suspend fun deleteEvent(id: Long)
+    suspend fun deleteEvent(id: String)
 
     /**
      * Pins or unpins [eventId] for the widget. Pinning is exclusive: pinning a new event unpins any
      * previously pinned one.
      */
-    suspend fun setPinned(eventId: Long, pinned: Boolean)
+    suspend fun setPinned(eventId: String, pinned: Boolean)
 
     /** Deletes every event — used by the "replace all" import strategy. */
     suspend fun deleteAll()

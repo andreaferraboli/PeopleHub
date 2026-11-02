@@ -24,7 +24,7 @@ class GetOutingUseCase
     constructor(
         private val repository: CheckInRepository,
     ) {
-        suspend operator fun invoke(outingId: Long): Outing? = repository.getOuting(outingId)
+        suspend operator fun invoke(outingId: String): Outing? = repository.getOuting(outingId)
     }
 
 /**
@@ -47,9 +47,9 @@ class UpdateOutingUseCase
         private val clock: Clock,
     ) {
         suspend operator fun invoke(
-            outingId: Long,
+            outingId: String,
             day: LocalDate,
-            personIds: List<Long>,
+            personIds: List<String>,
             note: String? = null,
         ): Result<Unit> =
             runCatching {
@@ -110,7 +110,7 @@ class DeleteOutingUseCase
         private val checkInRepository: CheckInRepository,
         private val peopleRepository: PeopleRepository,
     ) {
-        suspend operator fun invoke(outingId: Long) {
+        suspend operator fun invoke(outingId: String) {
             val outing = checkInRepository.getOuting(outingId) ?: return
             checkInRepository.deleteCheckIns(outing.checkInIds)
             outing.attendees.forEach { attendee ->

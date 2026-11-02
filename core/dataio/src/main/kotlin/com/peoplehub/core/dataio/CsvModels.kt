@@ -5,7 +5,7 @@ import com.peoplehub.core.domain.model.Person
 /**
  * Outcome of parsing a birthday CSV.
  *
- * @property people the rows that parsed successfully, as new [Person] records (id `0`).
+ * @property people the rows that parsed successfully, as new [Person] records (id empty).
  * @property errors one human-readable message per malformed row; a non-empty list does not abort
  * the import — valid rows are still returned in [people].
  */

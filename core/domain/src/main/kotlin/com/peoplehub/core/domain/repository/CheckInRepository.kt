@@ -11,7 +11,7 @@ import java.time.Instant
  */
 interface CheckInRepository {
     /** Records a new check-in and returns its id. */
-    suspend fun recordCheckIn(checkIn: CheckIn): Long
+    suspend fun recordCheckIn(checkIn: CheckIn): String
 
     /** Records several check-ins at once — used for multi-day and multi-person meetups. */
     suspend fun recordCheckIns(checkIns: List<CheckIn>)
@@ -19,26 +19,26 @@ interface CheckInRepository {
     /** Updates an existing check-in (its timestamp and/or note). */
     suspend fun updateCheckIn(checkIn: CheckIn)
 
-    /** Deletes the check-ins with the given [ids] in a single statement. */
-    suspend fun deleteCheckIns(ids: List<Long>)
+    /** Deletes the check-ins with the given [ids] (tombstones, in batches). */
+    suspend fun deleteCheckIns(ids: List<String>)
 
     /** The most recent check-in instant for [personId], or `null` if they have none left. */
-    suspend fun latestTimestamp(personId: Long): Instant?
+    suspend fun latestTimestamp(personId: String): Instant?
 
     /** Observes the reverse-chronological check-in history for a person. */
-    fun observeHistory(personId: Long): Flow<List<CheckIn>>
+    fun observeHistory(personId: String): Flow<List<CheckIn>>
 
     /**
-     * Reserves a fresh, unused [CheckIn.outingId] so several check-ins can be written as one shared
+     * Draws a fresh [CheckIn.outingId] (a UUID) so several check-ins can be written as one shared
      * outing (or a single one detached into an outing of its own).
      */
-    suspend fun newOutingId(): Long
+    fun newOutingId(): String
 
     /** Observes every recorded outing, most recent first. */
     fun observeOutings(): Flow<List<Outing>>
 
     /** One-shot read of a single outing, or `null` if it no longer exists. */
-    suspend fun getOuting(outingId: Long): Outing?
+    suspend fun getOuting(outingId: String): Outing?
 
     /** One-shot read of every check-in, used by backup/export. */
     suspend fun getAllCheckIns(): List<CheckIn>

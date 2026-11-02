@@ -98,9 +98,9 @@ class CsvBirthdaySupportTest {
     fun `export round-trips and omits people without a birthday`() {
         val people =
             listOf(
-                Person(id = 1L, firstName = "Ada", lastName = "Lovelace", birthday = LocalDate.of(1815, 12, 10)),
-                Person(id = 2L, firstName = "No", lastName = "Birthday", birthday = null),
-                Person(id = 3L, firstName = "Grace", lastName = "Hopper", birthday = LocalDate.of(1906, 12, 9)),
+                Person(id = "1", firstName = "Ada", lastName = "Lovelace", birthday = LocalDate.of(1815, 12, 10)),
+                Person(id = "2", firstName = "No", lastName = "Birthday", birthday = null),
+                Person(id = "3", firstName = "Grace", lastName = "Hopper", birthday = LocalDate.of(1906, 12, 9)),
             )
 
         val csv = support.export(people)
@@ -120,7 +120,7 @@ class CsvBirthdaySupportTest {
     fun `export quotes fields containing a comma`() {
         val people =
             listOf(
-                Person(id = 1L, firstName = "John", lastName = "Smith, Jr", birthday = LocalDate.of(1990, 5, 4)),
+                Person(id = "1", firstName = "John", lastName = "Smith, Jr", birthday = LocalDate.of(1990, 5, 4)),
             )
 
         val csv = support.export(people)

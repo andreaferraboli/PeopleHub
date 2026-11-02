@@ -11,11 +11,11 @@ interface BackupRepository {
     /** Builds an in-memory snapshot of all people, check-ins and events. */
     suspend fun exportAll(): BackupData
 
-    /** Wipes existing data and replaces it wholesale with [data]. */
+    /** Deletes the existing data (people, check-ins, events, reminders) and replaces it with [data]. */
     suspend fun importReplace(data: BackupData)
 
     /**
-     * Merges [data] into the existing database, deduplicating people by the composite key
+     * Merges [data] into the existing data, deduplicating people by the composite key
      * `firstName + lastName + birthday` and returning a [MergeReport] of what changed.
      */
     suspend fun importMerge(data: BackupData): MergeReport

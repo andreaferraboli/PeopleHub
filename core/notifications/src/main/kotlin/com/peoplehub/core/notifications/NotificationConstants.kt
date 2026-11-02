@@ -28,9 +28,12 @@ internal object NotificationIds {
     private const val REMINDER_BASE = 300_000
     private const val ID_MODULO = 90_000
 
-    fun checkIn(personId: Long): Int = CHECK_IN_BASE + (personId % ID_MODULO).toInt()
+    fun checkIn(personId: String): Int = CHECK_IN_BASE + slot(personId)
 
-    fun birthday(personId: Long): Int = BIRTHDAY_BASE + (personId % ID_MODULO).toInt()
+    fun birthday(personId: String): Int = BIRTHDAY_BASE + slot(personId)
 
-    fun reminder(reminderId: Long): Int = REMINDER_BASE + (reminderId % ID_MODULO).toInt()
+    fun reminder(reminderId: String): Int = REMINDER_BASE + slot(reminderId)
+
+    /** A stable slot for a document id (UUID) inside a range. */
+    private fun slot(id: String): Int = Math.floorMod(id.hashCode(), ID_MODULO)
 }

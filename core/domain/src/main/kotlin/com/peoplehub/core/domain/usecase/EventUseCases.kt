@@ -21,7 +21,7 @@ class ObserveEventUseCase
     constructor(
         private val repository: EventRepository,
     ) {
-        operator fun invoke(id: Long): Flow<PersonEvent?> = repository.observeEvent(id)
+        operator fun invoke(id: String): Flow<PersonEvent?> = repository.observeEvent(id)
     }
 
 /** Observes the event currently pinned to the widget, if any. */
@@ -57,7 +57,7 @@ class AddEventUseCase
     constructor(
         private val repository: EventRepository,
     ) {
-        suspend operator fun invoke(event: PersonEvent): Result<Long> =
+        suspend operator fun invoke(event: PersonEvent): Result<String> =
             runCatching {
                 require(event.title.isNotBlank()) { "Event title is required" }
                 repository.upsertEvent(
@@ -76,7 +76,7 @@ class DeleteEventUseCase
     constructor(
         private val repository: EventRepository,
     ) {
-        suspend operator fun invoke(id: Long) = repository.deleteEvent(id)
+        suspend operator fun invoke(id: String) = repository.deleteEvent(id)
     }
 
 /** Pins or unpins an event for the widget (pinning is exclusive). */
@@ -85,5 +85,5 @@ class SetEventPinnedUseCase
     constructor(
         private val repository: EventRepository,
     ) {
-        suspend operator fun invoke(eventId: Long, pinned: Boolean) = repository.setPinned(eventId, pinned)
+        suspend operator fun invoke(eventId: String, pinned: Boolean) = repository.setPinned(eventId, pinned)
     }

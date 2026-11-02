@@ -10,7 +10,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.junit5)
-    // Reads app/google-services.json (both com.peoplehub and com.peoplehub.debug) for Firebase sync.
+    // Reads app/google-services.json (both com.peoplehub and com.peoplehub.debug): every piece of data
+    // lives in Firestore.
     alias(libs.plugins.google.services)
 }
 
@@ -125,10 +126,9 @@ dependencies {
     // Feature & core modules
     implementation(projects.core.domain)
     implementation(projects.core.ui)
-    implementation(projects.core.database)
+    implementation(projects.core.data)
     implementation(projects.core.notifications)
     implementation(projects.core.dataio)
-    implementation(projects.core.sync)
     implementation(projects.feature.people)
     implementation(projects.feature.birthdays)
     implementation(projects.feature.events)
@@ -172,12 +172,10 @@ dependencies {
     // Permissions
     implementation(libs.accompanist.permissions)
 
-    // Google sign-in for cloud sync (Credential Manager), and the process lifecycle that turns the
-    // real-time listeners on only while the app is in the foreground.
+    // Google sign-in (Credential Manager): the app needs a signed-in account to read any data.
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services)
     implementation(libs.googleid)
-    implementation(libs.androidx.lifecycle.process)
 
     debugImplementation(libs.bundles.compose.debug)
 

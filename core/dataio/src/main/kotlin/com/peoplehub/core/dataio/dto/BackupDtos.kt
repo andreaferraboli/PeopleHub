@@ -5,15 +5,17 @@ import kotlinx.serialization.Serializable
 /**
  * Serialization-friendly mirror of the domain `Person`.
  *
- * Uses only primitive/JSON-native types so that no custom serializers are required:
- * the [birthday] is an ISO-8601 local date string, instants are epoch-millis longs and the
- * per-person check-in threshold is flattened into [warningDays]/[criticalDays].
+ * Uses only primitive/JSON-native types, apart from the ids ([FlexibleIdSerializer]: strings now,
+ * numbers in files written before the data moved to the cloud): the [birthday] is an ISO-8601 local
+ * date string, instants are epoch-millis longs and the per-person check-in threshold is flattened into
+ * [warningDays]/[criticalDays].
  *
  * Every field carries a default so that older or partial JSON decodes gracefully.
  */
 @Serializable
 data class PersonDto(
-    val id: Long = 0L,
+    @Serializable(with = FlexibleIdSerializer::class)
+    val id: String = "",
     val firstName: String,
     val lastName: String,
     val photoPath: String? = null,
@@ -41,28 +43,31 @@ data class PersonDto(
 data class InterestDto(
     val key: String,
     val value: String,
-    val id: Long = 0L,
 )
 
 /**
  * Serialization-friendly mirror of the domain `CheckIn`; the timestamp is epoch-millis.
  *
- * [outingId] groups the check-ins recorded for one shared outing. It is `0` in files written before
- * outings existed; the import then rebuilds the groups from the day and the note.
+ * [outingId] groups the check-ins recorded for one shared outing. It is missing (or `0`) in files
+ * written before outings existed; the import then rebuilds the groups from the day and the note.
  */
 @Serializable
 data class CheckInDto(
-    val id: Long = 0L,
-    val personId: Long,
+    @Serializable(with = FlexibleIdSerializer::class)
+    val id: String = "",
+    @Serializable(with = FlexibleIdSerializer::class)
+    val personId: String,
     val timestampEpochMillis: Long,
     val note: String? = null,
-    val outingId: Long = 0L,
+    @Serializable(with = FlexibleIdSerializer::class)
+    val outingId: String = "",
 )
 
 /** Serialization-friendly mirror of the domain `PersonEvent`; [dateTime] is an ISO local date-time string. */
 @Serializable
 data class EventDto(
-    val id: Long = 0L,
+    @Serializable(with = FlexibleIdSerializer::class)
+    val id: String = "",
     val title: String,
     val dateTime: String,
     val description: String? = null,
@@ -72,7 +77,8 @@ data class EventDto(
     val backgroundZoom: Float = 1f,
     val backgroundPanX: Float = 0f,
     val backgroundPanY: Float = 0f,
-    val personId: Long? = null,
+    @Serializable(with = NullableFlexibleIdSerializer::class)
+    val personId: String? = null,
     val pinnedToWidget: Boolean = false,
 )
 

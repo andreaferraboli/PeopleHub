@@ -30,17 +30,17 @@ class CheckInUseCasesTest {
         runTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            coEvery { checkInRepository.recordCheckIn(any()) } returns 1L
+            coEvery { checkInRepository.recordCheckIn(any()) } returns "1"
             val useCase = CheckInPersonUseCase(checkInRepository, peopleRepository, clock)
 
-            useCase(personId = 7L, note = "Coffee")
+            useCase(personId = "7", note = "Coffee")
 
             coVerify {
                 checkInRepository.recordCheckIn(
-                    match { it.personId == 7L && it.timestamp == now && it.note == "Coffee" },
+                    match { it.personId == "7" && it.timestamp == now && it.note == "Coffee" },
                 )
             }
-            coVerify { peopleRepository.updateLastCheckIn(7L, now.toEpochMilli()) }
+            coVerify { peopleRepository.updateLastCheckIn("7", now.toEpochMilli()) }
         }
 
     @Test
@@ -49,17 +49,17 @@ class CheckInUseCasesTest {
             val backDated = now.minus(3, ChronoUnit.DAYS)
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            coEvery { checkInRepository.recordCheckIn(any()) } returns 1L
+            coEvery { checkInRepository.recordCheckIn(any()) } returns "1"
             val useCase = CheckInPersonUseCase(checkInRepository, peopleRepository, clock)
 
-            useCase(personId = 7L, note = "Dinner last week", at = backDated)
+            useCase(personId = "7", note = "Dinner last week", at = backDated)
 
             coVerify {
                 checkInRepository.recordCheckIn(
-                    match { it.personId == 7L && it.timestamp == backDated },
+                    match { it.personId == "7" && it.timestamp == backDated },
                 )
             }
-            coVerify { peopleRepository.updateLastCheckIn(7L, backDated.toEpochMilli()) }
+            coVerify { peopleRepository.updateLastCheckIn("7", backDated.toEpochMilli()) }
         }
 
     @Test
@@ -68,12 +68,12 @@ class CheckInUseCasesTest {
             val backDated = now.minus(10, ChronoUnit.DAYS)
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            coEvery { checkInRepository.recordCheckIn(any()) } returns 1L
-            coEvery { peopleRepository.getPerson(7L) } returns
-                Person(id = 7, firstName = "Recent", lastName = "Seen", lastCheckInAt = now)
+            coEvery { checkInRepository.recordCheckIn(any()) } returns "1"
+            coEvery { peopleRepository.getPerson("7") } returns
+                Person(id = "7", firstName = "Recent", lastName = "Seen", lastCheckInAt = now)
             val useCase = CheckInPersonUseCase(checkInRepository, peopleRepository, clock)
 
-            useCase(personId = 7L, at = backDated)
+            useCase(personId = "7", at = backDated)
 
             coVerify { checkInRepository.recordCheckIn(match { it.timestamp == backDated }) }
             coVerify(exactly = 0) { peopleRepository.updateLastCheckIn(any(), any()) }
@@ -85,13 +85,13 @@ class CheckInUseCasesTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
             val survivor = now.minus(5, ChronoUnit.DAYS)
-            coEvery { checkInRepository.latestTimestamp(7L) } returns survivor
+            coEvery { checkInRepository.latestTimestamp("7") } returns survivor
             val useCase = DeleteCheckInsUseCase(checkInRepository, peopleRepository)
 
-            useCase(personId = 7L, ids = listOf(1L, 2L))
+            useCase(personId = "7", ids = listOf("1", "2"))
 
-            coVerify { checkInRepository.deleteCheckIns(listOf(1L, 2L)) }
-            coVerify { peopleRepository.updateLastCheckIn(7L, survivor.toEpochMilli()) }
+            coVerify { checkInRepository.deleteCheckIns(listOf("1", "2")) }
+            coVerify { peopleRepository.updateLastCheckIn("7", survivor.toEpochMilli()) }
         }
 
     @Test
@@ -99,12 +99,12 @@ class CheckInUseCasesTest {
         runTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            coEvery { checkInRepository.latestTimestamp(7L) } returns null
+            coEvery { checkInRepository.latestTimestamp("7") } returns null
             val useCase = DeleteCheckInsUseCase(checkInRepository, peopleRepository)
 
-            useCase(personId = 7L, ids = listOf(1L))
+            useCase(personId = "7", ids = listOf("1"))
 
-            coVerify { peopleRepository.updateLastCheckIn(7L, null) }
+            coVerify { peopleRepository.updateLastCheckIn("7", null) }
         }
 
     @Test
@@ -114,7 +114,7 @@ class CheckInUseCasesTest {
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
             val useCase = DeleteCheckInsUseCase(checkInRepository, peopleRepository)
 
-            useCase(personId = 7L, ids = emptyList())
+            useCase(personId = "7", ids = emptyList())
 
             coVerify(exactly = 0) { checkInRepository.deleteCheckIns(any()) }
             coVerify(exactly = 0) { peopleRepository.updateLastCheckIn(any(), any()) }
@@ -125,18 +125,18 @@ class CheckInUseCasesTest {
         runTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)
             val peopleRepository = mockk<PeopleRepository>(relaxed = true)
-            val edited = CheckIn(id = 3L, personId = 7L, timestamp = now.minus(1, ChronoUnit.DAYS), note = "  Lunch  ")
-            coEvery { checkInRepository.latestTimestamp(7L) } returns edited.timestamp
+            val edited = CheckIn(id = "3", personId = "7", timestamp = now.minus(1, ChronoUnit.DAYS), note = "  Lunch  ")
+            coEvery { checkInRepository.latestTimestamp("7") } returns edited.timestamp
             val useCase = UpdateCheckInUseCase(checkInRepository, peopleRepository)
 
             useCase(edited)
 
             coVerify {
                 checkInRepository.updateCheckIn(
-                    match { it.id == 3L && it.timestamp == edited.timestamp && it.note == "  Lunch  " },
+                    match { it.id == "3" && it.timestamp == edited.timestamp && it.note == "  Lunch  " },
                 )
             }
-            coVerify { peopleRepository.updateLastCheckIn(7L, edited.timestamp.toEpochMilli()) }
+            coVerify { peopleRepository.updateLastCheckIn("7", edited.timestamp.toEpochMilli()) }
         }
 
     @Test
@@ -144,10 +144,10 @@ class CheckInUseCasesTest {
         runTest {
             val peopleRepository = mockk<PeopleRepository>()
             val settingsRepository = mockk<SettingsRepository>()
-            val fresh = Person(id = 1, firstName = "Fresh", lastName = "One", lastCheckInAt = now.minus(2, ChronoUnit.DAYS))
-            val due = Person(id = 2, firstName = "Due", lastName = "Two", lastCheckInAt = now.minus(20, ChronoUnit.DAYS))
-            val overdue = Person(id = 3, firstName = "Over", lastName = "Due", lastCheckInAt = now.minus(40, ChronoUnit.DAYS))
-            val never = Person(id = 4, firstName = "Never", lastName = "Seen", lastCheckInAt = null)
+            val fresh = Person(id = "1", firstName = "Fresh", lastName = "One", lastCheckInAt = now.minus(2, ChronoUnit.DAYS))
+            val due = Person(id = "2", firstName = "Due", lastName = "Two", lastCheckInAt = now.minus(20, ChronoUnit.DAYS))
+            val overdue = Person(id = "3", firstName = "Over", lastName = "Due", lastCheckInAt = now.minus(40, ChronoUnit.DAYS))
+            val never = Person(id = "4", firstName = "Never", lastName = "Seen", lastCheckInAt = null)
             every { peopleRepository.observePeople(any()) } returns flowOf(listOf(fresh, due, overdue, never))
             every { settingsRepository.settings } returns flowOf(AppSettings())
 
@@ -155,7 +155,7 @@ class CheckInUseCasesTest {
 
             useCase().test {
                 val urgent = awaitItem()
-                assertEquals(listOf(4L, 3L, 2L), urgent.map { it.person.id })
+                assertEquals(listOf("4", "3", "2"), urgent.map { it.person.id })
                 awaitComplete()
             }
         }
@@ -166,12 +166,12 @@ class CheckInUseCasesTest {
             val peopleRepository = mockk<PeopleRepository>()
             val settingsRepository = mockk<SettingsRepository>()
             val longAgo = now.minus(90, ChronoUnit.DAYS)
-            val tracked = Person(id = 1, firstName = "Tracked", lastName = "One", lastCheckInAt = longAgo)
-            val family = Person(id = 2, firstName = "Fam", lastName = "Ily", lastCheckInAt = longAgo, isFamily = true)
+            val tracked = Person(id = "1", firstName = "Tracked", lastName = "One", lastCheckInAt = longAgo)
+            val family = Person(id = "2", firstName = "Fam", lastName = "Ily", lastCheckInAt = longAgo, isFamily = true)
             val birthdayOnly =
-                Person(id = 3, firstName = "Cake", lastName = "Only", lastCheckInAt = longAgo, birthdayOnly = true)
+                Person(id = "3", firstName = "Cake", lastName = "Only", lastCheckInAt = longAgo, birthdayOnly = true)
             val disabled =
-                Person(id = 4, firstName = "Off", lastName = "Track", lastCheckInAt = longAgo, checkInDisabled = true)
+                Person(id = "4", firstName = "Off", lastName = "Track", lastCheckInAt = longAgo, checkInDisabled = true)
             every { peopleRepository.observePeople(any()) } returns
                 flowOf(listOf(tracked, family, birthdayOnly, disabled))
             every { settingsRepository.settings } returns flowOf(AppSettings())
@@ -179,7 +179,7 @@ class CheckInUseCasesTest {
             val useCase = GetUrgentCheckInsUseCase(peopleRepository, settingsRepository, clock)
 
             useCase().test {
-                assertEquals(listOf(1L), awaitItem().map { it.person.id })
+                assertEquals(listOf("1"), awaitItem().map { it.person.id })
                 awaitComplete()
             }
         }

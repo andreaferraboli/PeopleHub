@@ -13,7 +13,7 @@ import java.time.LocalDate
  * same rhythm twice. The rationale — a gesture that arrives like clockwork reads as automatic and
  * loses its affective signal — is explained on the in-app science screen.
  *
- * @property id stable database identifier; `0` denotes a not-yet-persisted reminder.
+ * @property id the reminder's Firestore document id (a UUID); empty for a not-yet-persisted reminder.
  * @property personId the person this reminder belongs to (reminders are always per-person).
  * @property targetIntervalDays the nominal cadence in days the jitter window is centred on.
  * @property jitterPercent half-width of the jitter window as a percentage of the target
@@ -25,8 +25,8 @@ import java.time.LocalDate
  * or `null` for a fully custom reminder.
  */
 data class Reminder(
-    val id: Long = 0L,
-    val personId: Long,
+    val id: String = "",
+    val personId: String,
     val title: String,
     val note: String? = null,
     val category: ReminderCategory = ReminderCategory.CUSTOM,
@@ -53,7 +53,7 @@ data class Reminder(
  * @property lastDoneOn the day of the most recent tap, or `null` if [history] is empty.
  */
 data class ReminderCompletion(
-    val reminderId: Long,
+    val reminderId: String,
     val history: List<ReminderDoneEntry>,
 ) {
     val timesDone: Int get() = history.size
@@ -89,8 +89,8 @@ enum class ReminderCategory {
  * worker can post a notification without a second lookup.
  */
 data class DueReminder(
-    val reminderId: Long,
-    val personId: Long,
+    val reminderId: String,
+    val personId: String,
     val personName: String,
     val title: String,
     val note: String?,

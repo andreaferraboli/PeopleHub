@@ -15,13 +15,13 @@ data object EventsRoute
 
 /** Event detail route. [eventId] is read back via `SavedStateHandle.toRoute()` in the ViewModel. */
 @Serializable
-data class EventDetailRoute(val eventId: Long)
+data class EventDetailRoute(val eventId: String)
 
 /** Add/edit route; [eventId] is [NEW_EVENT] when creating a new event. */
 @Serializable
-data class AddEditEventRoute(val eventId: Long = NEW_EVENT) {
+data class AddEditEventRoute(val eventId: String = NEW_EVENT) {
     companion object {
-        const val NEW_EVENT: Long = -1L
+        const val NEW_EVENT: String = "new"
     }
 }
 
@@ -30,10 +30,10 @@ data class AddEditEventRoute(val eventId: Long = NEW_EVENT) {
  * the supplied callbacks so the feature stays decoupled from the rest of the app.
  */
 fun NavGraphBuilder.eventsSection(
-    onEventClick: (Long) -> Unit,
+    onEventClick: (String) -> Unit,
     onAddEvent: () -> Unit,
-    onEditEvent: (Long) -> Unit,
-    onPersonClick: (Long) -> Unit,
+    onEditEvent: (String) -> Unit,
+    onPersonClick: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     composable<EventsRoute> {

@@ -31,11 +31,11 @@ import java.time.LocalTime
 import javax.inject.Inject
 
 /** A person available for linking, as shown in the picker. */
-data class PersonOption(val id: Long, val name: String)
+data class PersonOption(val id: String, val name: String)
 
 /** Editable form model backing the add/edit event screen. */
 data class EventForm(
-    val id: Long = 0L,
+    val id: String = "",
     val title: String = "",
     val dateTime: LocalDateTime = LocalDateTime.MIN,
     val description: String = "",
@@ -43,7 +43,7 @@ data class EventForm(
     val backgroundImagePath: String? = null,
     val backgroundSourcePath: String? = null,
     val backgroundCrop: CropTransform = CropTransform.Default,
-    val personId: Long? = null,
+    val personId: String? = null,
     val pinnedToWidget: Boolean = false,
 ) {
     val canSave: Boolean get() = title.isNotBlank()
@@ -70,7 +70,7 @@ class AddEditEventViewModel
         private val widgetRefresher: WidgetRefresher,
         private val clock: Clock,
     ) : ViewModel() {
-        private val eventId: Long = savedStateHandle.toRoute<AddEditEventRoute>().eventId
+        private val eventId: String = savedStateHandle.toRoute<AddEditEventRoute>().eventId
 
         /** Whether this screen is editing an existing event rather than creating a new one. */
         val isEditing: Boolean = eventId != AddEditEventRoute.NEW_EVENT
@@ -152,7 +152,7 @@ class AddEditEventViewModel
                 )
             }
 
-        fun onPersonChange(value: Long?) = _form.update { it.copy(personId = value) }
+        fun onPersonChange(value: String?) = _form.update { it.copy(personId = value) }
 
         fun onPinnedChange(value: Boolean) = _form.update { it.copy(pinnedToWidget = value) }
 

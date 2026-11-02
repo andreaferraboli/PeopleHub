@@ -28,7 +28,7 @@ class CheckInPersonUseCase
         private val peopleRepository: PeopleRepository,
         private val clock: Clock,
     ) {
-        suspend operator fun invoke(personId: Long, note: String? = null, at: Instant? = null): Long {
+        suspend operator fun invoke(personId: String, note: String? = null, at: Instant? = null): String {
             val timestamp = at ?: clock.instant()
             val id =
                 checkInRepository.recordCheckIn(
@@ -66,21 +66,20 @@ class RecordMeetupUseCase
         private val peopleRepository: PeopleRepository,
         private val clock: Clock,
     ) {
-        suspend operator fun invoke(personIds: List<Long>, days: List<LocalDate>, note: String? = null) {
+        suspend operator fun invoke(personIds: List<String>, days: List<LocalDate>, note: String? = null) {
             if (personIds.isEmpty() || days.isEmpty()) return
             val cleanNote = note?.takeIf(String::isNotBlank)
             val people = personIds.distinct()
-            // One id per day, all reserved up front: nothing is written yet, so asking for the "next"
-            // id repeatedly would hand out the same number for every day.
-            val firstOutingId = checkInRepository.newOutingId()
             val checkIns =
-                days.distinct().sorted().flatMapIndexed { dayIndex, day ->
+                days.distinct().sorted().flatMap { day ->
+                    // One outing per day, shared by everyone who was there that day.
+                    val outingId = checkInRepository.newOutingId()
                     people.map { personId ->
                         CheckIn(
                             personId = personId,
                             timestamp = day.atTime(NOON_HOUR, 0).atZone(clock.zone).toInstant(),
                             note = cleanNote,
-                            outingId = firstOutingId + dayIndex,
+                            outingId = outingId,
                         )
                     }
                 }
@@ -112,10 +111,10 @@ class UpdateCheckInUseCase
         private val peopleRepository: PeopleRepository,
     ) {
         suspend operator fun invoke(checkIn: CheckIn) {
-            val outing = checkIn.outingId.takeIf { it > 0L }?.let { checkInRepository.getOuting(it) }
+            val outing = checkIn.outingId.takeIf { it.isNotEmpty() }?.let { checkInRepository.getOuting(it) }
             val isShared = outing != null && outing.attendees.any { it.personId != checkIn.personId }
             val outingId =
-                if (isShared || checkIn.outingId <= 0L) checkInRepository.newOutingId() else checkIn.outingId
+                if (isShared || checkIn.outingId.isEmpty()) checkInRepository.newOutingId() else checkIn.outingId
             checkInRepository.updateCheckIn(
                 checkIn.copy(note = checkIn.note?.takeIf(String::isNotBlank), outingId = outingId),
             )
@@ -133,7 +132,7 @@ class DeleteCheckInsUseCase
         private val checkInRepository: CheckInRepository,
         private val peopleRepository: PeopleRepository,
     ) {
-        suspend operator fun invoke(personId: Long, ids: List<Long>) {
+        suspend operator fun invoke(personId: String, ids: List<String>) {
             if (ids.isEmpty()) return
             checkInRepository.deleteCheckIns(ids)
             refreshLastCheckIn(checkInRepository, peopleRepository, personId)
@@ -144,7 +143,7 @@ class DeleteCheckInsUseCase
 internal suspend fun refreshLastCheckIn(
     checkInRepository: CheckInRepository,
     peopleRepository: PeopleRepository,
-    personId: Long,
+    personId: String,
 ) {
     val latest = checkInRepository.latestTimestamp(personId)
     peopleRepository.updateLastCheckIn(personId, latest?.toEpochMilli())
@@ -156,7 +155,7 @@ class ObserveCheckInHistoryUseCase
     constructor(
         private val repository: CheckInRepository,
     ) {
-        operator fun invoke(personId: Long): Flow<List<CheckIn>> = repository.observeHistory(personId)
+        operator fun invoke(personId: String): Flow<List<CheckIn>> = repository.observeHistory(personId)
     }
 
 /**

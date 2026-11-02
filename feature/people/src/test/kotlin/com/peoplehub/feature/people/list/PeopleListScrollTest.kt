@@ -86,7 +86,7 @@ class PeopleListScrollTest {
         val getSettings = mockk<GetSettingsUseCase>()
         val people =
             (1..count).map { i ->
-                Person(id = i.toLong(), firstName = "Person", lastName = i.toString().padStart(2, '0'))
+                Person(id = i.toString(), firstName = "Person", lastName = i.toString().padStart(2, '0'))
             }
         every { getPeople(any()) } returns flowOf(people)
         every { observeAllTags() } returns flowOf(emptyList())

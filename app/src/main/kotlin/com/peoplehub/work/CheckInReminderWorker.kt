@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.peoplehub.core.domain.model.CheckInStatus
+import com.peoplehub.core.domain.repository.AuthRepository
 import com.peoplehub.core.domain.usecase.GetUrgentCheckInsUseCase
 import com.peoplehub.core.notifications.PeopleHubNotifier
 import dagger.assisted.Assisted
@@ -16,7 +17,8 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Daily sweep that notifies the user about people they have not seen beyond their critical
- * threshold. Scheduled by [PeopleHubWorkScheduler] to run around 09:00.
+ * threshold. Scheduled by [PeopleHubWorkScheduler] at the configured reminder hour. Reads the cloud:
+ * signed out it does nothing, and without an answer from the server in time it retries.
  */
 @HiltWorker
 class CheckInReminderWorker
@@ -26,10 +28,12 @@ class CheckInReminderWorker
         @Assisted params: WorkerParameters,
         private val getUrgentCheckIns: GetUrgentCheckInsUseCase,
         private val notifier: PeopleHubNotifier,
+        private val auth: AuthRepository,
     ) : CoroutineWorker(appContext, params) {
         override suspend fun doWork(): Result {
-            getUrgentCheckIns()
-                .first()
+            if (auth.currentAccount() == null) return Result.success()
+            val urgent = readCloudOrNull { getUrgentCheckIns().first() } ?: return Result.retry()
+            urgent
                 .filter { it.person.notificationsEnabled }
                 .filter { it.status == CheckInStatus.OVERDUE || it.status == CheckInStatus.NEVER }
                 .forEach { urgency ->

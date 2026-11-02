@@ -20,7 +20,7 @@ class BackupSerializerTest {
     fun `encode then decode round-trips a full backup`() {
         val richPerson =
             Person(
-                id = 1L,
+                id = "1",
                 firstName = "Ada",
                 lastName = "Lovelace",
                 photoPath = "/photos/ada.jpg",
@@ -28,8 +28,8 @@ class BackupSerializerTest {
                 tags = listOf("friend", "mentor"),
                 interests =
                     listOf(
-                        Interest(key = "Field", value = "Mathematics", id = 7L),
-                        Interest(key = "Hobby", value = "Poetry", id = 8L),
+                        Interest(key = "Field", value = "Mathematics"),
+                        Interest(key = "Hobby", value = "Poetry"),
                     ),
                 notes = "First programmer",
                 lastCheckInAt = Instant.ofEpochMilli(1_700_000_000_000L),
@@ -38,7 +38,7 @@ class BackupSerializerTest {
             )
         val minimalPerson =
             Person(
-                id = 2L,
+                id = "2",
                 firstName = "Bob",
                 lastName = "Stone",
                 createdAt = Instant.ofEpochMilli(1_650_000_000_000L),
@@ -50,8 +50,8 @@ class BackupSerializerTest {
                 checkIns =
                     listOf(
                         CheckIn(
-                            id = 5L,
-                            personId = 1L,
+                            id = "5",
+                            personId = "1",
                             timestamp = Instant.ofEpochMilli(1_700_000_500_000L),
                             note = "Coffee",
                         ),
@@ -59,12 +59,12 @@ class BackupSerializerTest {
                 events =
                     listOf(
                         PersonEvent(
-                            id = 9L,
+                            id = "9",
                             title = "Gala",
                             dateTime = LocalDateTime.of(2026, 1, 15, 19, 30),
                             description = "Annual gala",
                             category = "Gala",
-                            personId = 1L,
+                            personId = "1",
                             pinnedToWidget = true,
                         ),
                     ),
@@ -107,5 +107,29 @@ class BackupSerializerTest {
 
         assertTrue(result.isSuccess, "unknown fields should be ignored, not rejected")
         assertEquals(BackupData.CURRENT_SCHEMA_VERSION, result.getOrThrow().schemaVersion)
+    }
+
+    @Test
+    fun `files written while ids were numbers still decode, ids as strings`() {
+        val json =
+            """
+            {
+              "schemaVersion": 1,
+              "people": [{ "id": 4, "firstName": "Ada", "lastName": "L", "interests": [{ "key": "k", "value": "v", "id": 9 }] }],
+              "checkIns": [{ "id": 11, "personId": 4, "timestampEpochMillis": 5, "outingId": 0 }],
+              "events": [
+                { "id": 2, "title": "Party", "dateTime": "2026-01-01T20:00:00", "personId": 4 },
+                { "title": "Solo", "dateTime": "2026-01-02T20:00:00", "personId": null }
+              ]
+            }
+            """.trimIndent()
+
+        val data = serializer.decode(json).getOrThrow()
+
+        assertEquals("4", data.people.single().id)
+        assertEquals(listOf(Interest("k", "v")), data.people.single().interests)
+        assertEquals(CheckIn(id = "11", personId = "4", timestamp = Instant.ofEpochMilli(5), outingId = "0"), data.checkIns.single())
+        assertEquals(listOf("4", null), data.events.map { it.personId })
+        assertEquals(listOf("2", ""), data.events.map { it.id })
     }
 }

@@ -18,12 +18,12 @@ data object RemindersRoute
  */
 @Serializable
 data class AddEditReminderRoute(
-    val reminderId: Long = NEW_REMINDER,
-    val personId: Long = NO_PERSON,
+    val reminderId: String = NEW_REMINDER,
+    val personId: String = NO_PERSON,
 ) {
     companion object {
-        const val NEW_REMINDER: Long = -1L
-        const val NO_PERSON: Long = -1L
+        const val NEW_REMINDER: String = "new"
+        const val NO_PERSON: String = "none"
     }
 }
 
@@ -37,9 +37,9 @@ data object ReminderScienceRoute
  */
 fun NavGraphBuilder.remindersSection(
     onAddReminder: () -> Unit,
-    onEditReminder: (Long) -> Unit,
+    onEditReminder: (String) -> Unit,
     onOpenScience: () -> Unit,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     composable<RemindersRoute> {

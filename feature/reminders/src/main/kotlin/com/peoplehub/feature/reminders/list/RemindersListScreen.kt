@@ -121,9 +121,9 @@ private const val FIRST_CARD_RISE_INDEX = 4
 @Composable
 fun RemindersListScreen(
     onAddReminder: () -> Unit,
-    onEditReminder: (Long) -> Unit,
+    onEditReminder: (String) -> Unit,
     onOpenScience: () -> Unit,
-    onPersonClick: (Long) -> Unit,
+    onPersonClick: (String) -> Unit,
     viewModel: RemindersListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -151,11 +151,11 @@ internal fun RemindersListContent(
     onAddReminder: () -> Unit,
     onOpenScience: () -> Unit,
     onCategoryChange: (ReminderCategory?) -> Unit,
-    onReminderClick: (Long) -> Unit,
-    onPersonClick: (Long) -> Unit,
-    onToggleEnabled: (Long, Boolean) -> Unit,
-    onDelete: (Long) -> Unit,
-    onMarkDone: (Long) -> Unit,
+    onReminderClick: (String) -> Unit,
+    onPersonClick: (String) -> Unit,
+    onToggleEnabled: (String, Boolean) -> Unit,
+    onDelete: (String) -> Unit,
+    onMarkDone: (String) -> Unit,
 ) {
     val spacing = PeopleHubTheme.spacing
     val clearance = LocalNavBarClearance.current
@@ -405,11 +405,11 @@ private fun CategoryFilterRow(
 
 private fun LazyListScope.remindersListBody(
     listState: UiState<List<ReminderListItem>>,
-    onReminderClick: (Long) -> Unit,
-    onPersonClick: (Long) -> Unit,
-    onToggleEnabled: (Long, Boolean) -> Unit,
-    onDelete: (Long) -> Unit,
-    onMarkDone: (Long) -> Unit,
+    onReminderClick: (String) -> Unit,
+    onPersonClick: (String) -> Unit,
+    onToggleEnabled: (String, Boolean) -> Unit,
+    onDelete: (String) -> Unit,
+    onMarkDone: (String) -> Unit,
 ) {
     when (listState) {
         UiState.Loading -> item(key = "loading") { StateBox { LoadingView() } }
@@ -870,8 +870,8 @@ private fun RemindersListPreviewContent() {
                     UiState.Success(
                         listOf(
                             ReminderListItem(
-                                1,
-                                1,
+                                "1",
+                                "1",
                                 "Marta Colombo",
                                 "Porta i fiori",
                                 null,
@@ -885,8 +885,8 @@ private fun RemindersListPreviewContent() {
                                 today = today,
                             ),
                             ReminderListItem(
-                                2,
-                                2,
+                                "2",
+                                "2",
                                 "Matteo Galli",
                                 "Tempo insieme non strutturato",
                                 null,
@@ -899,8 +899,8 @@ private fun RemindersListPreviewContent() {
                                 today = today,
                             ),
                             ReminderListItem(
-                                3,
-                                3,
+                                "3",
+                                "3",
                                 "Elena Ferri",
                                 "Senti un fratello o una sorella",
                                 null,
@@ -912,8 +912,8 @@ private fun RemindersListPreviewContent() {
                                 today = today,
                             ),
                             ReminderListItem(
-                                4,
-                                4,
+                                "4",
+                                "4",
                                 "Laura Bassi",
                                 "Chiama i tuoi genitori",
                                 "Chiedi com'e andata la visita",
@@ -926,8 +926,8 @@ private fun RemindersListPreviewContent() {
                                 today = today,
                             ),
                             ReminderListItem(
-                                5,
-                                5,
+                                "5",
+                                "5",
                                 "Francesca Lombardi",
                                 "Organizza una visita a Torino",
                                 null,

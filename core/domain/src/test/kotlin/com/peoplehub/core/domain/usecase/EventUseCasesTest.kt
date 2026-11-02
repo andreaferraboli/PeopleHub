@@ -28,7 +28,7 @@ class EventUseCasesTest {
     @Test
     fun `add event trims the title and drops a blank category`() =
         runTest {
-            coEvery { repository.upsertEvent(any()) } returns 5L
+            coEvery { repository.upsertEvent(any()) } returns "5"
             val useCase = AddEventUseCase(repository)
 
             val result =
@@ -36,7 +36,7 @@ class EventUseCasesTest {
                     PersonEvent(title = " Gala ", dateTime = LocalDateTime.of(2026, 11, 15, 19, 0), category = "   "),
                 )
 
-            assertEquals(5L, result.getOrNull())
+            assertEquals("5", result.getOrNull())
             coVerify { repository.upsertEvent(match { it.title == "Gala" && it.category == null }) }
         }
 }
