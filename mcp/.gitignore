@@ -1,0 +1,14 @@
+# build e dipendenze si rigenerano
+node_modules
+dist
+src/generated
+firestore-debug.log
+# stato OAuth locale
+*.sqlite
+*.sqlite-*
+# segreti: mai nel repo (chiavi del service account, token admin, env)
+.env*
+*-sa.json
+google-sa.json
+sa.json
+admin-token
