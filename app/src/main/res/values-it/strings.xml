@@ -79,7 +79,7 @@
     <string name="vault_diag_check_now_sent">Controllo notifiche avviato</string>
 
     <string name="vault_import_title">Importa backup</string>
-    <string name="vault_import_message">Sostituire tutti i dati attuali, o unire solo i nuovi record?</string>
+    <string name="vault_import_message">Sostituire tutti i dati attuali, o unire solo i nuovi record? Con la sincronizzazione cloud attiva il risultato arriva anche nel cloud: sostituire cancella anche i dati vecchi lì.</string>
     <string name="vault_import_merge">Unisci</string>
     <string name="vault_import_replace">Sostituisci tutto</string>
 
@@ -104,7 +104,7 @@
     <string name="vault_delete_all">Elimina tutte le persone</string>
     <string name="vault_delete_all_desc">Rimuove ogni persona e le relative uscite. Gli eventi vengono mantenuti ma diventano scollegati. L\'operazione non può essere annullata.</string>
     <string name="vault_delete_all_confirm_title">Eliminare tutte le persone?</string>
-    <string name="vault_delete_all_confirm_message">Questa operazione rimuove definitivamente tutte le persone che hai aggiunto, insieme alle loro uscite. Non può essere annullata.</string>
+    <string name="vault_delete_all_confirm_message">Questa operazione rimuove definitivamente tutte le persone che hai aggiunto, insieme alle loro uscite. Con la sincronizzazione cloud attiva vengono eliminate anche dal cloud. Non può essere annullata.</string>
 
     <!-- Vault: import guide entry -->
     <string name="vault_guide_title">Come importare</string>
@@ -145,4 +145,29 @@
     <string name="ig_backup_title">Backup completo · JSON</string>
     <string name="ig_backup_desc">L\'istantanea completa — persone, uscite ed eventi. Dopo aver scelto il file, seleziona Unisci per aggiungere solo i nuovi record o Sostituisci per sovrascrivere tutto.</string>
     <string name="ig_backup_import">Scegli file di backup</string>
+
+    <!-- Sincronizzazione cloud (Cassaforte) -->
+    <string name="vault_sync_title">Sincronizzazione cloud</string>
+    <string name="vault_sync_desc">Tieni una copia dei tuoi dati nel tuo Firebase, sempre allineata, così sopravvive a un telefono nuovo e il tuo assistente può leggerla. Le foto restano su questo telefono.</string>
+    <string name="vault_sync_sign_in">Accedi con Google</string>
+    <string name="vault_sync_signed_in_as">Collegato come %1$s</string>
+    <string name="vault_sync_checking">Controllo cosa c\'è nel cloud…</string>
+    <string name="vault_sync_retry">Riprova</string>
+    <string name="vault_sync_upload">Carica su Firebase</string>
+    <string name="vault_sync_upload_hint">Il cloud è vuoto. Carica una volta tutto quello che c\'è su questo telefono; da lì in poi ogni modifica si sincronizza da sola.</string>
+    <string name="vault_sync_download">Scarica dal cloud</string>
+    <string name="vault_sync_download_hint">Questo account ha già dei dati nel cloud. Scaricali per sostituire quelli di questo telefono; da lì in poi ogni modifica si sincronizza da sola.</string>
+    <string name="vault_sync_download_confirm_title">Sostituire i dati di questo telefono?</string>
+    <string name="vault_sync_download_confirm_message">Tutto quello che c\'è su questo telefono (persone, uscite, eventi, promemoria) viene sostituito dai dati del cloud. Le foto e gli sfondi degli eventi di questo telefono non sono nel cloud e andranno persi.</string>
+    <string name="vault_sync_active">Sincronizzazione automatica attiva</string>
+    <string name="vault_sync_running">Sincronizzazione in corso…</string>
+    <string name="vault_sync_last">Ultima sincronizzazione: %1$s</string>
+    <string name="vault_sync_never">Non ancora sincronizzato</string>
+    <string name="vault_sync_pending">Modifiche in attesa di invio: %1$d</string>
+    <string name="vault_sync_error">Ultimo errore: %1$s</string>
+    <string name="vault_sync_now">Sincronizza ora</string>
+    <string name="vault_sync_sign_out">Esci</string>
+    <string name="vault_sync_sign_in_failed">L\'accesso con Google non è andato a buon fine</string>
+    <string name="vault_sync_done">Sincronizzazione completata</string>
+    <string name="vault_sync_failed">Sincronizzazione non riuscita: %1$s</string>
 </resources>

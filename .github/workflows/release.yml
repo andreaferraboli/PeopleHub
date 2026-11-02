@@ -23,6 +23,9 @@ on:
   push:
     branches:
       - master
+    # The MCP server lives in the same repo but is not part of the APK.
+    paths-ignore:
+      - 'mcp/**'
   workflow_dispatch:
     inputs:
       version:

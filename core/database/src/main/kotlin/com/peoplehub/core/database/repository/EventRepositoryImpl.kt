@@ -65,7 +65,7 @@ internal class EventRepositoryImpl
             return if (event.id == 0L) {
                 dao.insert(entity)
             } else {
-                dao.update(entity)
+                dao.update(entity.copy(remoteId = dao.remoteIdOf(event.id) ?: entity.remoteId))
                 event.id
             }
         }

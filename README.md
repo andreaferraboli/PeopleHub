@@ -1,15 +1,16 @@
 # PeopleHub
 
-**Your personal relationship hub — 100% offline.**
+**Your personal relationship hub — local first, with optional cloud sync.**
 
 PeopleHub helps you nurture the relationships that matter. It keeps track of the people in your
 life, their birthdays, the last time you saw them ("check‑ins"), their interests, and the
 significant events around them — with elapsed/remaining day counters that nudge you to stay in
 touch.
 
-There is **no networking anywhere in the app** — no analytics, no accounts, no cloud. Every piece of
-personal data lives only on your device in a local database. The single exception is the optional
-self‑updater, which checks GitHub Releases for a newer APK; your data never leaves the phone.
+The app works entirely from a local database on the phone and needs no account. Two things use the
+network: the self‑updater, which checks GitHub Releases for a newer APK, and **optional cloud sync**
+with your own Firebase project (Vault → Cloud sync, sign in with Google). Until you sign in, nothing
+leaves the phone; there are no analytics.
 
 ---
 
@@ -34,6 +35,11 @@ self‑updater, which checks GitHub Releases for a newer APK; your data never le
   (Vault → Language).
 - **Self‑documenting UI** — every icon button shows a tooltip describing what it does.
 - **Automatic backups** — export/import the full dataset (JSON) or just birthdays (CSV).
+- **Cloud sync (optional)** — sign in with Google in the Vault and your data is kept in step, both
+  ways, with Firestore in your own Firebase project (`peoplehub-af26`), so an assistant connected
+  through the MCP server in `mcp/` can read and change it. One upload the first time (or a download,
+  on a new phone), then it is automatic. Photos and event backgrounds stay on the phone; one active
+  phone per account is assumed. Details in [docs/firestore-schema.md](docs/firestore-schema.md).
 
 ## Design — "Velluto"
 
@@ -57,6 +63,7 @@ animations. Full rules in [DESIGN.md](DESIGN.md).
 | Widgets | Glance |
 | I/O | kotlinx.serialization JSON + hand‑written CSV |
 | Images | Coil 3 (local files in internal storage) |
+| Cloud sync | Firebase Auth (Google, via Credential Manager) + Cloud Firestore, only in `:core:sync` |
 | Tests | JUnit 5 + MockK + Turbine |
 | Quality | Ktlint + Detekt, `allWarningsAsErrors = true` |
 
@@ -72,6 +79,7 @@ animations. Full rules in [DESIGN.md](DESIGN.md).
 :core:ui              Compose theme (Velluto), design-system components, icons, scenes, UiState
 :core:notifications   Notification channels + PeopleHubNotifier + action constants
 :core:dataio   (JVM)  JSON (kotlinx.serialization) + CSV import/export, DTOs, mappers
+:core:sync            Two-way Firestore sync: outbox pusher, cursor puller, Firebase Auth, settings sync
 :feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import
 :feature:birthdays    Year/Month/List calendar views, CSV/JSON import + export
 :feature:events       Events list with filters, detail, add/edit, pin-to-widget
@@ -110,15 +118,15 @@ export JAVA_HOME='/c/Program Files/Android/Android Studio/jbr'   # Git Bash on W
 
 ## Releases & auto‑update
 
-The app self‑updates from **GitHub Releases** — the Release is the single source of truth (no
-Firebase/Firestore).
+The app self‑updates from **GitHub Releases** — the Release is the single source of truth (cloud sync
+has nothing to do with updates).
 
 - **Versioning** — `app/build.gradle.kts` defines `appVersionName` (`X.Y.Z`); `versionCode` is
   derived as `major*10000 + minor*100 + patch`.
 - **In‑app updater** — on launch the app reads `releases/latest` from the GitHub API, compares the
   tag's version code to the installed one, and offers to download + install the `.apk` via a
-  `FileProvider`. The Vault also has a manual "Check for updates". **This is the app's only network
-  use.**
+  `FileProvider`. The Vault also has a manual "Check for updates". Apart from the optional cloud
+  sync, this is the app's only network use.
 - **Publishing** (pick one):
   - Local: `pwsh ./publish-update.ps1 -Version X.Y.Z` — bumps the version, builds the signed APK,
     commits, pushes, and `gh release create`s with the APK attached.

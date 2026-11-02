@@ -6,6 +6,7 @@ import com.peoplehub.core.database.dao.CheckInDao
 import com.peoplehub.core.database.dao.EventDao
 import com.peoplehub.core.database.dao.PeopleDao
 import com.peoplehub.core.database.dao.ReminderDao
+import com.peoplehub.core.database.dao.SyncDao
 import com.peoplehub.core.database.entity.CheckInEntity
 import com.peoplehub.core.database.entity.EventEntity
 import com.peoplehub.core.database.entity.InterestEntity
@@ -14,6 +15,8 @@ import com.peoplehub.core.database.entity.PersonFtsEntity
 import com.peoplehub.core.database.entity.PersonTagEntity
 import com.peoplehub.core.database.entity.ReminderCompletionEntity
 import com.peoplehub.core.database.entity.ReminderEntity
+import com.peoplehub.core.database.entity.SyncOutboxEntity
+import com.peoplehub.core.database.entity.SyncStateEntity
 
 /**
  * The single Room database for PeopleHub. Foreign keys are enabled in the DI builder so cascading
@@ -29,6 +32,8 @@ import com.peoplehub.core.database.entity.ReminderEntity
         EventEntity::class,
         ReminderEntity::class,
         ReminderCompletionEntity::class,
+        SyncOutboxEntity::class,
+        SyncStateEntity::class,
     ],
     version = PeopleHubDatabase.VERSION,
     exportSchema = true,
@@ -42,8 +47,10 @@ abstract class PeopleHubDatabase : RoomDatabase() {
 
     abstract fun reminderDao(): ReminderDao
 
+    abstract fun syncDao(): SyncDao
+
     companion object {
-        const val VERSION: Int = 10
+        const val VERSION: Int = 11
         const val NAME: String = "peoplehub.db"
     }
 }

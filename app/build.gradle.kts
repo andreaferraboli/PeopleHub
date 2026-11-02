@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.junit5)
+    // Reads app/google-services.json (both com.peoplehub and com.peoplehub.debug) for Firebase sync.
+    alias(libs.plugins.google.services)
 }
 
 // The version name drives the integer versionCode (derived below) so the in-app updater can compare
@@ -126,6 +128,7 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.notifications)
     implementation(projects.core.dataio)
+    implementation(projects.core.sync)
     implementation(projects.feature.people)
     implementation(projects.feature.birthdays)
     implementation(projects.feature.events)
@@ -168,6 +171,13 @@ dependencies {
 
     // Permissions
     implementation(libs.accompanist.permissions)
+
+    // Google sign-in for cloud sync (Credential Manager), and the process lifecycle that turns the
+    // real-time listeners on only while the app is in the foreground.
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.googleid)
+    implementation(libs.androidx.lifecycle.process)
 
     debugImplementation(libs.bundles.compose.debug)
 

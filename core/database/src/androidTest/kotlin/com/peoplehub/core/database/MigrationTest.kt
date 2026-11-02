@@ -72,6 +72,46 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun v10RowsGetCloudIdsOneOutingIdPerOutingAndTheTriggersQueueLocalWrites() {
+        helper.createDatabase(TEST_DB, 10).use { db ->
+            db.execSQL(
+                "INSERT INTO person (id, first_name, last_name, notes, created_at_epoch_millis) " +
+                    "VALUES (1, 'Ada', 'Lovelace', '', 0), (2, 'Bob', 'Smith', '', 0)",
+            )
+            db.execSQL(
+                "INSERT INTO check_in (id, person_id, timestamp_epoch_millis, note, outing_id) " +
+                    "VALUES (1, 1, 10, 'x', 1), (2, 2, 10, 'x', 1), (3, 1, 50, NULL, 2)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(TEST_DB, 11, true, MIGRATION_10_11).use { db ->
+            db.query("SELECT COUNT(DISTINCT remote_id), COUNT(*) FROM person WHERE length(remote_id) = 36").use {
+                it.moveToFirst()
+                assertEquals(2, it.getInt(0))
+                assertEquals(2, it.getInt(1))
+            }
+            db.query("SELECT COUNT(DISTINCT outing_remote_id) FROM check_in GROUP BY outing_id ORDER BY outing_id").use {
+                assertEquals(2, it.count)
+                while (it.moveToNext()) assertEquals(1, it.getInt(0))
+            }
+            db.query("SELECT COUNT(*) FROM sync_outbox").use {
+                it.moveToFirst()
+                assertEquals(0, it.getInt(0))
+            }
+
+            db.execSQL("UPDATE person SET notes = 'Maths' WHERE id = 1")
+            db.execSQL("DELETE FROM check_in WHERE id = 3")
+            db.query("SELECT collection FROM sync_outbox ORDER BY collection").use {
+                assertEquals(2, it.count)
+                it.moveToFirst()
+                assertEquals("checkIns", it.getString(0))
+                it.moveToNext()
+                assertEquals("people", it.getString(0))
+            }
+        }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test.db"
     }

@@ -40,3 +40,12 @@
 - Non provato: il login Google vero da claude.ai e i dati reali di Andrea (uid non noto finche non si collega).
 - PR #4, merge in master.
 - Aperto: collegare il connettore da claude.ai; quando l'app scrivera davvero su Firestore, controllare un giro completo telefono -> MCP -> telefono (LWW sull'intero documento, tombstone dei completamenti alla cancellazione di un promemoria).
+
+## 2026-11-02 - Sync con Firebase (peoplehub-af26)
+- L'app non e piu solo offline: Room resta il database locale (UI, widget, notifiche, ricerca), un motore di sync bidirezionale lo allinea a Firestore sotto users/{uid}/ con login Google. Serve perche i dati siano anche sul cloud e leggibili/modificabili dal server MCP (PR #4).
+- Progetto Firebase `peoplehub-af26` (piano Spark, Firestore eur3, regole solo proprietario, provider Google), app Android com.peoplehub e com.peoplehub.debug, google-services.json committato. Schema e contratto con l'MCP in docs/firestore-schema.md.
+- Room v11: remote_id UUID su person, check_in, event, reminder, reminder_completion e outing_remote_id; outbox riempita da trigger SQLite (core/database/.../sync/SyncTriggers.kt) con flag per non rimandare al cloud cio che arriva dal cloud. Nuovo modulo :core:sync (Pusher, Puller, mapping, preferenze), SyncWorker e passaggio periodico nello scheduler.
+- Vault: SyncCard con accesso Google (Credential Manager), "Carica su Firebase" visibile solo fino al primo upload riuscito, "Scarica dal cloud" se il cloud ha gia dati, stato e uscita.
+- Limiti: foto non sincronizzate (Storage richiede Blaze), un solo telefono attivo (promemoria non deduplicati).
+- Verifica: la verifica completa e stata interrotta; su richiesta di Andrea si spedisce senza altri test e il primo controllo e la build della CI di release. Test JVM nuovi scritti (mapper, conflitti, puller/pusher, decisione Carica/Scarica, SQL della migrazione); MigrationTest 10->11 non eseguito (serve un device).
+- Aperto: prova reale sul telefono (login, primo upload, modifica da Claude che torna sul telefono); SHA-1 di debug delle build da Windows non registrato.

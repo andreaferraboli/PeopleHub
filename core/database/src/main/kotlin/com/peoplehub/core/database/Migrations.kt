@@ -2,6 +2,7 @@ package com.peoplehub.core.database
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.peoplehub.core.database.sync.SyncTriggers
 
 /**
  * Schema migrations for [PeopleHubDatabase].
@@ -34,6 +35,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *   their instant is recovered from the reminder's `last_fired_epoch_millis` when that falls on the same
  *   local day (marking done always moves it, and the sweep cannot fire again the same day), and stays
  *   `null` otherwise, meaning "done that day, time unknown".
+ * - **v11** — cloud sync. Every synced table (`person`, `check_in`, `event`, `reminder`,
+ *   `reminder_completion`) gains `remote_id`, a UUID that is the row's Firestore document id, unique
+ *   and backfilled for every existing row; `check_in` also gains `outing_remote_id`, one UUID per
+ *   existing `outing_id`. Adds `sync_outbox` (the queue of changes to push) and `sync_state` (the
+ *   "applying a cloud change" switch), and installs the triggers in `SyncTriggers`. Existing rows are
+ *   not queued: the first upload from the Vault sends everything.
  */
 internal val MIGRATION_1_2: Migration =
     object : Migration(1, 2) {
@@ -161,6 +168,45 @@ internal val MIGRATION_9_10: Migration =
         }
     }
 
+private val SYNCED_TABLES = listOf("person", "check_in", "event", "reminder", "reminder_completion")
+
+/**
+ * The v10 -> v11 statements in order, kept as plain SQL so a JVM test can run them on a database
+ * built from the exported v10 schema (`SyncMigrationSqlTest`).
+ */
+internal val MIGRATION_10_11_SQL: List<String> =
+    buildList {
+        for (table in SYNCED_TABLES) {
+            add("ALTER TABLE `$table` ADD COLUMN `remote_id` TEXT NOT NULL DEFAULT ''")
+            add("UPDATE `$table` SET remote_id = ${SyncTriggers.UUID_SQL}")
+            add("CREATE UNIQUE INDEX IF NOT EXISTS `index_${table}_remote_id` ON `$table` (`remote_id`)")
+        }
+        add("ALTER TABLE `check_in` ADD COLUMN `outing_remote_id` TEXT")
+        add(
+            "CREATE TEMP TABLE outing_identity AS " +
+                "SELECT outing_id, ${SyncTriggers.UUID_SQL} AS uuid FROM (SELECT DISTINCT outing_id FROM check_in)",
+        )
+        add("UPDATE check_in SET outing_remote_id = (SELECT o.uuid FROM outing_identity o WHERE o.outing_id = check_in.outing_id)")
+        add("DROP TABLE outing_identity")
+        add("CREATE INDEX IF NOT EXISTS `index_check_in_outing_remote_id` ON `check_in` (`outing_remote_id`)")
+        add(
+            "CREATE TABLE IF NOT EXISTS `sync_outbox` (`collection` TEXT NOT NULL, `remote_id` TEXT NOT NULL, " +
+                "`changed_at` INTEGER NOT NULL, PRIMARY KEY(`collection`, `remote_id`))",
+        )
+        add(
+            "CREATE TABLE IF NOT EXISTS `sync_state` (`id` INTEGER NOT NULL, " +
+                "`applying_remote` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
+        )
+        addAll(SyncTriggers.statements)
+    }
+
+internal val MIGRATION_10_11: Migration =
+    object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            MIGRATION_10_11_SQL.forEach(db::execSQL)
+        }
+    }
+
 /** All migrations registered with the database builder, in order. */
 internal val ALL_MIGRATIONS: Array<Migration> =
     arrayOf(
@@ -173,4 +219,5 @@ internal val ALL_MIGRATIONS: Array<Migration> =
         MIGRATION_7_8,
         MIGRATION_8_9,
         MIGRATION_9_10,
+        MIGRATION_10_11,
     )

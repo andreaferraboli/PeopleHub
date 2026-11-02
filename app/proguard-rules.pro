@@ -51,3 +51,14 @@
 # Kotlin metadata / coroutines (standard safe keeps)
 -keepclassmembers class kotlin.Metadata { *; }
 -dontwarn kotlinx.coroutines.**
+
+# ---------------------------------------------------------------------------
+# Credential Manager (Google sign-in for cloud sync)
+# The Play Services provider is loaded reflectively by CredentialManager (rule from the Android docs).
+# Firebase Auth / Firestore ship their own consumer rules, and sync maps documents by hand (no
+# toObject()), so no model class needs keeping.
+# ---------------------------------------------------------------------------
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** {
+  *;
+}

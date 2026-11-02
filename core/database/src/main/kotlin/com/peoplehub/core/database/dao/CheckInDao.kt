@@ -73,6 +73,17 @@ interface CheckInDao {
     @Insert
     suspend fun insertAll(checkIns: List<CheckInEntity>)
 
+    /** The cloud identity of a stored check-in, carried over by updates (see `RemoteIds.kt`). */
+    @Query("SELECT remote_id FROM check_in WHERE id = :id")
+    suspend fun remoteIdOf(id: Long): String?
+
+    /**
+     * The cloud identity of local outing [outingId], or `null` when no row has it yet (a new or
+     * detached outing): a trigger then draws one.
+     */
+    @Query("SELECT outing_remote_id FROM check_in WHERE outing_id = :outingId AND outing_remote_id IS NOT NULL LIMIT 1")
+    suspend fun outingRemoteIdOf(outingId: Long): String?
+
     @Query("DELETE FROM check_in")
     suspend fun deleteAll()
 }

@@ -1,11 +1,13 @@
 # PeopleHub — Engineering Guide
 
-PeopleHub is a **100% offline** Android app that acts as a personal relationship hub: it tracks the
+PeopleHub is a **local-first** Android app that acts as a personal relationship hub: it tracks the
 people in your life, their birthdays, when you last saw them ("check-ins", grouped into "outings"),
 their interests, and significant personal events with elapsed/remaining day counters.
 
-There is **no networking** anywhere in the app — no HTTP client, no analytics, nothing leaves the
-device. All data lives in a local Room database and DataStore.
+All data lives in a local Room database and DataStore, and the app reads only from there. The
+network is used for two things: the GitHub Releases self-updater, and **optional two-way cloud sync**
+with Firestore (project `peoplehub-af26`) once the user signs in with Google in the Vault — see
+"Cloud sync" below. No analytics; nothing leaves the device before that sign-in.
 
 ## Stack
 
@@ -22,6 +24,7 @@ device. All data lives in a local Room database and DataStore.
 | Widgets | Glance |
 | I/O | kotlinx.serialization JSON + hand-written CSV parsing |
 | Images | Coil 3 (local files in internal storage) |
+| Cloud sync | Firebase Auth (Google via Credential Manager) + Cloud Firestore, only in `:core:sync` |
 | Tests | JUnit5 + MockK + Turbine; Compose UI on the JVM with Robolectric (JUnit4 via the vintage engine) |
 | Quality | Ktlint + Detekt, `allWarningsAsErrors = true` |
 
@@ -37,6 +40,8 @@ device. All data lives in a local Room database and DataStore.
 :core:ui              Compose theme (Velluto, see DESIGN.md), design-system components, icons, scenes, UiState
 :core:notifications   Notification channels + PeopleHubNotifier + action constants
 :core:dataio   (JVM)  JSON (kotlinx.serialization) + CSV import/export, DTOs, mappers
+:core:sync            Firestore sync engine: outbox pusher, cursor puller, settings sync, Firebase Auth,
+                      the only module with Firebase dependencies
 :feature:people       People directory (FTS search/filter/sort), tabbed detail, add/edit, JSON import,
                       record/edit an outing, outings calendar
 :feature:birthdays    Year/Month/List calendar views, CSV/JSON import + export
@@ -47,7 +52,8 @@ device. All data lives in a local Room database and DataStore.
 ```
 
 Dependency direction: `feature:* -> core:domain, core:ui (+ dataio where needed)`;
-`core:database & core:notifications -> core:domain`; `app -> everything`. Domain is pure JVM and
+`core:database & core:notifications -> core:domain`; `core:sync -> core:database, core:domain`;
+`app -> everything`. Domain is pure JVM and
 has **no Android dependencies**.
 
 ## Architecture rules
@@ -93,6 +99,53 @@ picker excludes birthday-only entries (bare birthdays, not tracked relationships
 are *already attending the edited outing*: a quick check-in on such a person is reachable from their
 own screen, and hiding them would leave that outing with nothing ticked — unremovable, and impossible
 to save at all, since an outing needs at least one attendee.
+
+## Cloud sync
+
+Room stays the source of truth for the UI, widgets, notifications and FTS search; Firestore is a
+replica under `users/{uid}/` that other writers (the MCP server in `mcp/`) also change. The data
+contract — collections, field names and types, sync fields — is **`docs/firestore-schema.md`**:
+change it there first and keep the MCP server in step.
+
+- **Identity (v11)**: every synced row (`person`, `check_in`, `event`, `reminder`,
+  `reminder_completion`) has `remote_id`, a UUID that is its document id; local `Long` ids never leave
+  the phone. Inserts draw one (`newRemoteId()`); updates built from domain models **must** carry the
+  stored one over (`*Dao.remoteIdOf`, done in the repository impls). `check_in.outing_remote_id` is the
+  outing's cloud id, filled by a trigger (copied from a sibling row of the same `outing_id`, or new).
+  Rows coming from the cloud keep whatever id string the cloud has.
+- **Outbox**: SQL triggers (`core/database/.../sync/SyncTriggers.kt`, installed by the migration and
+  by the `onCreate` callback) record every insert/update/delete in `sync_outbox` as
+  (collection, remote id, changed_at). Tags and interests mark their person; FK cascades fire the
+  triggers too, so "delete all" and a backup restore reach the cloud as tombstones. While the engine
+  applies cloud changes it sets `sync_state.applying_remote`, and the triggers stay silent.
+- **Push** (`Pusher`): outbox in batches of ≤ 400, parents first; the row's current state, or a merged
+  tombstone (`deleted: true`) when the row is gone; `updatedAt` = local change time,
+  `serverUpdatedAt` = server timestamp, `updatedBy = android:<installId>`.
+- **Pull** (`Puller`): per collection, documents with `serverUpdatedAt > cursor`, in the order
+  people → reminders → events → checkIns → reminderCompletions. Own writes are skipped; a cloud version
+  older than a pending local change is skipped (last write wins on the whole document). A child whose
+  parent is missing is deferred without moving the cursor past it, and given up after 3 rounds (an
+  event is then kept unlinked). Afterwards last check-in and FTS of touched people are re-derived and
+  `WidgetRefresher` is called.
+- **When**: always pull, then push. Local changes and settings changes ask `CloudSyncScheduler` for a
+  `SyncWorker` (unique, `KEEP`, network, 3 s delay); Firestore listeners run only while the app is in
+  the foreground (`ProcessLifecycleOwner`) and ask for the same worker; a periodic `SyncWorker` every
+  6 hours lets notifications and widgets see MCP changes even if the app is never opened.
+- **Settings**: `settings/main` carries `warningDays`, `criticalDays`, `birthdayOffsets` (day counts),
+  `dailyReminderHour`, `timeZone` (the phone's IANA zone); the rest stays local. A cloud change to the
+  hour re-schedules the sweeps (`RecurringWorkRescheduler`).
+- **First sync** (Vault → Cloud sync): after "Sign in with Google" the engine checks whether the cloud
+  has data. Empty → "Upload to Firebase" (queues every row, pushes, then hides itself); not empty and
+  this account never synced on this phone → "Download from the cloud", which wipes local data (with a
+  confirmation) and pulls everything. The per-account flag is `sync_initial_upload_done_<uid>` in the
+  `peoplehub_sync` DataStore (also cursors, install id, last result).
+- **Limits**: photos and event backgrounds are not synced (Storage needs the Blaze plan), only
+  `hasPhoto`. **One active phone per account** is assumed: reminders and their notifications are not
+  de-duplicated across devices. Google sign-in works only for builds whose signing SHA-1 is registered
+  in Firebase (release key and this machine's debug key; a debug build from another PC needs its own
+  key added with `firebase apps:android:sha:create`).
+- Versions: Firebase BoM 34.12.0 and googleid 1.1.1 on purpose — newer ones ship Kotlin 2.3/2.4
+  metadata that Kotlin 2.1 cannot read. Upgrade them together with Kotlin.
 
 ## Design system — "Velluto"
 
@@ -218,7 +271,7 @@ export JAVA_HOME='/c/Program Files/Android/Android Studio/jbr'   # Git Bash on W
 
 ## Auto-update (GitHub Releases)
 
-The app self-updates from **GitHub Releases** — no Firestore/Firebase. The Release is the single
+The app self-updates from **GitHub Releases** (unrelated to cloud sync). The Release is the single
 source of truth.
 
 - **Version scheme**: `versionCode = major*10000 + minor*100 + patch`, derived from the version name.
@@ -230,8 +283,8 @@ source of truth.
   `api.github.com/repos/<owner>/<repo>/releases/latest`, parses the tag + the `.apk` asset, and if
   its derived versionCode exceeds the installed one shows a dialog. `ApkInstaller` downloads to the
   private cache and launches the system installer via a `FileProvider` (`REQUEST_INSTALL_PACKAGES`).
-  The Vault also has a manual "Check for updates". **This is the only network use in the app**;
-  personal data never leaves the device.
+  The Vault also has a manual "Check for updates". Apart from the optional cloud sync, this is the
+  only network use in the app.
 - **Publishing** — two options (use one):
   - Local (Windows): `pwsh ./publish-update.ps1 -Version 1.1.1` — bumps the version, builds the
     signed APK, tags, pushes, and `gh release create`s with the APK attached.
@@ -245,7 +298,7 @@ source of truth.
     `base64 -w0 keystore/peoplehub-release.jks`. Without a key the script refuses to publish an
     unsigned APK (override with `--allow-unsigned` only for throwaway test builds).
   - CI (recommended, push-only): `.github/workflows/release.yml` runs **automatically on every push
-    to `master`** and does everything — no version edit, no local build. It auto-computes the next
+    to `master`** (except pushes that only touch `mcp/`, see `paths-ignore`) and does everything — no version edit, no local build. It auto-computes the next
     version (latest published release's patch + 1), injects it via `APP_VERSION_NAME`, then builds +
     signs + publishes `v<version>` with the APK. Because the version drives the build, the APK genuinely
     *is* that version, and a post-build step asserts the APK's `versionName` equals the tag — so a

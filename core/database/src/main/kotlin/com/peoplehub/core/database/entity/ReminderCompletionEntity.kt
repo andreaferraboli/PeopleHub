@@ -29,11 +29,12 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index(value = ["reminder_id", "done_epoch_day"])],
+    indices = [Index(value = ["reminder_id", "done_epoch_day"]), Index(value = ["remote_id"], unique = true)],
 )
 data class ReminderCompletionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     @ColumnInfo(name = "reminder_id") val reminderId: Long,
     @ColumnInfo(name = "done_epoch_day") val doneEpochDay: Long,
     @ColumnInfo(name = "done_epoch_millis") val doneEpochMillis: Long?,
+    @ColumnInfo(name = "remote_id", defaultValue = "''") val remoteId: String = newRemoteId(),
 )

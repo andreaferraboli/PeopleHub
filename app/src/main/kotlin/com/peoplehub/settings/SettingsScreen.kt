@@ -66,6 +66,7 @@ import com.peoplehub.R
 import com.peoplehub.core.domain.model.AppSettings
 import com.peoplehub.core.domain.model.ImportStrategy
 import com.peoplehub.core.domain.model.ReminderOffset
+import com.peoplehub.core.domain.model.SyncStatus
 import com.peoplehub.core.ui.components.BarSegment
 import com.peoplehub.core.ui.components.CapsLabel
 import com.peoplehub.core.ui.components.GlassPanel
@@ -111,17 +112,34 @@ fun SettingsScreen(
     onOpenLanguage: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel(),
+    syncViewModel: SyncViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val syncStatus by syncViewModel.status.collectAsStateWithLifecycle()
     val updateState by updateViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var showDownloadDialog by remember { mutableStateOf(false) }
     var diagnostics by remember { mutableStateOf(readNotificationDiagnostics(context)) }
     val languageTag = remember { AppLocale.currentTag(context) }
     val checkNowMessage = stringResource(R.string.vault_diag_check_now_sent)
+    val signInFailedMessage = stringResource(R.string.vault_sync_sign_in_failed)
+    val syncDoneMessage = stringResource(R.string.vault_sync_done)
+    val syncFailedTemplate = stringResource(R.string.vault_sync_failed, "%s")
+
+    LaunchedEffect(syncViewModel) {
+        syncViewModel.events.collect { event ->
+            val text =
+                when (event) {
+                    SyncEvent.Done -> syncDoneMessage
+                    is SyncEvent.Failed -> syncFailedTemplate.replace("%s", event.message)
+                }
+            snackbarHostState.showSnackbar(text)
+        }
+    }
 
     // Re-read on every resume so returning from a system settings screen reflects the new grant.
     LifecycleResumeEffect(Unit) {
@@ -211,7 +229,44 @@ fun SettingsScreen(
                 },
                 onDeleteAll = { showDeleteAllDialog = true },
             ),
+        syncStatus = syncStatus,
+        syncActions =
+            SyncActions(
+                onSignIn = {
+                    scope.launch {
+                        GoogleSignIn
+                            .requestIdToken(context)
+                            .onSuccess(syncViewModel::onIdToken)
+                            .onFailure { snackbarHostState.showSnackbar(signInFailedMessage) }
+                    }
+                },
+                onUpload = syncViewModel::upload,
+                onDownload = { showDownloadDialog = true },
+                onSyncNow = syncViewModel::syncNow,
+                onRetryCheck = syncViewModel::retryCloudCheck,
+                onSignOut = {
+                    syncViewModel.signOut()
+                    scope.launch { GoogleSignIn.clear(context) }
+                },
+            ),
     )
+
+    if (showDownloadDialog) {
+        AlertDialog(
+            onDismissRequest = { showDownloadDialog = false },
+            title = { Text(stringResource(R.string.vault_sync_download_confirm_title)) },
+            text = { Text(stringResource(R.string.vault_sync_download_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDownloadDialog = false
+                    syncViewModel.download()
+                }) { Text(stringResource(R.string.vault_sync_download)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDownloadDialog = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
 
     if (showDeleteAllDialog) {
         AlertDialog(
@@ -284,6 +339,8 @@ internal fun SettingsContent(
     snackbarHostState: SnackbarHostState,
     actions: SettingsActions,
     modifier: Modifier = Modifier,
+    syncStatus: SyncStatus = SyncStatus(),
+    syncActions: SyncActions = SyncActions(),
 ) {
     val c = PeopleHubTheme.colors
     val spacing = PeopleHubTheme.spacing
@@ -323,11 +380,17 @@ internal fun SettingsContent(
                     modifier = cardModifier.riseIn(1),
                 )
 
+                SyncCard(
+                    status = syncStatus,
+                    actions = syncActions,
+                    modifier = cardModifier.riseIn(2),
+                )
+
                 ThresholdCard(
                     warningDays = state.settings.defaultCheckInThreshold.warningDays,
                     criticalDays = state.settings.defaultCheckInThreshold.criticalDays,
                     onChange = actions.onThresholdChange,
-                    modifier = cardModifier.riseIn(2),
+                    modifier = cardModifier.riseIn(3),
                 )
 
                 BirthdayRemindersCard(
@@ -337,7 +400,7 @@ internal fun SettingsContent(
                     onToggle = actions.onToggleReminder,
                     onToggleExact = actions.onToggleExactAlarms,
                     onHourChange = actions.onReminderHourChange,
-                    modifier = cardModifier.riseIn(3),
+                    modifier = cardModifier.riseIn(4),
                 )
 
                 DiagnosticsCard(
@@ -348,7 +411,7 @@ internal fun SettingsContent(
                     onFixExactAlarms = actions.onFixExactAlarms,
                     onFixBattery = actions.onFixBattery,
                     onCheckNow = actions.onCheckNow,
-                    modifier = cardModifier.riseIn(4),
+                    modifier = cardModifier.riseIn(5),
                 )
 
                 UpdatesCard(
@@ -356,14 +419,14 @@ internal fun SettingsContent(
                     updateState = updateState,
                     onCheck = actions.onCheckUpdates,
                     onInstall = actions.onInstallUpdate,
-                    modifier = cardModifier.riseIn(5),
+                    modifier = cardModifier.riseIn(6),
                 )
 
                 PreferencesCard(
                     languageTag = languageTag,
                     onOpenLanguage = actions.onOpenLanguage,
                     onOpenBirthdayOnly = actions.onOpenBirthdayOnly,
-                    modifier = cardModifier.riseIn(6),
+                    modifier = cardModifier.riseIn(7),
                 )
 
                 Spacer(Modifier.height(spacing.s))
