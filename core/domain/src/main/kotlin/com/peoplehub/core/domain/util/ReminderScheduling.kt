@@ -1,7 +1,9 @@
 package com.peoplehub.core.domain.util
 
+import com.peoplehub.core.domain.model.ReminderDoneEntry
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -51,5 +53,48 @@ object ReminderScheduling {
     fun nextFireAt(from: Instant, targetIntervalDays: Int, jitterPercent: Int, random: Random): Instant =
         from.plus(Duration.ofDays(nextIntervalDays(targetIntervalDays, jitterPercent, random).toLong()))
 
+    /**
+     * The instant a completion counts from: its exact time, or local noon of its day for the entries
+     * that kept only the day (the same rule as the MCP server).
+     */
+    fun anchorOf(entry: ReminderDoneEntry, zone: ZoneId): Instant = entry.at ?: noonOf(entry, zone)
+
+    private fun noonOf(entry: ReminderDoneEntry, zone: ZoneId): Instant {
+        val noon = entry.day.atTime(DAY_ONLY_HOUR, 0)
+        return noon.atZone(zone).toInstant()
+    }
+
+    /** The most recent [anchorOf] in [history], or `null` when it is empty. */
+    fun latestAnchor(history: List<ReminderDoneEntry>, zone: ZoneId): Instant? = history.maxOfOrNull { anchorOf(it, zone) }
+
+    /**
+     * Where the cadence restarts after the completion history was edited, or `null` when it does not
+     * need to move.
+     *
+     * Only the **latest** completion drives the schedule (that is what "done" restarts from), so the
+     * next occurrence is redrawn only when the latest completion changed: a back-dated entry older than
+     * the latest one, or deleting an old one, leaves it alone. When it did change, the new interval is
+     * counted from the latest remaining completion, or from [fallback] (now) when none is left, as
+     * the MCP server does. Counted from a past completion, the result may lie in the past: the
+     * reminder is then simply due, as it would be had the history always been that way.
+     */
+    fun nextFireAfterHistoryChange(
+        before: List<ReminderDoneEntry>,
+        after: List<ReminderDoneEntry>,
+        fallback: Instant,
+        targetIntervalDays: Int,
+        jitterPercent: Int,
+        zone: ZoneId,
+        random: Random,
+    ): Instant? {
+        val previous = latestAnchor(before, zone)
+        val latest = latestAnchor(after, zone)
+        if (previous == latest) return null
+        return nextFireAt(latest ?: fallback, targetIntervalDays, jitterPercent, random)
+    }
+
     private const val PERCENT = 100.0
+
+    /** Local hour a day-only completion is placed at. */
+    private const val DAY_ONLY_HOUR = 12
 }

@@ -215,10 +215,26 @@ describe('server HTTP Node davanti al Worker', () => {
     });
     expect(list.status).toBe(200);
     const tools = JSON.parse(list.body).result.tools as Array<{ name: string; annotations: { readOnlyHint: boolean; destructiveHint: boolean } }>;
-    expect(tools.length).toBe(25);
+    expect(tools.length).toBe(33);
     expect(tools.filter((t) => t.annotations.readOnlyHint).map((t) => t.name).sort()).toEqual(
-      ['get_person', 'get_profile', 'get_settings', 'list_events', 'list_outings', 'list_overdue_people', 'list_people', 'list_reminders', 'list_tags', 'raw_read', 'upcoming_birthdays'].sort()
+      [
+        'get_person',
+        'get_profile',
+        'get_settings',
+        'list_check_ins',
+        'list_events',
+        'list_outings',
+        'list_overdue_people',
+        'list_people',
+        'list_reminder_completions',
+        'list_reminders',
+        'list_tags',
+        'raw_read',
+        'upcoming_birthdays',
+      ].sort()
     );
-    expect(tools.filter((t) => t.annotations.destructiveHint).map((t) => t.name).sort()).toEqual(['delete_event', 'delete_outing', 'delete_person', 'delete_reminder', 'update_outing']);
+    expect(tools.filter((t) => t.annotations.destructiveHint).map((t) => t.name).sort()).toEqual(
+      ['delete_check_in', 'delete_event', 'delete_outing', 'delete_person', 'delete_reminder', 'delete_reminder_completion', 'raw_write', 'update_outing'].sort()
+    );
   });
 });

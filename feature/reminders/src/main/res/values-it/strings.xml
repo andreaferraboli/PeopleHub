@@ -48,6 +48,31 @@
     <string name="reminder_jitter_value">Variazione: %1$d%%</string>
     <string name="reminder_window_explain">Arriva ogni %1$d–%2$d giorni, variando ogni volta, mai con un ritmo fisso.</string>
     <string name="reminder_presets_title">Scegli un preset</string>
+    <string name="reminder_interval_less">Un giorno in meno</string>
+    <string name="reminder_interval_more">Un giorno in più</string>
+    <string name="reminder_enabled_label">Attivo</string>
+    <string name="reminder_enabled_supporting">In pausa tiene lo storico ma non manda notifiche</string>
+    <string name="reminder_next_section">Quando</string>
+    <string name="reminder_next_label">Prossima volta</string>
+    <string name="reminder_next_auto">Automatica, tra %1$d e %2$d giorni</string>
+    <string name="reminder_next_hint">Scegli tu il giorno, oppure lascia decidere alla cadenza. Quando lo segni come fatto, la cadenza riparte da quel momento.</string>
+    <string name="reminder_next_reset">Torna automatica</string>
+
+    <!-- Storico delle volte fatte -->
+    <string name="reminder_history_title">Storico</string>
+    <string name="reminder_history_hint">Ogni volta che l\'hai fatto. Le modifiche si salvano subito; se toccano l\'ultima volta, la prossima scadenza viene ricalcolata.</string>
+    <string name="reminder_history_add">Aggiungi una volta passata</string>
+    <string name="reminder_history_add_title">Quando l\'hai fatto?</string>
+    <string name="reminder_history_edit_title">Modifica questa volta</string>
+    <string name="reminder_history_delete">Elimina questa volta</string>
+    <string name="reminder_history_no_time">ora non registrata</string>
+    <string name="reminder_history_manage">Modifica lo storico</string>
+    <string name="reminder_history_error_future">Quel momento è nel futuro</string>
+    <string name="reminder_history_error_failed">Non è stato possibile salvare la modifica</string>
+    <string name="reminder_field_date">Data</string>
+    <string name="reminder_field_time">Ora</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_confirm">OK</string>
 
     <!-- Presets: Amore -->
     <string name="preset_love_new_activity_name">Provate qualcosa di nuovo insieme</string>

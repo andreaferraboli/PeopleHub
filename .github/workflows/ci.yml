@@ -1,0 +1,29 @@
+name: CI
+
+# Compiles and tests every pull request that touches the app, so a broken build is
+# caught before the merge to master publishes an APK. The server has no Android SDK.
+on:
+  pull_request:
+    paths-ignore:
+      - 'mcp/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build debug APK and run unit tests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleDebug testDebugUnitTest --no-daemon

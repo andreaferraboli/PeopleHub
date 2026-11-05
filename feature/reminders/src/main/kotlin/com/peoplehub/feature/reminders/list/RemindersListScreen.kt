@@ -547,7 +547,14 @@ private fun DueHeroCard(
                         color = c.accentOnHero,
                     )
                 }
-                if (showHistory) DoneHistoryList(reminder.doneHistory, color = c.onMediaMuted)
+                if (showHistory) {
+                    DoneHistoryList(
+                        history = reminder.doneHistory,
+                        color = c.onMediaMuted,
+                        onEditHistory = onClick,
+                        actionColor = c.accentOnHero,
+                    )
+                }
             }
         }
     }
@@ -624,7 +631,7 @@ private fun ReminderCard(
                 onHero = false,
             )
             Hairline()
-            ReminderDoneRow(reminder = reminder, onMarkDone = onMarkDone)
+            ReminderDoneRow(reminder = reminder, onMarkDone = onMarkDone, onEditHistory = onClick)
         }
     }
 }
@@ -721,7 +728,11 @@ private fun ReminderPersonRow(
  * is already recorded, so the state is never ambiguous. Tapping the summary unfolds every recorded tap.
  */
 @Composable
-private fun ReminderDoneRow(reminder: ReminderListItem, onMarkDone: () -> Unit) {
+private fun ReminderDoneRow(
+    reminder: ReminderListItem,
+    onMarkDone: () -> Unit,
+    onEditHistory: () -> Unit,
+) {
     val c = PeopleHubTheme.colors
     val spacing = PeopleHubTheme.spacing
     var showHistory by remember { mutableStateOf(false) }
@@ -781,7 +792,9 @@ private fun ReminderDoneRow(reminder: ReminderListItem, onMarkDone: () -> Unit) 
                     },
             )
         }
-        if (showHistory && hasHistory) DoneHistoryList(reminder.doneHistory, color = c.text2)
+        if (showHistory && hasHistory) {
+            DoneHistoryList(history = reminder.doneHistory, color = c.text2, onEditHistory = onEditHistory)
+        }
     }
 }
 
@@ -803,11 +816,16 @@ private fun doneSummary(reminder: ReminderListItem): String =
 private fun historyToggleLabel(showing: Boolean): String =
     stringResource(if (showing) R.string.reminder_done_history_hide else R.string.reminder_done_history_show)
 
-/** Every recorded tap, most recent first. */
+/**
+ * Every recorded tap, most recent first, closed by the link to the reminder's editor, where each time
+ * can be moved or deleted and a forgotten one added.
+ */
 @Composable
 private fun DoneHistoryList(
     history: List<DoneMoment>,
     color: Color,
+    onEditHistory: () -> Unit,
+    actionColor: Color = PeopleHubTheme.colors.accentTextSurface,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(PeopleHubTheme.spacing.xxs)) {
         history.forEach { moment ->
@@ -824,6 +842,12 @@ private fun DoneHistoryList(
                 color = color,
             )
         }
+        TextAction(
+            label = stringResource(R.string.reminder_history_manage),
+            onClick = onEditHistory,
+            color = actionColor,
+            leading = { Icon(VellutoIcons.Pencil, contentDescription = null, tint = actionColor, modifier = Modifier.size(14.dp)) },
+        )
     }
 }
 

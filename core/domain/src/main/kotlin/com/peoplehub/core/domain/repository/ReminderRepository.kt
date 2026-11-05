@@ -3,6 +3,7 @@ package com.peoplehub.core.domain.repository
 import com.peoplehub.core.domain.model.DueReminder
 import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.ReminderCompletion
+import com.peoplehub.core.domain.model.ReminderDoneEntry
 import com.peoplehub.core.domain.model.ReminderFilter
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
@@ -48,7 +49,26 @@ interface ReminderRepository {
      * Appends one entry to reminder [id]'s completion history: it was done at [at], on local [day].
      * Every call adds an entry, so ticking a card twice in a day keeps both taps.
      */
-    suspend fun recordCompletion(id: String, at: Instant, day: LocalDate)
+    suspend fun recordCompletion(id: String, at: Instant, day: LocalDate, note: String? = null)
+
+    /** One-shot read of reminder [reminderId]'s completion history, most recent first. */
+    suspend fun getCompletions(reminderId: String): List<ReminderDoneEntry>
+
+    /**
+     * Rewrites the completion [completionId] as done at [at], on local [day], with [note] (`null`
+     * clears it). Nothing else of the document is touched. A completion that no longer exists is left
+     * alone (a merge would otherwise revive its tombstone).
+     */
+    suspend fun updateCompletion(completionId: String, at: Instant, day: LocalDate, note: String?)
+
+    /** Deletes (tombstones) one entry of a completion history. */
+    suspend fun deleteCompletion(completionId: String)
+
+    /**
+     * Moves reminder [id]'s next occurrence to [nextFireAt]; with [clearLastFired] its `lastFiredAt` is
+     * cleared too (the history was emptied). Nothing else is touched.
+     */
+    suspend fun reschedule(id: String, nextFireAt: Instant, clearLastFired: Boolean = false)
 
     /** Observes the completion history of every reminder, keyed by reminder id. */
     fun observeCompletions(): Flow<Map<String, ReminderCompletion>>

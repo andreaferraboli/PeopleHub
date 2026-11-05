@@ -28,14 +28,41 @@ Date in ingresso e in uscita ISO (`YYYY-MM-DD`) nel fuso di `settings/main.timeZ
 istanti in ISO 8601 con scarto. Le scritture usano sempre id (UUID), mai nomi.
 
 Lettura: `get_profile`, `list_people`, `get_person`, `list_tags`, `list_overdue_people`, `upcoming_birthdays`,
-`list_outings`, `list_events`, `list_reminders`, `get_settings`, `raw_read`.
+`list_outings`, `list_check_ins`, `list_events`, `list_reminders`, `list_reminder_completions`, `get_settings`,
+`raw_read`.
 
 Scrittura: `create_person`, `update_person`, `delete_person`, `check_in`, `update_outing`, `delete_outing`,
-`create_event`, `update_event`, `delete_event`, `create_reminder`, `update_reminder`, `delete_reminder`,
-`mark_reminder_done`, `update_settings`.
+`update_check_in`, `delete_check_in`, `create_event`, `update_event`, `delete_event`, `create_reminder`,
+`update_reminder`, `delete_reminder`, `mark_reminder_done`, `add_reminder_completion`, `update_reminder_completion`,
+`delete_reminder_completion`, `update_settings`, `raw_write`.
 
-Annotazioni MCP: i tool di lettura sono `readOnlyHint`; `delete_*` e `update_outing` (puo togliere persone) sono
-`destructiveHint`.
+Cosa si puo fare, per area:
+- **persone**: ogni campo sincronizzato si imposta o si svuota; tag e interessi per lista intera o incrementali
+  (`addTags`/`removeTags`, `addInterests`/`removeInterestKeys`); una sola soglia basta se la persona ha gia le sue;
+- **uscite e check-in**: `check_in` crea un'uscita (adesso, un giorno a mezzogiorno o a un'ora, un istante esatto `at`,
+  oppure piu giorni con `dates`, un'uscita per giorno come l'app); `update_outing` cambia momento, nota e presenti
+  (lista intera o `addPersonIds`/`removePersonIds`); `list_check_ins` e lo storico per persona; `update_check_in`
+  modifica la riga di una persona (momento, nota, persona, uscita) e, se l'uscita e' condivisa, la stacca come l'app
+  (`keepOuting` per lasciarla dentro, `outingId` per spostarla); `delete_check_in` toglie una sola riga;
+- **promemoria**: `update_reminder` imposta anche persona, preset, `lastFiredAt`, `createdAt` e la prossima data
+  (esplicita con `nextFireAt` / `nextFireDate`+`nextFireTime`, o riestratta con `redraw`); lo storico dei "fatto" si
+  legge con `list_reminder_completions` (per promemoria, per persona o tutto, con periodo) e si modifica con
+  `add_reminder_completion` (anche nel passato, con nota), `update_reminder_completion` (data, ora, nota, promemoria) e
+  `delete_reminder_completion` (tombstone); dopo ogni modifica la pianificazione si ricalcola (vedi sotto), salvo
+  `reschedule: false`;
+- **riserva**: `raw_read` e `raw_write` su qualunque documento sotto `users/{uid}/`, `raw_write` solo su richiesta
+  esplicita.
+
+Annotazioni MCP: i tool di lettura sono `readOnlyHint`; `delete_*`, `update_outing` (puo togliere persone) e
+`raw_write` sono `destructiveHint`.
+
+`raw_write`: `op` create (fallisce se esiste), set (sostituisce il documento), merge (unisce i campi, mappe annidate
+comprese), delete (tombstone `deleted: true`, mai una cancellazione vera). Mette sempre i campi di sync (`updatedAt`,
+`serverUpdatedAt`, `updatedBy: "mcp"`, `deleted: false` salvo che `data` dica altro: un merge con `deleted: false`
+ripristina un tombstone) e rifiuta `updatedAt`/`serverUpdatedAt`/`updatedBy` nei dati. Valori speciali:
+`{"$timestamp":"ISO"}`, `{"$serverTimestamp":true}`, `{"$delete":true}` (solo merge). Percorso relativo validato come
+`raw_read` (niente `/` iniziale, `..`, `users/...`, segmenti riservati) e client confinato a `users/{uid}/`. Non applica
+nessuna regola dell'app (niente ricalcoli ne cascate).
 
 Regole portate dal Kotlin (`core/domain`), con i casi dei test Kotlin in `test/domain.test.ts`:
 - compleanni (`DateCalculations.kt`): prossima ricorrenza, giorni mancanti, eta; il 29 febbraio cade il 28 negli anni
@@ -46,6 +73,14 @@ Regole portate dal Kotlin (`core/domain`), con i casi dei test Kotlin in `test/d
 - promemoria (`ReminderScheduling.kt`, `ReminderUseCases.kt`): finestra `target +- target*jitter%`, intervallo estratto a
   caso, nuova data solo se cambia la cadenza (dalla `lastFiredAt` o da adesso), "fatto" = completamento
   (`day` epoch day nel fuso + `at`) e nuova data da adesso;
+- storico dei "fatto" (`scheduleAfterHistoryChange` in `src/domain/reminders.ts`, la stessa regola dell'app:
+  `ReminderScheduling.nextFireAfterHistoryChange` e `rescheduleAfterHistoryChange` in `ReminderUseCases.kt`; contratto
+  in `docs/firestore-schema.md`): un completamento con la sola data (`at: null`) conta come mezzogiorno locale di `day`;
+  `nextFireAt` si riestrae solo se l'ultimo completamento cambia, come ultimo completamento rimasto + intervallo appena
+  estratto (puo cadere nel passato: il promemoria e' da fare); se lo storico si svuota, `lastFiredAt` torna null e
+  `nextFireAt` = adesso + intervallo estratto; altrimenti le modifiche allo storico non toccano `lastFiredAt`. Niente
+  "fatto" nel futuro; spostando un completamento con `at` si riscrivono insieme `at` e `day` (giorno locale di `at` nel
+  fuso delle impostazioni); `reschedule: false` modifica solo lo storico;
 - cancellazioni: sempre tombstone. `delete_person` marca anche check-in, promemoria e completamenti della persona e
   scollega gli eventi.
 
@@ -56,8 +91,8 @@ Regole portate dal Kotlin (`core/domain`), con i casi dei test Kotlin in `test/d
   di 10 minuti; a ogni richiesta `/mcp` si ricontrollano allowlist, provider ed eta della sessione (`MAX_SESSION_DAYS`).
 - **Redirect** solo verso i callback di Claude; token legati a `<origine>/mcp`; CSP stretta sulla pagina di login;
   rate limit per IP sulle rotte OAuth; origine fissa da `PUBLIC_URL`.
-- **Confini dei dati**: il client Firestore rifiuta ogni percorso fuori da `users/{uid}/`; `raw_read` accetta solo percorsi
-  relativi validati.
+- **Confini dei dati**: il client Firestore rifiuta ogni percorso fuori da `users/{uid}/`; `raw_read` e `raw_write`
+  accettano solo percorsi relativi validati.
 - **Segreti** solo in `/etc/peoplehub-mcp/google-sa.json` e `/etc/peoplehub-mcp/admin-token` (root, 600), passati con
   `LoadCredential`; mai nel repo. Servizio con lo stesso hardening di Finance Hub (`systemd-analyze security`: 1.5 OK).
 

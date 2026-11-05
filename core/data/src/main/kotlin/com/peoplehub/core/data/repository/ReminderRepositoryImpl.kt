@@ -91,10 +91,29 @@ internal class ReminderRepositoryImpl
         override suspend fun markFired(id: String, firedAt: Instant, nextFireAt: Instant) =
             updateLive(id, mapOf("lastFiredAt" to firedAt.toEpochMilli(), "nextFireAt" to nextFireAt.toEpochMilli()))
 
-        override suspend fun recordCompletion(id: String, at: Instant, day: LocalDate) =
+        override suspend fun recordCompletion(id: String, at: Instant, day: LocalDate, note: String?) =
             store.commit(
-                listOf(CloudWrite.Put(Cloud.REMINDER_COMPLETIONS, newDocumentId(), DocumentMapper.completionToDoc(id, at, day))),
+                listOf(CloudWrite.Put(Cloud.REMINDER_COMPLETIONS, newDocumentId(), DocumentMapper.completionToDoc(id, at, day, note))),
             )
+
+        override suspend fun getCompletions(reminderId: String): List<ReminderDoneEntry> =
+            observeCompletions().first()[reminderId]?.history.orEmpty()
+
+        override suspend fun updateCompletion(completionId: String, at: Instant, day: LocalDate, note: String?) {
+            val doc = store.observe(Cloud.REMINDER_COMPLETIONS).first().firstOrNull { it.id == completionId } ?: return
+            val reminderId = doc.data.string("reminderId") ?: return
+            val fields = DocumentMapper.completionToDoc(reminderId, at, day, note, withNote = true)
+            store.commit(listOf(CloudWrite.Put(Cloud.REMINDER_COMPLETIONS, completionId, fields)))
+        }
+
+        override suspend fun deleteCompletion(completionId: String) =
+            store.commit(listOf(CloudWrite.Tombstone(Cloud.REMINDER_COMPLETIONS, completionId)))
+
+        override suspend fun reschedule(id: String, nextFireAt: Instant, clearLastFired: Boolean) {
+            val fields = mutableMapOf<String, Any?>("nextFireAt" to nextFireAt.toEpochMilli())
+            if (clearLastFired) fields["lastFiredAt"] = null
+            updateLive(id, fields)
+        }
 
         override fun observeCompletions(): Flow<Map<String, ReminderCompletion>> =
             store.observe(Cloud.REMINDER_COMPLETIONS).map { docs ->

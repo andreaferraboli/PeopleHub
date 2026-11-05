@@ -91,6 +91,24 @@ The background image, its crop and the widget pin stay on the phone, keyed by th
 | `reminderId` | string | |
 | `day` | number (epoch day) | the local day of the tap |
 | `at` | number or null | the exact instant (null for old taps that kept only the day) |
+| `note` | string or null, optional | free-text note on this time; written by the MCP and by the app's history editor |
+
+`note` may be missing. The app's "done" button never writes it (so a merge keeps whatever is there);
+the history editor shows it and writes it back on every edit (`null` when the user cleared it).
+
+The history is editable from the app and the MCP: an entry can be added at any past moment, moved
+(`at` and `day` rewritten together, `day` = the local day of `at` in the settings time zone) or
+deleted (tombstone). Both writers recompute the reminder the same way:
+
+- A date-only entry (`at` null) counts as **local noon** of `day`.
+- `nextFireAt` is redrawn **only if the latest completion changed**: the latest remaining completion
+  + a freshly jittered interval. It may lie in the past, which simply makes the reminder due.
+- If the history becomes **empty**, `lastFiredAt` is cleared (`null`) and `nextFireAt` = now + a
+  freshly jittered interval.
+- Otherwise `lastFiredAt` is not touched by history edits. A completion in the future is refused.
+
+On `reminders`, the app lets the user set `nextFireAt` by hand (start of the chosen local day); a date
+set that way wins over the cadence recompute on that save.
 
 ### `settings/main`
 | Field | Type | Meaning |

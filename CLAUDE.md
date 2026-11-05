@@ -49,8 +49,9 @@ The other network use is the GitHub Releases self-updater. No analytics. See "Cl
                       record/edit an outing, outings calendar
 :feature:birthdays    Year/Month/List calendar views, CSV/JSON import + export
 :feature:events       Events list with filters, detail, add/edit, pin-to-widget
-:feature:reminders    Per-person relationship reminders: list (filter, pause, done, delete), add/edit,
-                      the "why irregular cadence" science screen
+:feature:reminders    Per-person relationship reminders: list (filter, pause, done, delete), add/edit
+                      (every field, next occurrence by hand, editable done history), the "why
+                      irregular cadence" science screen
 :feature:widget       Three Glance widgets (birthdays, urgent check-ins, event) + config activity + updater
 ```
 
@@ -86,7 +87,9 @@ Two edit paths, deliberately distinct:
 
 - `UpdateOutingUseCase` rewrites the whole outing — day, description and attendee list — applying the
   change to every attendee's row (removed people lose theirs, added people gain one) and re-deriving
-  the denormalised last-seen of everyone touched on either side.
+  the denormalised last-seen of everyone touched on either side. The outing keeps its time of day
+  (noon when recorded in the app, the exact moment when written by the MCP) when it moves to another
+  day.
 - `UpdateCheckInUseCase` edits **one person's** row from their own history and, if that row was part
   of a shared outing, **detaches** it into an outing of its own, so a personal edit never silently
   rewrites what everyone else sees.
@@ -242,6 +245,17 @@ re-enqueues with `CANCEL_AND_REENQUEUE` instead of being swallowed by `KEEP`.
   taps, each redrawing the next occurrence, and the card's summary unfolds into the full list. "Last
   done" is still the latest `done_epoch_day`. Rows from v9 only knew the day; the migration recovers
   their time from `last_fired_epoch_millis` when it falls on that same day, else it stays `null`.
+- **Editing the done history** (since 1.8.0, in the reminder editor): a past time can be added
+  (`AddReminderCompletionUseCase`), moved (`UpdateReminderCompletionUseCase`) or deleted
+  (`DeleteReminderCompletionUseCase`), each applied at once. Only the **latest** completion drives the
+  schedule, so `ReminderScheduling.nextFireAfterHistoryChange` redraws `nextFireAt` only when the latest
+  one changed, counting from the new latest (a date-only entry counts as local noon); the result may be
+  in the past, which just makes the reminder due. When the history becomes empty `lastFiredAt` is
+  cleared and the next one is drawn from now. These are the MCP's rules too (see
+  `docs/firestore-schema.md`). Times in the future are refused. Each time can carry a `note`, which the
+  editor always writes back and the "done" button never touches. The editor also sets
+  `enabled` and lets the user pick the next occurrence by hand (`nextFireOverride` on Add/Update
+  `ReminderUseCase`), which wins over the cadence recompute.
 - **Diagnostics**: notifications, exact alarms and battery optimisation all fail silently, so
   Settings surfaces each with a one-tap route to the system screen that fixes it
   (`NotificationDiagnostics`).

@@ -48,6 +48,31 @@
     <string name="reminder_jitter_value">Variation: %1$d%%</string>
     <string name="reminder_window_explain">Arrives every %1$d to %2$d days, varying each time, never on a fixed rhythm.</string>
     <string name="reminder_presets_title">Choose a preset</string>
+    <string name="reminder_interval_less">One day less</string>
+    <string name="reminder_interval_more">One day more</string>
+    <string name="reminder_enabled_label">Active</string>
+    <string name="reminder_enabled_supporting">A paused reminder keeps its history but never notifies</string>
+    <string name="reminder_next_section">When</string>
+    <string name="reminder_next_label">Next time</string>
+    <string name="reminder_next_auto">Automatic, in %1$d to %2$d days</string>
+    <string name="reminder_next_hint">Pick the day yourself, or leave it to the cadence. Marking it done starts the cadence again from that moment.</string>
+    <string name="reminder_next_reset">Back to automatic</string>
+
+    <!-- Done history editor -->
+    <string name="reminder_history_title">History</string>
+    <string name="reminder_history_hint">Every time you did it. Changes are saved right away; when they touch the latest time, the next one is recalculated.</string>
+    <string name="reminder_history_add">Add a past time</string>
+    <string name="reminder_history_add_title">When did you do it?</string>
+    <string name="reminder_history_edit_title">Edit this time</string>
+    <string name="reminder_history_delete">Delete this time</string>
+    <string name="reminder_history_no_time">time not recorded</string>
+    <string name="reminder_history_manage">Edit the history</string>
+    <string name="reminder_history_error_future">That moment is in the future</string>
+    <string name="reminder_history_error_failed">The change could not be saved</string>
+    <string name="reminder_field_date">Date</string>
+    <string name="reminder_field_time">Time</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">OK</string>
 
     <!-- Presets: Love -->
     <string name="preset_love_new_activity_name">Try something new together</string>

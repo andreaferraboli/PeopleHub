@@ -67,10 +67,15 @@ data class ReminderCompletion(
  * @property day the local day the tap happened on, fixed when it was recorded.
  * @property at the exact instant, or `null` for taps recorded before the app kept the time of day
  * (those only ever stored the day).
+ * @property id the `reminderCompletions` document id, so the entry can be edited or deleted; empty
+ * for an entry that is not stored yet.
+ * @property note an optional free-text note on this time (written by the app editor or the MCP).
  */
 data class ReminderDoneEntry(
     val day: LocalDate,
     val at: Instant?,
+    val id: String = "",
+    val note: String? = null,
 )
 
 /**

@@ -35,6 +35,7 @@ class GetOutingUseCase
  * removed are deleted, and freshly added people get a new row under the same outing id. Everyone
  * touched on either side (before or after) then has their denormalised last-seen timestamp
  * re-derived, so removing the person you saw most recently rolls the cadence tracker back correctly.
+ * The outing keeps its time of day when it moves to another day.
  *
  * Fails when [personIds] is empty (an outing without attendees is not an outing — delete it instead
  * via [DeleteOutingUseCase]) or when the outing no longer exists.
@@ -58,7 +59,10 @@ class UpdateOutingUseCase
                 val outing = checkInRepository.getOuting(outingId)
                 requireNotNull(outing) { "Outing $outingId no longer exists" }
 
-                val timestamp = day.atTime(NOON_HOUR, 0).atZone(clock.zone).toInstant()
+                // Keep the outing's own time of day (noon for outings recorded in the app, the exact
+                // moment for check-ins written by the MCP), so moving it to another day loses nothing.
+                val timeOfDay = outing.timestamp.atZone(clock.zone).toLocalTime()
+                val timestamp = day.atTime(timeOfDay).atZone(clock.zone).toInstant()
                 val cleanNote = note?.trim()?.takeIf(String::isNotBlank)
                 val existingByPerson = outing.attendees.associateBy { it.personId }
 
@@ -94,10 +98,6 @@ class UpdateOutingUseCase
                     refreshLastCheckIn(checkInRepository, peopleRepository, personId)
                 }
             }
-
-        private companion object {
-            const val NOON_HOUR = 12
-        }
     }
 
 /**

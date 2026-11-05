@@ -246,4 +246,197 @@ describe.skipIf(!EMULATOR)('tool MCP contro Firestore emulator', () => {
     expect(await h.callError('create_person', { firstName: 'X', warningDays: 3 })).toMatch(/both/);
     expect(await h.callError('create_person', { firstName: '   ' })).toMatch(/required/);
   });
+
+  it('storico dei promemoria: aggiunta nel passato, lista, modifica, cancellazione e ripianificazione come l app', async () => {
+    const a = await person({ firstName: 'Zio' });
+    const rem = await h.call('create_reminder', { personId: a, title: 'Chiamare', targetIntervalDays: 14, jitterPercent: 0 });
+    const r = () => h.doc(`reminders/${rem.id}`);
+    // ultima notifica del telefono: le modifiche allo storico non la toccano (solo lo svuotamento la azzera)
+    const LF = Date.parse('2026-10-28T08:00:00Z');
+    await h.call('update_reminder', { id: rem.id, lastFiredAt: '2026-10-28T08:00:00Z' });
+
+    const first = await h.call('add_reminder_completion', { reminderId: rem.id, date: '2026-10-20', time: '18:30', note: ' cena ' });
+    const t1 = Date.parse('2026-10-20T16:30:00Z'); // 18:30 a Roma (CEST)
+    expect(await h.doc(`reminderCompletions/${first.completionId}`)).toMatchObject({ reminderId: rem.id, day: 20746, at: t1, note: 'cena', deleted: false, updatedBy: 'mcp' });
+    expect(first.schedule).toMatchObject({ rescheduled: true, timesDone: 1, lastDoneOn: '2026-10-20' });
+    expect(await r()).toMatchObject({ lastFiredAt: LF, nextFireAt: t1 + 14 * DAY });
+
+    // piu vecchio dell'ultimo: solo storico; senza ora resta solo il giorno
+    const old = await h.call('add_reminder_completion', { reminderId: rem.id, date: '2026-10-10' });
+    expect(old.schedule.rescheduled).toBe(false);
+    expect(await h.doc(`reminderCompletions/${old.completionId}`)).toMatchObject({ day: 20736, at: null });
+    expect((await h.doc(`reminderCompletions/${old.completionId}`))!.note).toBeUndefined();
+
+    const list = await h.call('list_reminder_completions', { reminderId: rem.id });
+    expect(list.items.map((c: { id: string; date: string; at: string | null; note: string | null }) => [c.id, c.date, c.at, c.note])).toEqual([
+      [first.completionId, '2026-10-20', '2026-10-20T18:30:00+02:00', 'cena'],
+      [old.completionId, '2026-10-10', null, null],
+    ]);
+    expect(list.items[0]).toMatchObject({ reminderTitle: 'Chiamare', personId: a, personName: 'Zio' });
+    expect((await h.call('list_reminder_completions', { from: '2026-10-15' })).total).toBe(1);
+    expect((await h.call('list_reminder_completions', { personId: a })).total).toBe(2);
+    expect((await h.call('list_reminders', { includePaused: true })).items[0]).toMatchObject({ timesDone: 2, lastDoneOn: '2026-10-20' });
+
+    // la data cambia e l'ora resta (dopo il cambio d'ora: CET); la cadenza era ancorata qui e la segue
+    const t2 = Date.parse('2026-10-25T17:30:00Z');
+    const upd = await h.call('update_reminder_completion', { id: first.completionId, date: '2026-10-25', note: null });
+    expect(upd.schedules[0]).toMatchObject({ rescheduled: true, lastDoneOn: '2026-10-25' });
+    expect(await h.doc(`reminderCompletions/${first.completionId}`)).toMatchObject({ day: 20751, at: t2, note: null });
+    expect(await r()).toMatchObject({ lastFiredAt: LF, nextFireAt: t2 + 14 * DAY });
+
+    // via l'ultimo: si riparte dal precedente (solo giorno = mezzogiorno locale)
+    const tOld = Date.parse('2026-10-10T10:00:00Z');
+    expect((await h.call('delete_reminder_completion', { id: first.completionId })).schedule).toMatchObject({ rescheduled: true, lastDoneOn: '2026-10-10' });
+    expect((await h.doc(`reminderCompletions/${first.completionId}`))!.deleted).toBe(true);
+    expect(await r()).toMatchObject({ lastFiredAt: LF, nextFireAt: tOld + 14 * DAY });
+    // storico vuoto: mai scattato, prossima data da adesso
+    await h.call('delete_reminder_completion', { id: old.completionId });
+    expect(await r()).toMatchObject({ lastFiredAt: null, nextFireAt: NOW + 14 * DAY });
+    expect((await h.call('list_reminder_completions', {})).total).toBe(0);
+
+    // niente futuro; reschedule false lascia stare la cadenza
+    expect(await h.callError('add_reminder_completion', { reminderId: rem.id, date: '2026-11-03' })).toMatch(/future/);
+    expect(await h.callError('add_reminder_completion', { reminderId: rem.id, time: '23:00' })).toMatch(/future/);
+    expect(await h.callError('add_reminder_completion', { reminderId: rem.id, at: '2026-11-01T09:00:00+01:00', date: '2026-11-01' })).toMatch(/either/);
+    await h.call('add_reminder_completion', { reminderId: rem.id, at: '2026-11-01T09:00:00+01:00', reschedule: false });
+    expect(await r()).toMatchObject({ lastFiredAt: null, nextFireAt: NOW + 14 * DAY });
+
+    // spostare un completamento su un altro promemoria ricalcola entrambi
+    const other = await h.call('create_reminder', { personId: a, title: 'Regalo', targetIntervalDays: 30, jitterPercent: 0 });
+    const moved = (await h.call('list_reminder_completions', { reminderId: rem.id })).items[0].id;
+    const mv = await h.call('update_reminder_completion', { id: moved, reminderId: other.id });
+    expect(mv.schedules.map((s: { reminderId: string }) => s.reminderId)).toEqual([rem.id, other.id]);
+    expect(await h.doc(`reminders/${other.id}`)).toMatchObject({ lastFiredAt: null, nextFireAt: Date.parse('2026-11-01T08:00:00Z') + 30 * DAY });
+    // il promemoria di partenza resta senza storico: lastFiredAt null e data da adesso
+    expect(await r()).toMatchObject({ lastFiredAt: null, nextFireAt: NOW + 14 * DAY });
+
+    const done = await h.call('mark_reminder_done', { id: rem.id, note: 'fatto' });
+    expect(await h.doc(`reminderCompletions/${done.completionId}`)).toMatchObject({ at: NOW, note: 'fatto' });
+  });
+
+  it('update_reminder imposta ogni campo: persona, preset, ultime date, prossima data esplicita o riestratta', async () => {
+    const a = await person({ firstName: 'Ada' });
+    const b = await person({ firstName: 'Bea' });
+    const rem = await h.call('create_reminder', { personId: a, title: 'Scrivere', targetIntervalDays: 14, jitterPercent: 0 });
+    await h.call('update_reminder', { id: rem.id, personId: b, presetKey: 'friend_face_time', lastFiredAt: '2026-10-01T10:00:00+02:00', createdAt: '2026-09-01T00:00:00Z' });
+    expect(await h.doc(`reminders/${rem.id}`)).toMatchObject({ personId: b, presetKey: 'friend_face_time', lastFiredAt: Date.parse('2026-10-01T08:00:00Z'), createdAt: Date.parse('2026-09-01T00:00:00Z'), nextFireAt: NOW + 14 * DAY });
+    const byDate = await h.call('update_reminder', { id: rem.id, nextFireDate: '2026-12-24', nextFireTime: '09:15' });
+    expect(byDate).toMatchObject({ rescheduled: true, nextFireDate: '2026-12-24', nextFireAt: '2026-12-24T09:15:00+01:00' });
+    await h.call('update_reminder', { id: rem.id, nextFireDate: '2026-12-25' });
+    expect((await h.doc(`reminders/${rem.id}`))!.nextFireAt).toBe(Date.parse('2026-12-25T08:15:00Z'));
+    await h.call('update_reminder', { id: rem.id, nextFireAt: '2026-11-20T07:00:00Z' });
+    expect((await h.doc(`reminders/${rem.id}`))!.nextFireAt).toBe(Date.parse('2026-11-20T07:00:00Z'));
+    await h.call('update_reminder', { id: rem.id, redraw: 'fromLastFired' });
+    expect((await h.doc(`reminders/${rem.id}`))!.nextFireAt).toBe(Date.parse('2026-10-01T08:00:00Z') + 14 * DAY);
+    await h.call('update_reminder', { id: rem.id, redraw: 'fromNow', presetKey: null, lastFiredAt: null });
+    expect(await h.doc(`reminders/${rem.id}`)).toMatchObject({ nextFireAt: NOW + 14 * DAY, presetKey: null, lastFiredAt: null });
+    expect(await h.callError('update_reminder', { id: rem.id, presetKey: 'nope' })).toMatch(/Unknown presetKey/);
+    expect(await h.callError('update_reminder', { id: rem.id, nextFireAt: '2026-11-20T07:00:00Z', redraw: 'fromNow' })).toMatch(/not both/);
+    expect(await h.callError('update_reminder', { id: rem.id, nextFireTime: '10:00' })).toMatch(/nextFireDate/);
+    expect(await h.callError('update_reminder', { id: rem.id, lastFiredAt: '2026-10-01T10:00' })).toMatch(/offset/);
+    expect(await h.callError('update_reminder', { id: rem.id, personId: 'nope' })).toMatch(/not found/);
+  });
+
+  it('check-in: piu giorni, istante esatto, lista, modifica di una riga (stacca dall uscita), cancellazione', async () => {
+    const a = await person({ firstName: 'Aldo' });
+    const b = await person({ firstName: 'Bice' });
+    const c = await person({ firstName: 'Ciro' });
+    const multi = await h.call('check_in', { personIds: [a, b], dates: ['2026-10-02', '2026-10-01'], note: 'Gita' });
+    expect(multi.outings.map((o: { date: string }) => o.date)).toEqual(['2026-10-01', '2026-10-02']);
+    expect(new Set(multi.outings.map((o: { outingId: string }) => o.outingId)).size).toBe(2);
+    const exact = await h.call('check_in', { personIds: [a], at: '2026-10-05T20:00:00+02:00' });
+    expect((await h.doc(`checkIns/${exact.checkIns[0].id}`))!.at).toBe(Date.parse('2026-10-05T18:00:00Z'));
+    expect(await h.callError('check_in', { personIds: [a], at: '2026-10-05T20:00:00+02:00', date: '2026-10-05' })).toMatch(/either/);
+
+    const hist = await h.call('list_check_ins', { personId: a });
+    expect(hist.items.map((x: { date: string }) => x.date)).toEqual(['2026-10-05', '2026-10-02', '2026-10-01']);
+    expect(hist.items[1]).toMatchObject({ personName: 'Aldo', note: 'Gita', with: [{ personId: b, name: 'Bice' }] });
+    expect((await h.call('list_check_ins', { from: '2026-10-02', to: '2026-10-02' })).total).toBe(2);
+
+    // riga di Aldo nell'uscita condivisa del 2/10: si stacca, Bice resta com'era
+    const day2 = multi.outings[1];
+    const aldoRow = day2.checkIns.find((x: { personId: string }) => x.personId === a).id;
+    const bice2 = day2.checkIns.find((x: { personId: string }) => x.personId === b).id;
+    const upd = await h.call('update_check_in', { checkInId: aldoRow, note: 'solo io', time: '19:00' });
+    expect(upd.detached).toBe(true);
+    const aldoDoc = (await h.doc(`checkIns/${aldoRow}`))!;
+    expect(aldoDoc).toMatchObject({ note: 'solo io', at: Date.parse('2026-10-02T17:00:00Z') });
+    expect(aldoDoc.outingId).not.toBe(day2.outingId);
+    expect(await h.doc(`checkIns/${bice2}`)).toMatchObject({ note: 'Gita', outingId: day2.outingId });
+
+    // keepOuting: resta nell'uscita del 1/10
+    const day1 = multi.outings[0];
+    const aldo1 = day1.checkIns.find((x: { personId: string }) => x.personId === a).id;
+    expect((await h.call('update_check_in', { checkInId: aldo1, time: '21:00', keepOuting: true })).detached).toBe(false);
+    expect((await h.doc(`checkIns/${aldo1}`))!.outingId).toBe(day1.outingId);
+
+    // riassegnata a Ciro: last-seen di entrambi ricalcolato
+    await h.call('update_check_in', { checkInId: exact.checkIns[0].id, personId: c });
+    expect((await h.doc(`people/${c}`))!.lastCheckInAt).toBe(Date.parse('2026-10-05T18:00:00Z'));
+    expect((await h.doc(`people/${a}`))!.lastCheckInAt).toBe(Date.parse('2026-10-02T17:00:00Z'));
+
+    await h.call('delete_check_in', { checkInId: aldoRow });
+    expect((await h.doc(`checkIns/${aldoRow}`))!.deleted).toBe(true);
+    expect((await h.doc(`people/${a}`))!.lastCheckInAt).toBe(Date.parse('2026-10-01T19:00:00Z'));
+    expect(await h.callError('update_check_in', { checkInId: aldoRow, note: 'x' })).toMatch(/not found/);
+    expect(await h.callError('update_check_in', { checkInId: aldo1 })).toMatch(/Nothing to update/);
+  });
+
+  it('update_outing aggiunge e toglie persone senza riscrivere la lista intera', async () => {
+    const a = await person({ firstName: 'Ugo' });
+    const b = await person({ firstName: 'Vera' });
+    const c = await person({ firstName: 'Walter' });
+    const o = await h.call('check_in', { personIds: [a, b], date: '2026-10-30' });
+    const r = await h.call('update_outing', { outingId: o.outingId, addPersonIds: [c], removePersonIds: [a], at: '2026-10-30T21:00:00+01:00' });
+    expect(r).toMatchObject({ attendees: 2, added: 1, removedCheckIns: 1 });
+    const out = (await h.call('list_outings', {})).items[0];
+    expect(out.attendees.map((x: { personId: string }) => x.personId).sort()).toEqual([b, c].sort());
+    expect(out.at).toBe('2026-10-30T21:00:00+01:00');
+    expect((await h.doc(`people/${a}`))!.lastCheckInAt).toBeNull();
+    expect(await h.callError('update_outing', { outingId: o.outingId, removePersonIds: [b, c] })).toMatch(/delete_outing/);
+    expect(await h.callError('update_outing', { outingId: o.outingId, removePersonIds: [a] })).toMatch(/Not in this outing/);
+    expect(await h.callError('update_outing', { outingId: o.outingId, personIds: [a], addPersonIds: [b] })).toMatch(/not both/);
+  });
+
+  it('update_person: tag e interessi incrementali, una sola soglia su soglie gia personali', async () => {
+    const a = await person({ firstName: 'Eva', tags: ['amici', 'calcio'], interests: [{ key: 'Cibo', value: 'Sushi' }, { key: 'Film', value: 'Noir' }], warningDays: 5, criticalDays: 10 });
+    await h.call('update_person', { id: a, addTags: [' lavoro', 'amici'], removeTags: ['calcio'], addInterests: [{ key: 'cibo', value: 'Ramen' }], removeInterestKeys: ['FILM'], criticalDays: 20 });
+    expect(await h.doc(`people/${a}`)).toMatchObject({ tags: ['amici', 'lavoro'], interests: [{ key: 'cibo', value: 'Ramen' }], warningDays: 5, criticalDays: 20 });
+    expect(await h.callError('update_person', { id: a, tags: ['x'], addTags: ['y'] })).toMatch(/not both/);
+    const b = await person({ firstName: 'Fede' });
+    expect(await h.callError('update_person', { id: b, warningDays: 3 })).toMatch(/both/);
+  });
+
+  it('raw_write: merge, create, set, tombstone e valori speciali, sempre con i campi di sync e solo sotto il proprio uid', async () => {
+    const a = await person({ firstName: 'Gaia', notes: 'x' });
+    expect(await h.call('raw_write', { op: 'merge', path: `people/${a}`, data: { notes: 'scritto a mano', extra: { deep: 1 } } })).toMatchObject({ ok: true, deleted: false });
+    const doc = (await h.doc(`people/${a}`))!;
+    expect(doc).toMatchObject({ firstName: 'Gaia', notes: 'scritto a mano', extra: { deep: 1 }, updatedBy: 'mcp', deleted: false, updatedAt: NOW });
+    expect(doc.serverUpdatedAt).toBeInstanceOf(Timestamp);
+    await h.call('raw_write', { op: 'merge', path: `people/${a}`, data: { extra: { $delete: true }, when: { $timestamp: '2026-10-01T00:00:00Z' } } });
+    const after = (await h.doc(`people/${a}`))!;
+    expect(after.extra).toBeUndefined();
+    expect(after.when).toBeInstanceOf(Timestamp);
+
+    await h.call('raw_write', { op: 'create', path: 'events/ev-1', data: { title: 'Grezzo', at: NOW } });
+    expect((await h.call('list_events', {})).items.map((e: { id: string }) => e.id)).toEqual(['ev-1']);
+    expect(await h.callError('raw_write', { op: 'create', path: 'events/ev-1', data: { title: 'Doppio' } })).toMatch(/Error/);
+    await h.call('raw_write', { op: 'set', path: 'events/ev-1', data: { title: 'Sostituito', at: NOW } });
+    expect(await h.doc('events/ev-1')).toMatchObject({ title: 'Sostituito', deleted: false, updatedBy: 'mcp' });
+
+    expect(await h.call('raw_write', { op: 'delete', path: 'events/ev-1' })).toMatchObject({ tombstone: true });
+    expect(await h.doc('events/ev-1')).toMatchObject({ title: 'Sostituito', deleted: true });
+    expect((await h.call('list_events', {})).total).toBe(0);
+    await h.call('raw_write', { op: 'merge', path: 'events/ev-1', data: { deleted: false } });
+    expect((await h.call('list_events', {})).total).toBe(1);
+
+    expect(await h.callError('raw_write', { op: 'delete', path: 'events/nope' })).toMatch(/not found/);
+    expect(await h.callError('raw_write', { op: 'set', path: 'events/ev-1', data: { title: { $delete: true } } })).toMatch(/merge/);
+    expect(await h.callError('raw_write', { op: 'merge', path: 'events/ev-1', data: { updatedBy: 'android:x' } })).toMatch(/Sync fields/);
+    expect(await h.callError('raw_write', { op: 'merge', path: 'events', data: { a: 1 } })).toMatch(/document/);
+    expect(await h.callError('raw_write', { op: 'merge', path: 'users/altro-utente/people/x', data: { a: 1 } })).toMatch(/relativ/);
+    expect(await h.callError('raw_write', { op: 'merge', path: 'people/../../altro-utente/people/x', data: { a: 1 } })).toMatch(/non ammessi/);
+    expect(await h.callError('raw_write', { op: 'merge', path: '/people/x', data: { a: 1 } })).toMatch(/relativ/);
+    expect(await h.callError('raw_write', { op: 'merge', path: 'people/x', data: {} })).toMatch(/data is required/);
+  });
 });

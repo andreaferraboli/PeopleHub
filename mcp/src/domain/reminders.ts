@@ -77,3 +77,71 @@ export const REMINDER_PRESETS: readonly ReminderPreset[] = [
 export function presetByKey(key: string): ReminderPreset | undefined {
   return REMINDER_PRESETS.find((p) => p.key === key);
 }
+
+/* ------------------------------------------------------- storico dei completamenti */
+
+/** Campi di un completamento (reminderCompletions) che contano per lo storico. */
+export interface CompletionFields {
+  day?: unknown;
+  at?: unknown;
+  [field: string]: unknown;
+}
+
+const finite = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+/**
+ * Giorno (epoch day) di un completamento, come DocumentMapper.completionFromDoc: `day`, altrimenti `at / 86_400_000`
+ * (divisione intera in UTC, come il Kotlin), altrimenti null (documento illeggibile: l'app lo salta).
+ */
+export function completionDay(c: CompletionFields): number | null {
+  const day = finite(c.day);
+  if (day !== null) return Math.trunc(day);
+  const at = finite(c.at);
+  return at === null ? null : Math.floor(at / DAY_MS);
+}
+
+/**
+ * Istante con cui si ordina un completamento: `at`, oppure il mezzogiorno locale del suo giorno per i tocchi che hanno
+ * solo il giorno (righe migrate dalla v9, o registrate con la sola data). `noonOf` converte un epoch day nel
+ * mezzogiorno del fuso dell'utente. Null se il documento e' illeggibile.
+ */
+export function completionInstant(c: CompletionFields, noonOf: (epochDay: number) => number): number | null {
+  const at = finite(c.at);
+  if (at !== null) return at;
+  const day = completionDay(c);
+  return day === null ? null : noonOf(day);
+}
+
+/** Istante dell'ultimo completamento di uno storico, o null se e' vuoto. */
+export function latestCompletion(history: CompletionFields[], noonOf: (epochDay: number) => number): number | null {
+  let best: number | null = null;
+  for (const c of history) {
+    const t = completionInstant(c, noonOf);
+    if (t !== null && (best === null || t > best)) best = t;
+  }
+  return best;
+}
+
+/**
+ * Pianificazione di un promemoria dopo una modifica al suo storico (aggiunta, modifica o cancellazione di un
+ * completamento): la stessa regola dell'app (ReminderScheduling.nextFireAfterHistoryChange e
+ * rescheduleAfterHistoryChange in ReminderUseCases.kt), cosi' i due scrittori fanno la stessa cosa.
+ *
+ * - l'ultimo completamento non cambia: niente da scrivere (null);
+ * - e' cambiato: `nextFireAt` = ultimo completamento rimasto + intervallo appena estratto (puo cadere nel passato:
+ *   il promemoria e' semplicemente da fare); `lastFiredAt` non si tocca;
+ * - lo storico e' vuoto: `nextFireAt` = adesso + intervallo estratto e `lastFiredAt` torna null.
+ */
+export function scheduleAfterHistoryChange(input: {
+  latestBefore: number | null;
+  latestAfter: number | null;
+  targetIntervalDays: number;
+  jitterPercent: number;
+  nowMs: number;
+  random: RandomInt;
+}): { nextFireAt: number; lastFiredAt?: null } | null {
+  const { latestBefore, latestAfter } = input;
+  if (latestAfter === latestBefore) return null;
+  const next = nextFireAt(latestAfter ?? input.nowMs, input.targetIntervalDays, input.jitterPercent, input.random);
+  return latestAfter === null ? { nextFireAt: next, lastFiredAt: null } : { nextFireAt: next };
+}
