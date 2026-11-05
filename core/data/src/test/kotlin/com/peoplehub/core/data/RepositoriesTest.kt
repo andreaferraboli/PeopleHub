@@ -2,6 +2,7 @@ package com.peoplehub.core.data
 
 import com.peoplehub.core.data.cloud.Cloud
 import com.peoplehub.core.data.cloud.CloudStore
+import com.peoplehub.core.data.mapping.DocumentMapper
 import com.peoplehub.core.data.repository.BackupRepositoryImpl
 import com.peoplehub.core.data.repository.CheckInRepositoryImpl
 import com.peoplehub.core.data.repository.CloudReads
@@ -194,6 +195,52 @@ class RepositoriesTest {
             reminders.setEnabled("r1", false)
             assertTrue(store.stored(Cloud.REMINDERS, "r1")!!.deleted)
         }
+
+    @Test
+    fun `a completion can be moved and deleted, and a tombstoned one is never revived`() =
+        runTest {
+            seedPerson("a", "Ada")
+            store.seed(Cloud.REMINDERS, "r1", mapOf("personId" to "a", "title" to "Call", "enabled" to true, "nextFireAt" to 0L))
+            store.seed(Cloud.REMINDER_COMPLETIONS, "c1", mapOf("reminderId" to "r1", "day" to 0L, "at" to 5L, "note" to "From Claude"))
+            store.seed(Cloud.REMINDER_COMPLETIONS, "c2", mapOf("reminderId" to "r1", "day" to 2L, "at" to 2 * 86_400_000L))
+
+            assertEquals(listOf("c2", "c1"), reminders.getCompletions("r1").map { it.id })
+            assertEquals("From Claude", reminders.getCompletions("r1").last().note)
+
+            val moved = Instant.ofEpochMilli(3 * 86_400_000L + 60_000L)
+            reminders.updateCompletion("c1", moved, LocalDate.ofEpochDay(3), note = "From Claude")
+            assertEquals(3L, store.live(Cloud.REMINDER_COMPLETIONS).getValue("c1")["day"])
+            assertEquals(moved.toEpochMilli(), store.live(Cloud.REMINDER_COMPLETIONS).getValue("c1")["at"])
+            assertEquals("r1", store.live(Cloud.REMINDER_COMPLETIONS).getValue("c1")["reminderId"])
+            assertEquals("From Claude", store.live(Cloud.REMINDER_COMPLETIONS).getValue("c1")["note"])
+            assertEquals(listOf("c1", "c2"), reminders.getCompletions("r1").map { it.id })
+            reminders.updateCompletion("c1", moved, LocalDate.ofEpochDay(3), note = null)
+            assertTrue(store.live(Cloud.REMINDER_COMPLETIONS).getValue("c1").containsKey("note"))
+            assertNull(store.live(Cloud.REMINDER_COMPLETIONS).getValue("c1")["note"])
+
+            reminders.deleteCompletion("c2")
+            assertEquals(setOf("c2"), store.tombstoned(Cloud.REMINDER_COMPLETIONS))
+            reminders.deleteCompletion("ghost")
+            assertNull(store.stored(Cloud.REMINDER_COMPLETIONS, "ghost"))
+            reminders.updateCompletion("c2", moved, LocalDate.ofEpochDay(3), note = null)
+            assertTrue(store.stored(Cloud.REMINDER_COMPLETIONS, "c2")!!.deleted)
+
+            reminders.markFired("r1", Instant.ofEpochMilli(7L), Instant.ofEpochMilli(9L))
+            reminders.reschedule("r1", Instant.ofEpochMilli(42L))
+            assertEquals(42L, store.live(Cloud.REMINDERS).getValue("r1")["nextFireAt"])
+            assertEquals(7L, store.live(Cloud.REMINDERS).getValue("r1")["lastFiredAt"])
+            assertEquals("Call", store.live(Cloud.REMINDERS).getValue("r1")["title"])
+            reminders.reschedule("r1", Instant.ofEpochMilli(43L), clearLastFired = true)
+            assertNull(store.live(Cloud.REMINDERS).getValue("r1")["lastFiredAt"])
+        }
+
+    @Test
+    fun `the done button never drops a note written by the MCP`() {
+        val doc = DocumentMapper.completionToDoc("r1", Instant.ofEpochMilli(5L), LocalDate.ofEpochDay(0))
+
+        assertFalse(doc.containsKey("note"))
+        assertEquals("x", DocumentMapper.completionToDoc("r1", Instant.ofEpochMilli(5L), LocalDate.ofEpochDay(0), "x")["note"])
+    }
 
     @Test
     fun `due reminders carry the person name and skip people that are gone`() =

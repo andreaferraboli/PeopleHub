@@ -3,6 +3,7 @@ package com.peoplehub.core.domain.usecase
 import com.peoplehub.core.domain.model.DueReminder
 import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.ReminderCompletion
+import com.peoplehub.core.domain.model.ReminderDoneEntry
 import com.peoplehub.core.domain.model.ReminderFilter
 import com.peoplehub.core.domain.repository.ReminderRepository
 import com.peoplehub.core.domain.util.ReminderScheduling
@@ -42,9 +43,9 @@ class GetReminderUseCase
     }
 
 /**
- * Validates and persists a new reminder, computing its first (jittered) fire time from now. Title
- * is mandatory and the reminder must belong to a person; the interval and jitter are clamped to
- * sane bounds.
+ * Validates and persists a new reminder, computing its first (jittered) fire time from now, unless the
+ * user picked the first occurrence by hand ([nextFireOverride]). Title is mandatory and the reminder
+ * must belong to a person; the interval and jitter are clamped to sane bounds.
  */
 class AddReminderUseCase
     @Inject
@@ -53,7 +54,10 @@ class AddReminderUseCase
         private val clock: Clock,
         private val random: Random,
     ) {
-        suspend operator fun invoke(reminder: Reminder): Result<String> =
+        suspend operator fun invoke(
+            reminder: Reminder,
+            nextFireOverride: Instant? = null,
+        ): Result<String> =
             runCatching {
                 require(reminder.title.isNotBlank()) { "Reminder title is required" }
                 require(reminder.personId.isNotBlank()) { "Reminder must belong to a person" }
@@ -67,16 +71,18 @@ class AddReminderUseCase
                         targetIntervalDays = target,
                         jitterPercent = jitter,
                         createdAt = if (reminder.createdAt == Instant.EPOCH) now else reminder.createdAt,
-                        nextFireAt = ReminderScheduling.nextFireAt(now, target, jitter, random),
+                        nextFireAt = nextFireOverride ?: ReminderScheduling.nextFireAt(now, target, jitter, random),
                     ),
                 )
             }
     }
 
 /**
- * Validates and persists edits to an existing reminder. The next fire time is only recomputed when
- * the cadence (target interval or jitter) actually changed — editing just the title or note leaves
- * the schedule untouched — and is then based on the last fire (or now, if it never fired).
+ * Validates and persists edits to an existing reminder: every field of the given reminder is written
+ * as is (person, title, note, category, cadence, enabled, ...). The next fire time is, in order: the
+ * date the user set by hand (`nextFireOverride`); recomputed when the cadence (target interval or
+ * jitter) actually changed, based on the last fire (or now, if it never fired); otherwise left
+ * untouched, so editing just the title or note does not move the schedule.
  */
 class UpdateReminderUseCase
     @Inject
@@ -85,9 +91,13 @@ class UpdateReminderUseCase
         private val clock: Clock,
         private val random: Random,
     ) {
-        suspend operator fun invoke(reminder: Reminder): Result<String> =
+        suspend operator fun invoke(
+            reminder: Reminder,
+            nextFireOverride: Instant? = null,
+        ): Result<String> =
             runCatching {
                 require(reminder.title.isNotBlank()) { "Reminder title is required" }
+                require(reminder.personId.isNotBlank()) { "Reminder must belong to a person" }
                 val existing = repository.getReminder(reminder.id)
                 val target = reminder.targetIntervalDays.coerceAtLeast(ReminderScheduling.MIN_INTERVAL_DAYS)
                 val jitter = reminder.jitterPercent.coerceIn(0, ReminderScheduling.MAX_JITTER_PERCENT)
@@ -95,9 +105,12 @@ class UpdateReminderUseCase
                     existing == null ||
                         existing.targetIntervalDays != target ||
                         existing.jitterPercent != jitter
+                // lastFiredAt belongs to the phone's sweep and to history edits (cleared when the history
+                // is emptied), never to the form: the stored value wins over the copy the editor loaded.
+                val lastFiredAt = if (existing != null) existing.lastFiredAt else reminder.lastFiredAt
                 val nextFireAt =
-                    if (cadenceChanged) {
-                        val base = reminder.lastFiredAt ?: Instant.now(clock)
+                    nextFireOverride ?: if (cadenceChanged) {
+                        val base = lastFiredAt ?: Instant.now(clock)
                         ReminderScheduling.nextFireAt(base, target, jitter, random)
                     } else {
                         existing.nextFireAt
@@ -108,6 +121,7 @@ class UpdateReminderUseCase
                         note = reminder.note?.trim()?.takeIf(String::isNotBlank),
                         targetIntervalDays = target,
                         jitterPercent = jitter,
+                        lastFiredAt = lastFiredAt,
                         nextFireAt = nextFireAt,
                     ),
                 )
@@ -216,3 +230,126 @@ class ObserveReminderCompletionsUseCase
     ) {
         operator fun invoke(): Flow<Map<String, ReminderCompletion>> = repository.observeCompletions()
     }
+
+/**
+ * Adds a completion to a reminder's history at any past moment ([at]), e.g. "I did it last Tuesday but
+ * forgot to tick it". If it becomes the latest completion, the cadence restarts from it with a freshly
+ * drawn interval (see [ReminderScheduling.nextFireAfterHistoryChange]); an entry older than the latest
+ * one leaves the schedule alone. Fails for a moment in the future or a reminder that no longer exists.
+ *
+ * @return the reminder's next occurrence after the change.
+ */
+class AddReminderCompletionUseCase
+    @Inject
+    constructor(
+        private val repository: ReminderRepository,
+        private val clock: Clock,
+        private val random: Random,
+    ) {
+        suspend operator fun invoke(
+            reminderId: String,
+            at: Instant,
+            note: String? = null,
+        ): Result<Instant> =
+            runCatching {
+                val reminder = requireNotNull(repository.getReminder(reminderId)) { "Reminder $reminderId no longer exists" }
+                requireNotInFuture(at, clock)
+                val before = repository.getCompletions(reminderId)
+                val day = at.atZone(clock.zone).toLocalDate()
+                val cleanNote = note.cleanNote()
+                repository.recordCompletion(reminderId, at, day, cleanNote)
+                val after = before + ReminderDoneEntry(day = day, at = at, note = cleanNote)
+                rescheduleAfterHistoryChange(repository, reminder, before, after, clock, random)
+            }
+    }
+
+/**
+ * Moves one completion of a reminder's history to another moment ([at]). When that changes the latest
+ * completion, the cadence restarts from the new latest one; otherwise the schedule is left alone.
+ * Fails for a moment in the future or an entry that no longer exists.
+ *
+ * @return the reminder's next occurrence after the change.
+ */
+class UpdateReminderCompletionUseCase
+    @Inject
+    constructor(
+        private val repository: ReminderRepository,
+        private val clock: Clock,
+        private val random: Random,
+    ) {
+        suspend operator fun invoke(
+            reminderId: String,
+            completionId: String,
+            at: Instant,
+            note: String?,
+        ): Result<Instant> =
+            runCatching {
+                val reminder = requireNotNull(repository.getReminder(reminderId)) { "Reminder $reminderId no longer exists" }
+                requireNotInFuture(at, clock)
+                val before = repository.getCompletions(reminderId)
+                require(before.any { it.id == completionId }) { "Completion $completionId no longer exists" }
+                val day = at.atZone(clock.zone).toLocalDate()
+                val cleanNote = note.cleanNote()
+                repository.updateCompletion(completionId, at, day, cleanNote)
+                val after = before.map { if (it.id == completionId) it.copy(day = day, at = at, note = cleanNote) else it }
+                rescheduleAfterHistoryChange(repository, reminder, before, after, clock, random)
+            }
+    }
+
+/**
+ * Deletes one completion from a reminder's history (a tombstone, like every deletion). Removing the
+ * latest one, such as a mistaken tap on "done", puts the cadence back on the previous completion, so the
+ * reminder may well be due again right away. Removing the last one left clears `lastFiredAt` and draws
+ * the next occurrence from now, as the MCP server does.
+ *
+ * @return the reminder's next occurrence after the change.
+ */
+class DeleteReminderCompletionUseCase
+    @Inject
+    constructor(
+        private val repository: ReminderRepository,
+        private val clock: Clock,
+        private val random: Random,
+    ) {
+        suspend operator fun invoke(reminderId: String, completionId: String): Result<Instant> =
+            runCatching {
+                val reminder = requireNotNull(repository.getReminder(reminderId)) { "Reminder $reminderId no longer exists" }
+                val before = repository.getCompletions(reminderId)
+                repository.deleteCompletion(completionId)
+                val after = before.filterNot { it.id == completionId }
+                rescheduleAfterHistoryChange(repository, reminder, before, after, clock, random)
+            }
+    }
+
+private fun requireNotInFuture(at: Instant, clock: Clock) {
+    require(!at.isAfter(Instant.now(clock))) { "A completion cannot be in the future" }
+}
+
+private fun String?.cleanNote(): String? = this?.trim()?.takeIf(String::isNotBlank)
+
+/**
+ * Applies [ReminderScheduling.nextFireAfterHistoryChange] to [reminder] and writes the new next
+ * occurrence when it moved, clearing `lastFiredAt` when the history became empty (the MCP's rule).
+ * Returns the next occurrence in force afterwards.
+ */
+private suspend fun rescheduleAfterHistoryChange(
+    repository: ReminderRepository,
+    reminder: Reminder,
+    before: List<ReminderDoneEntry>,
+    after: List<ReminderDoneEntry>,
+    clock: Clock,
+    random: Random,
+): Instant {
+    val next =
+        ReminderScheduling.nextFireAfterHistoryChange(
+            before = before,
+            after = after,
+            fallback = Instant.now(clock),
+            targetIntervalDays = reminder.targetIntervalDays,
+            jitterPercent = reminder.jitterPercent,
+            zone = clock.zone,
+            random = random,
+        ) ?: return reminder.nextFireAt
+    repository.reschedule(reminder.id, next, clearLastFired = after.isEmpty())
+    return next
+}

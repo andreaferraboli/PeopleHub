@@ -18,7 +18,7 @@ import {
   signedDaysFromToday,
 } from '../domain/dates.js';
 import { ToolError } from '../domain/errors.js';
-import { toReminderCategory } from '../domain/reminders.js';
+import { completionDay, toReminderCategory } from '../domain/reminders.js';
 import type { Doc, SyncBatch } from '../store.js';
 import type { Clock, ToolContext } from './helpers.js';
 
@@ -246,7 +246,10 @@ export function reminderView(r: Doc, clk: Clock, people: Map<string, Doc>, compl
   const next = num(r.nextFireAt) ?? 0;
   const last = num(r.lastFiredAt);
   const mine = completions.filter((c) => str(c.reminderId) === r.id);
-  const lastDoneDay = mine.reduce<number | null>((acc, c) => (num(c.day) !== null && (acc === null || (c.day as number) > acc) ? (c.day as number) : acc), null);
+  const lastDoneDay = mine.reduce<number | null>((acc, c) => {
+    const day = completionDay(c);
+    return day !== null && (acc === null || day > acc) ? day : acc;
+  }, null);
   const person = people.get(str(r.personId));
   const nextDay = localDateOf(next, clk.tz);
   return {
@@ -266,6 +269,24 @@ export function reminderView(r: Doc, clk: Clock, people: Map<string, Doc>, compl
     presetKey: strOrNull(r.presetKey),
     timesDone: mine.length,
     lastDoneOn: lastDoneDay === null ? null : formatLocalDate(fromEpochDay(lastDoneDay)),
+  };
+}
+
+/** Un completamento dello storico: giorno locale, istante (null se e' noto solo il giorno) e nota. */
+export function completionView(c: Doc, clk: Clock, reminders: Map<string, Doc>, people: Map<string, Doc>) {
+  const day = completionDay(c);
+  const at = num(c.at);
+  const reminder = reminders.get(str(c.reminderId));
+  const person = reminder ? people.get(str(reminder.personId)) : undefined;
+  return {
+    id: c.id,
+    reminderId: str(c.reminderId),
+    reminderTitle: reminder ? str(reminder.title) : null,
+    personId: reminder ? str(reminder.personId) : null,
+    personName: person ? fullName(person) : null,
+    date: day === null ? null : formatLocalDate(fromEpochDay(day)),
+    at: at === null ? null : formatInstant(at, clk.tz),
+    note: strOrNull(c.note),
   };
 }
 

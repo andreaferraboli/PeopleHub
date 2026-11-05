@@ -149,6 +149,28 @@ export const docIdSchema = z.string().min(1).max(200).refine(isValidDocId, 'inva
 
 export const dayString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date in the format YYYY-MM-DD');
 export const timeString = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time in the format HH:mm (24h)');
+/** Istante ISO 8601 con scarto esplicito (Z o +hh:mm): senza scarto l'ora sarebbe ambigua. */
+export const instantString = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?([zZ]|[+-]\d{2}:\d{2})$/, 'ISO 8601 instant with offset, e.g. 2026-10-03T18:30:00+02:00');
+
+/** Istante ISO -> epoch millis (lo schema ha gia controllato la forma). */
+export function parseInstant(text: string, label = 'at'): number {
+  const ms = Date.parse(text);
+  if (Number.isNaN(ms)) throw new ToolError(`${label}: invalid instant ${text}`);
+  return ms;
+}
+
+/** "HH:mm" -> [ore, minuti]. */
+export function hourMinute(time: string): [number, number] {
+  const [h, m] = time.split(':').map(Number);
+  return [h, m];
+}
+
+/** Ora del giorno "HH:mm" di un istante nel fuso. */
+export function timeOfDay(ms: number, tz: string): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(ms));
+}
 
 export const pagination = {
   limit: z.number().int().min(1).max(500).default(100).describe('How many rows to return (max 500).'),

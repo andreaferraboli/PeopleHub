@@ -20,7 +20,18 @@ import {
   zonedEpoch,
   type LocalDate,
 } from '../src/domain/dates.js';
-import { MIN_INTERVAL_DAYS, nextFireAt, nextIntervalDays, presetByKey, window, type RandomInt } from '../src/domain/reminders.js';
+import {
+  completionDay,
+  completionInstant,
+  latestCompletion,
+  MIN_INTERVAL_DAYS,
+  nextFireAt,
+  nextIntervalDays,
+  presetByKey,
+  scheduleAfterHistoryChange,
+  window,
+  type RandomInt,
+} from '../src/domain/reminders.js';
 import { isEmailAllowed } from '../src/config.js';
 
 const d = (year: number, month: number, day: number): LocalDate => ({ year, month, day });
@@ -173,6 +184,45 @@ describe('ReminderScheduling (da ReminderSchedulingTest.kt)', () => {
     expect(presetByKey('love_new_activity')).toMatchObject({ category: 'LOVE', targetIntervalDays: 30, jitterPercent: 30 });
     expect(presetByKey('family_siblings')).toMatchObject({ targetIntervalDays: 21, jitterPercent: 20 });
     expect(presetByKey('nope')).toBeUndefined();
+  });
+});
+
+describe('storico dei completamenti e ripianificazione', () => {
+  const DAY = 86_400_000;
+  const low: RandomInt = (from) => from; // estremo basso della finestra: 14/0 -> 14 giorni
+  const noon = (epochDay: number) => zonedEpoch(fromEpochDay(epochDay), 12, 0, 'Europe/Rome');
+  const T = Date.parse('2026-10-01T08:00:00Z');
+  const base = { targetIntervalDays: 14, jitterPercent: 0, nowMs: Date.parse('2026-11-02T10:00:00Z'), random: low };
+
+  it('giorno e istante come DocumentMapper: day, poi at / millis al giorno; solo il giorno = mezzogiorno locale', () => {
+    expect(completionDay({ day: 20759, at: 0 })).toBe(20759);
+    expect(completionDay({ at: Date.parse('2026-11-02T23:30:00Z') })).toBe(20759);
+    expect(completionDay({})).toBeNull();
+    expect(completionInstant({ day: 20759, at: null }, noon)).toBe(Date.parse('2026-11-02T11:00:00Z'));
+    expect(latestCompletion([{ day: 20759, at: null }, { day: 20758, at: Date.parse('2026-11-01T20:00:00Z') }], noon)).toBe(Date.parse('2026-11-02T11:00:00Z'));
+    expect(latestCompletion([], noon)).toBeNull();
+  });
+
+  it('ultimo completamento invariato (aggiunta o cancellazione di uno piu vecchio): nessuna ripianificazione', () => {
+    expect(scheduleAfterHistoryChange({ ...base, latestBefore: T, latestAfter: T })).toBeNull();
+    expect(scheduleAfterHistoryChange({ ...base, latestBefore: null, latestAfter: null })).toBeNull();
+  });
+
+  it('nuovo ultimo completamento: nextFireAt da li con intervallo fresco, lastFiredAt non si tocca', () => {
+    const at = T + 5 * DAY;
+    expect(scheduleAfterHistoryChange({ ...base, latestBefore: null, latestAfter: at })).toEqual({ nextFireAt: at + 14 * DAY });
+    expect(scheduleAfterHistoryChange({ ...base, latestBefore: T, latestAfter: at })).toEqual({ nextFireAt: at + 14 * DAY });
+  });
+
+  it('ultimo tolto o spostato indietro: si riparte dal piu recente rimasto, anche se la data cade nel passato', () => {
+    const prev = T - 20 * DAY;
+    const r = scheduleAfterHistoryChange({ ...base, latestBefore: T, latestAfter: prev });
+    expect(r).toEqual({ nextFireAt: prev + 14 * DAY });
+    expect(r!.nextFireAt).toBeLessThan(base.nowMs);
+  });
+
+  it('storico svuotato: lastFiredAt null e prossima data da adesso', () => {
+    expect(scheduleAfterHistoryChange({ ...base, latestBefore: T, latestAfter: null })).toEqual({ lastFiredAt: null, nextFireAt: base.nowMs + 14 * DAY });
   });
 });
 

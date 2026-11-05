@@ -94,6 +94,24 @@ class OutingUseCasesTest {
         }
 
     @Test
+    fun `moving an outing to another day keeps its time of day`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            val evening = day.atTime(21, 15).toInstant(ZoneOffset.UTC)
+            coEvery { checkInRepository.getOuting(OUTING_ID) } returns
+                outing(attendee(personId = "1", checkInId = "10")).copy(timestamp = evening)
+            val moved = day.minusDays(3)
+            val useCase = UpdateOutingUseCase(checkInRepository, peopleRepository, clock)
+
+            val result = useCase(outingId = OUTING_ID, day = moved, personIds = listOf("1"))
+
+            assertTrue(result.isSuccess)
+            val expected = moved.atTime(21, 15).toInstant(ZoneOffset.UTC)
+            coVerify { checkInRepository.updateCheckIn(match { it.id == "10" && it.timestamp == expected }) }
+        }
+
+    @Test
     fun `updating an outing re-derives the last-seen of everyone touched on either side`() =
         runTest {
             val checkInRepository = mockk<CheckInRepository>(relaxed = true)

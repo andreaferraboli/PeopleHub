@@ -201,19 +201,35 @@ internal object DocumentMapper {
         val reminderId = d.string("reminderId")?.takeIf { it.isNotEmpty() } ?: return null
         val at = d.long("at")
         val day = d.long("day") ?: at?.let { it / MILLIS_PER_DAY } ?: return null
-        return CompletionDoc(reminderId, ReminderDoneEntry(day = LocalDate.ofEpochDay(day), at = at?.let(Instant::ofEpochMilli)))
+        return CompletionDoc(
+            reminderId,
+            ReminderDoneEntry(
+                day = LocalDate.ofEpochDay(day),
+                at = at?.let(Instant::ofEpochMilli),
+                id = doc.id,
+                note = d.string("note")?.takeIf(String::isNotBlank),
+            ),
+        )
     }
 
+    /**
+     * The fields of a completion. `note` is written only when [withNote] (the history editor, which
+     * shows it and may clear it); the "done" button leaves it out, so a merge never drops a note the
+     * MCP put there.
+     */
     fun completionToDoc(
         reminderId: String,
         at: Instant,
         day: LocalDate,
+        note: String? = null,
+        withNote: Boolean = note != null,
     ): Map<String, Any?> =
-        mapOf(
-            "reminderId" to reminderId,
-            "day" to day.toEpochDay(),
-            "at" to at.toEpochMilli(),
-        )
+        buildMap {
+            put("reminderId", reminderId)
+            put("day", day.toEpochDay())
+            put("at", at.toEpochMilli())
+            if (withNote) put("note", note)
+        }
 
     private fun parseDate(value: String): LocalDate? = runCatching { LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
 

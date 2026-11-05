@@ -294,12 +294,28 @@ export const createPerson = defineTool({
 export const updatePerson = defineTool({
   name: 'update_person',
   title: 'Update a person',
-  description: 'Changes only the given fields of a person. tags and interests replace the whole list. birthday null clears it; warningDays+criticalDays both null go back to the global thresholds.',
-  input: { id: docIdSchema, firstName: z.string().min(1).max(200).optional(), ...personFields },
+  description:
+    'Changes only the given fields of a person; every synced field can be set or cleared. tags and interests replace the whole list; addTags/removeTags and addInterests/removeInterestKeys change it in place instead (an added interest with an existing key replaces its value). birthday null clears it; warningDays+criticalDays both null go back to the global thresholds (one of them alone is enough when the person already has custom thresholds); lastName "" and notes "" clear them.',
+  input: {
+    id: docIdSchema,
+    firstName: z.string().min(1).max(200).optional(),
+    ...personFields,
+    addTags: z.array(z.string().max(100)).max(100).optional(),
+    removeTags: z.array(z.string().max(100)).max(100).optional().describe('Exact tag names to remove.'),
+    addInterests: z.array(interestSchema).max(200).optional(),
+    removeInterestKeys: z.array(z.string().max(200)).max(200).optional().describe('Interest keys to remove (case-insensitive).'),
+  },
   idempotent: true,
   handler: async (args, ctx) => {
-    await requirePerson(ctx, args.id);
-    const t = thresholdFields(args.warningDays, args.criticalDays);
+    const current = await requirePerson(ctx, args.id);
+    if (args.tags !== undefined && (args.addTags !== undefined || args.removeTags !== undefined)) throw new ToolError('Pass either tags (full list) or addTags/removeTags, not both');
+    if (args.interests !== undefined && (args.addInterests !== undefined || args.removeInterestKeys !== undefined)) throw new ToolError('Pass either interests (full list) or addInterests/removeInterestKeys, not both');
+    // una sola soglia (numero) su una persona che ha gia le sue: l'altra resta quella salvata
+    const savedWarning = typeof current.warningDays === 'number' && typeof current.criticalDays === 'number' ? current.warningDays : undefined;
+    const savedCritical = savedWarning !== undefined ? (current.criticalDays as number) : undefined;
+    const warning = args.warningDays === undefined && typeof args.criticalDays === 'number' ? savedWarning : args.warningDays;
+    const critical = args.criticalDays === undefined && typeof args.warningDays === 'number' ? savedCritical : args.criticalDays;
+    const t = thresholdFields(warning, critical);
     const patch: Record<string, unknown> = {};
     if (args.firstName !== undefined) {
       if (!args.firstName.trim()) throw new ToolError('firstName cannot be empty');
@@ -311,6 +327,17 @@ export const updatePerson = defineTool({
     if (args.notes !== undefined) patch.notes = args.notes;
     if (args.tags !== undefined) patch.tags = cleanTags(args.tags);
     if (args.interests !== undefined) patch.interests = cleanInterests(args.interests);
+    if (args.addTags !== undefined || args.removeTags !== undefined) {
+      const remove = new Set((args.removeTags ?? []).map((x) => x.trim()));
+      patch.tags = cleanTags([...strArray(current.tags), ...(args.addTags ?? [])]).filter((x) => !remove.has(x));
+    }
+    if (args.addInterests !== undefined || args.removeInterestKeys !== undefined) {
+      const key = (k: string) => k.trim().toLowerCase();
+      const remove = new Set((args.removeInterestKeys ?? []).map(key));
+      const added = cleanInterests(args.addInterests ?? []);
+      const addedKeys = new Set(added.map((i) => key(i.key)));
+      patch.interests = [...interestsOf(current.interests).filter((i) => !addedKeys.has(key(i.key))), ...added].filter((i) => !remove.has(key(i.key)));
+    }
     if (t) Object.assign(patch, t);
     for (const k of ['notificationsEnabled', 'birthdayOnly', 'checkInDisabled', 'isFamily'] as const) if (args[k] !== undefined) patch[k] = args[k];
     if (Object.keys(patch).length === 0) throw new ToolError('Nothing to update: pass at least one field');
