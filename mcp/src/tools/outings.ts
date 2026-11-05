@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { formatLocalDate, localDateOf, requireLocalDate, toEpochDay, zonedEpoch, type LocalDate } from '../domain/dates.js';
 import { ToolError } from '../domain/errors.js';
 import type { Doc } from '../store.js';
-import { clock, cleanText, dayString, defineTool, docIdSchema, hourMinute, instantString, page, pagination, parseInstant, timeString, type Clock, type ToolContext } from './helpers.js';
+import { clock, cleanText, dayString, defineTool, docIdSchema, hourMinute, instantString, page, pagination, parseInstant, timeOfDay, timeString, type Clock, type ToolContext } from './helpers.js';
 import { byId, checkInView, fullName, groupOutings, num, refreshLastCheckIn, str } from './views.js';
 
 /** Ora di riferimento dei giorni registrati (RecordMeetupUseCase: mezzogiorno nel fuso). */
@@ -148,7 +148,7 @@ export const updateCheckIn = defineTool({
   name: 'update_check_in',
   title: 'Edit one check-in',
   description:
-    'Edits ONE person\'s check-in (from list_check_ins, get_person or list_outings attendees), like editing it from their history in the app: at (ISO instant), or date (noon, or time) and/or time (keeps the day), note (null clears), personId (reassign). If the row belongs to an outing shared with others it is detached into an outing of its own, like the app, unless keepOuting is true; outingId moves it into the given outing. Last-seen dates are recomputed. To edit the whole outing use update_outing.',
+    'Edits ONE person\'s check-in (from list_check_ins, get_person or list_outings attendees), like editing it from their history in the app: at (ISO instant), or date (keeps the current time of day unless time is given) and/or time (keeps the day), note (null clears), personId (reassign). If the row belongs to an outing shared with others it is detached into an outing of its own, like the app, unless keepOuting is true; outingId moves it into the given outing. Last-seen dates are recomputed. To edit the whole outing use update_outing.',
   input: {
     checkInId: docIdSchema,
     at: instantString.optional(),
@@ -171,8 +171,11 @@ export const updateCheckIn = defineTool({
     const patch: Record<string, unknown> = {};
     const current = num(row.at) ?? clk.nowMs;
     if (args.at !== undefined) patch.at = parseInstant(args.at);
-    else if (args.date !== undefined) patch.at = atOn(clk, requireLocalDate(args.date, 'date'), args.time);
-    else if (args.time !== undefined) patch.at = atOn(clk, localDateOf(current, clk.tz), args.time);
+    // date senza time tiene l'ora del giorno della riga, come l'app; time senza date tiene il giorno
+    else if (args.date !== undefined || args.time !== undefined) {
+      const day = args.date !== undefined ? requireLocalDate(args.date, 'date') : localDateOf(current, clk.tz);
+      patch.at = atOn(clk, day, args.time ?? timeOfDay(current, clk.tz));
+    }
     if (args.note !== undefined) patch.note = cleanText(args.note);
     if (newPerson !== oldPerson) patch.personId = newPerson;
     const hasEdit = Object.keys(patch).length > 0 || args.outingId !== undefined;
@@ -212,7 +215,7 @@ export const updateOuting = defineTool({
   name: 'update_outing',
   title: 'Edit an outing',
   description:
-    'Rewrites an outing as a whole, like the app: new moment (date at noon or time, time alone keeps the day, or at = ISO instant), new shared note (null clears it) and attendees: personIds = full list, or addPersonIds/removePersonIds (people removed lose their check-in, people added get one; at least one must remain, otherwise use delete_outing). Everyone touched has their last-seen date recomputed. Fields not given stay as they are.',
+    'Rewrites an outing as a whole, like the app: new moment (date alone keeps the current time of day, time alone keeps the day, both set both, or at = ISO instant), new shared note (null clears it) and attendees: personIds = full list, or addPersonIds/removePersonIds (people removed lose their check-in, people added get one; at least one must remain, otherwise use delete_outing). Everyone touched has their last-seen date recomputed. Fields not given stay as they are.',
   input: {
     outingId: docIdSchema,
     date: dayString.optional(),
@@ -231,7 +234,8 @@ export const updateOuting = defineTool({
     const currentAt = Math.max(...rows.map((r) => num(r.at) ?? 0));
     let at = currentAt;
     if (args.at !== undefined) at = parseInstant(args.at);
-    else if (args.date || args.time) at = atOn(clk, args.date ? requireLocalDate(args.date, 'date') : localDateOf(currentAt, clk.tz), args.time);
+    // date senza time tiene l'ora del giorno attuale dell'uscita, come l'app; time senza date tiene il giorno
+    else if (args.date || args.time) at = atOn(clk, args.date ? requireLocalDate(args.date, 'date') : localDateOf(currentAt, clk.tz), args.time ?? timeOfDay(currentAt, clk.tz));
     const note = args.note === undefined ? (rows.map((r) => cleanText(str(r.note))).find((n) => n !== null) ?? null) : cleanText(args.note);
     const before = rows.map((r) => str(r.personId));
     let wanted: string[];

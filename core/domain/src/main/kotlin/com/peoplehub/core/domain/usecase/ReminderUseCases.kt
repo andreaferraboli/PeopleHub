@@ -105,9 +105,12 @@ class UpdateReminderUseCase
                     existing == null ||
                         existing.targetIntervalDays != target ||
                         existing.jitterPercent != jitter
+                // lastFiredAt belongs to the phone's sweep and to history edits (cleared when the history
+                // is emptied), never to the form: the stored value wins over the copy the editor loaded.
+                val lastFiredAt = if (existing != null) existing.lastFiredAt else reminder.lastFiredAt
                 val nextFireAt =
                     nextFireOverride ?: if (cadenceChanged) {
-                        val base = reminder.lastFiredAt ?: Instant.now(clock)
+                        val base = lastFiredAt ?: Instant.now(clock)
                         ReminderScheduling.nextFireAt(base, target, jitter, random)
                     } else {
                         existing.nextFireAt
@@ -118,6 +121,7 @@ class UpdateReminderUseCase
                         note = reminder.note?.trim()?.takeIf(String::isNotBlank),
                         targetIntervalDays = target,
                         jitterPercent = jitter,
+                        lastFiredAt = lastFiredAt,
                         nextFireAt = nextFireAt,
                     ),
                 )

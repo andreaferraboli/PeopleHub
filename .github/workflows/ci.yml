@@ -23,7 +23,8 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # `test` covers both the JVM modules (core:domain, core:dataio) and the Android unit tests.
       - name: Build debug APK and run unit tests
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:assembleDebug testDebugUnitTest --no-daemon
+          ./gradlew :app:assembleDebug test --no-daemon

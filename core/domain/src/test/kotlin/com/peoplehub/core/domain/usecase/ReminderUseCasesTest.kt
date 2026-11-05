@@ -321,6 +321,24 @@ class ReminderUseCasesTest {
         }
 
     @Test
+    fun `saving the form never brings back a last fire cleared by a history edit`() =
+        runTest {
+            // The editor loaded the reminder while it still had a last fire; deleting the only completion
+            // then cleared it in the store. Saving a cadence change must count from now, not the stale copy.
+            val stale = weekly.copy(lastFiredAt = Instant.parse("2026-07-18T09:00:00Z"))
+            coEvery { repository.getReminder("5") } returns weekly.copy(lastFiredAt = null)
+            coEvery { repository.upsertReminder(any()) } returns "5"
+            val saved = slot<Reminder>()
+            val useCase = UpdateReminderUseCase(repository, clock, Random(1))
+
+            useCase(stale.copy(targetIntervalDays = 10))
+
+            coVerify { repository.upsertReminder(capture(saved)) }
+            assertEquals(null, saved.captured.lastFiredAt)
+            assertEquals(now.plus(Duration.ofDays(10)), saved.captured.nextFireAt)
+        }
+
+    @Test
     fun `editing only the title keeps the stored next occurrence`() =
         runTest {
             coEvery { repository.getReminder("5") } returns weekly

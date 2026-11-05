@@ -70,4 +70,6 @@
 - Nuovo workflow .github/workflows/ci.yml: compila l'APK debug e lancia i test JVM su ogni PR, perche il server non ha l'SDK Android.
 - Verifica: :core:domain test, ktlint, detekt exit 0 (70 test); detekt/ktlint su :core:data e :feature:reminders exit 0; MCP typecheck, lint, test:emu 90/90 exit 0. Compilazione Android affidata alla CI della PR. Mai provata su dispositivo.
 - Scartato: regola MCP che teneva la scadenza se il telefono aveva notificato dopo l'ultimo completamento, tolta per avere un solo comportamento con l'app. Niente create_outing separato: check_in crea gia un'uscita.
+- Review (code-reviewer) prima del merge, 4 bug corretti: update_outing/update_check_in dell'MCP rimettevano l'ora a mezzogiorno (ora tengono l'ora del giorno, come l'app); raw_write resuscitava documenti cancellati (ora rifiuta salvo deleted esplicito); il salvataggio dell'editor riscriveva un lastFiredAt vecchio dopo aver svuotato lo storico (ora lo prende dal documento salvato); deleteCompletion creava documenti stub su id inesistenti. La CI lanciava solo testDebugUnitTest e saltava i test JVM di core:domain: ora `test`.
+- CI della PR (assembleDebug + test) verde: e la prima compilazione reale del codice Android.
 - Aperto: redeploy dell'MCP sulla VPS dopo il merge, prova sul telefono.

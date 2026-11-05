@@ -43,7 +43,9 @@ Cosa si puo fare, per area:
   oppure piu giorni con `dates`, un'uscita per giorno come l'app); `update_outing` cambia momento, nota e presenti
   (lista intera o `addPersonIds`/`removePersonIds`); `list_check_ins` e lo storico per persona; `update_check_in`
   modifica la riga di una persona (momento, nota, persona, uscita) e, se l'uscita e' condivisa, la stacca come l'app
-  (`keepOuting` per lasciarla dentro, `outingId` per spostarla); `delete_check_in` toglie una sola riga;
+  (`keepOuting` per lasciarla dentro, `outingId` per spostarla); `delete_check_in` toglie una sola riga. In
+  `update_outing` e `update_check_in` una `date` senza `time` tiene l'ora del giorno attuale (nel fuso delle
+  impostazioni) e un `time` senza `date` tiene il giorno, come l'app;
 - **promemoria**: `update_reminder` imposta anche persona, preset, `lastFiredAt`, `createdAt` e la prossima data
   (esplicita con `nextFireAt` / `nextFireDate`+`nextFireTime`, o riestratta con `redraw`); lo storico dei "fatto" si
   legge con `list_reminder_completions` (per promemoria, per persona o tutto, con periodo) e si modifica con
@@ -58,8 +60,10 @@ Annotazioni MCP: i tool di lettura sono `readOnlyHint`; `delete_*`, `update_outi
 
 `raw_write`: `op` create (fallisce se esiste), set (sostituisce il documento), merge (unisce i campi, mappe annidate
 comprese), delete (tombstone `deleted: true`, mai una cancellazione vera). Mette sempre i campi di sync (`updatedAt`,
-`serverUpdatedAt`, `updatedBy: "mcp"`, `deleted: false` salvo che `data` dica altro: un merge con `deleted: false`
-ripristina un tombstone) e rifiuta `updatedAt`/`serverUpdatedAt`/`updatedBy` nei dati. Valori speciali:
+`serverUpdatedAt`, `updatedBy: "mcp"`, `deleted: false` salvo che `data` dica altro) e rifiuta
+`updatedAt`/`serverUpdatedAt`/`updatedBy` nei dati. Un set o merge su un documento gia tombstone viene rifiutato se
+`data` non dice `deleted` in modo esplicito: `deleted: false` e' un ripristino voluto, `deleted: true` lo modifica
+lasciandolo cancellato (niente resurrezioni silenziose). Valori speciali:
 `{"$timestamp":"ISO"}`, `{"$serverTimestamp":true}`, `{"$delete":true}` (solo merge). Percorso relativo validato come
 `raw_read` (niente `/` iniziale, `..`, `users/...`, segmenti riservati) e client confinato a `users/{uid}/`. Non applica
 nessuna regola dell'app (niente ricalcoli ne cascate).
@@ -69,7 +73,8 @@ Regole portate dal Kotlin (`core/domain`), con i casi dei test Kotlin in `test/d
   non bisestili; anno <= 1 = eta sconosciuta; `birthday` salvato come `ISO_LOCAL_DATE`;
 - check-in (`CheckInStatus`, `GetUrgentCheckInsUseCase`): FRESH/DUE/OVERDUE/NEVER, soglie della persona solo se ha
   entrambi i valori, esclusi famiglia, check-in disattivati e solo compleanno; un'uscita e' l'insieme dei check-in con
-  lo stesso `outingId`, i giorni registrati stanno a mezzogiorno nel fuso; `lastCheckInAt` si ricalcola dopo ogni modifica;
+  lo stesso `outingId`, i giorni registrati nuovi stanno a mezzogiorno nel fuso (le modifiche tengono l'ora della riga);
+  `lastCheckInAt` si ricalcola dopo ogni modifica;
 - promemoria (`ReminderScheduling.kt`, `ReminderUseCases.kt`): finestra `target +- target*jitter%`, intervallo estratto a
   caso, nuova data solo se cambia la cadenza (dalla `lastFiredAt` o da adesso), "fatto" = completamento
   (`day` epoch day nel fuso + `at`) e nuova data da adesso;

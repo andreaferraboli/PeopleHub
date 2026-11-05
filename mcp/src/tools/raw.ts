@@ -100,7 +100,7 @@ export const rawWrite = defineTool({
   name: 'raw_write',
   title: 'Raw write (one document)',
   description:
-    'ONLY ON EXPLICIT USER REQUEST, for what no specific tool covers. Writes ONE document under users/{uid}/ given its RELATIVE path (even number of segments, e.g. "reminders/<id>", "settings/main"). op: create (new document, fails if it exists), set (replaces the whole document), merge (merges the given fields, nested maps included), delete (tombstone: deleted=true, the document is kept; never a hard delete). Every write stamps the sync fields (updatedAt, serverUpdatedAt, updatedBy "mcp") and deleted=false unless data sets deleted (merge {deleted:false} restores a tombstone). Special values in data: {"$timestamp":"ISO"}, {"$serverTimestamp":true}, {"$delete":true} (merge only: removes the field). Applies NO app rule: no lastCheckInAt / nextFireAt recompute, no cascades, no validation of the schema in docs/firestore-schema.md; prefer the specific tools.',
+    'ONLY ON EXPLICIT USER REQUEST, for what no specific tool covers. Writes ONE document under users/{uid}/ given its RELATIVE path (even number of segments, e.g. "reminders/<id>", "settings/main"). op: create (new document, fails if it exists), set (replaces the whole document), merge (merges the given fields, nested maps included), delete (tombstone: deleted=true, the document is kept; never a hard delete). Every write stamps the sync fields (updatedAt, serverUpdatedAt, updatedBy "mcp") and deleted=false unless data sets deleted. A write into a tombstoned document is refused unless data sets deleted explicitly: "deleted": false is a deliberate restore, "deleted": true edits it and keeps it deleted. Special values in data: {"$timestamp":"ISO"}, {"$serverTimestamp":true}, {"$delete":true} (merge only: removes the field). Applies NO app rule: no lastCheckInAt / nextFireAt recompute, no cascades, no validation of the schema in docs/firestore-schema.md; prefer the specific tools.',
   input: {
     op: z.enum(['create', 'set', 'merge', 'delete']),
     path: z.string().min(1).max(500).describe('Path of a DOCUMENT relative to users/{uid}/.'),
@@ -127,6 +127,13 @@ export const rawWrite = defineTool({
     const decoded = decodeWriteValue(data) as DocumentData;
     if (op !== 'merge' && hasFieldDelete(decoded)) throw new ToolError('{"$delete":true} works only with op merge');
     if (decoded.deleted !== undefined && typeof decoded.deleted !== 'boolean') throw new ToolError('deleted must be a boolean');
+    if (op !== 'create') {
+      // scrivere deleted:false su un tombstone lo farebbe rivivere: solo se lo si chiede apposta
+      const existing = await ref.get();
+      if (existing.exists && existing.data()?.deleted === true && decoded.deleted === undefined) {
+        throw new ToolError(`${parsed.relative} is deleted (tombstone): pass "deleted": false in data to restore it deliberately`);
+      }
+    }
     const doc = { ...decoded, ...sync, deleted: decoded.deleted ?? false };
     if (op === 'create') batch.create(ref, doc);
     else batch.set(ref, doc, { merge: op === 'merge' });

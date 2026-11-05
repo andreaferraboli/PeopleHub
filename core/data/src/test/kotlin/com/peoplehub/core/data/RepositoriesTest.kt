@@ -220,6 +220,8 @@ class RepositoriesTest {
 
             reminders.deleteCompletion("c2")
             assertEquals(setOf("c2"), store.tombstoned(Cloud.REMINDER_COMPLETIONS))
+            reminders.deleteCompletion("ghost")
+            assertNull(store.stored(Cloud.REMINDER_COMPLETIONS, "ghost"))
             reminders.updateCompletion("c2", moved, LocalDate.ofEpochDay(3), note = null)
             assertTrue(store.stored(Cloud.REMINDER_COMPLETIONS, "c2")!!.deleted)
 

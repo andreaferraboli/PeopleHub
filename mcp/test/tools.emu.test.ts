@@ -380,6 +380,12 @@ describe.skipIf(!EMULATOR)('tool MCP contro Firestore emulator', () => {
     expect((await h.doc(`people/${a}`))!.lastCheckInAt).toBe(Date.parse('2026-10-01T19:00:00Z'));
     expect(await h.callError('update_check_in', { checkInId: aldoRow, note: 'x' })).toMatch(/not found/);
     expect(await h.callError('update_check_in', { checkInId: aldo1 })).toMatch(/Nothing to update/);
+
+    // date senza time tiene l'ora locale della riga (20:00), anche oltre il cambio d'ora
+    await h.call('update_check_in', { checkInId: exact.checkIns[0].id, date: '2026-10-26' });
+    expect((await h.doc(`checkIns/${exact.checkIns[0].id}`))!.at).toBe(Date.parse('2026-10-26T19:00:00Z'));
+    await h.call('update_check_in', { checkInId: exact.checkIns[0].id, date: '2026-10-27', time: '08:00' });
+    expect((await h.doc(`checkIns/${exact.checkIns[0].id}`))!.at).toBe(Date.parse('2026-10-27T07:00:00Z'));
   });
 
   it('update_outing aggiunge e toglie persone senza riscrivere la lista intera', async () => {
@@ -392,6 +398,11 @@ describe.skipIf(!EMULATOR)('tool MCP contro Firestore emulator', () => {
     const out = (await h.call('list_outings', {})).items[0];
     expect(out.attendees.map((x: { personId: string }) => x.personId).sort()).toEqual([b, c].sort());
     expect(out.at).toBe('2026-10-30T21:00:00+01:00');
+    // date senza time tiene le 21:00 dell'uscita (prima era mezzogiorno)
+    await h.call('update_outing', { outingId: o.outingId, date: '2026-10-29' });
+    expect((await h.call('list_outings', {})).items[0].at).toBe('2026-10-29T21:00:00+01:00');
+    await h.call('update_outing', { outingId: o.outingId, time: '09:30' });
+    expect((await h.call('list_outings', {})).items[0].at).toBe('2026-10-29T09:30:00+01:00');
     expect((await h.doc(`people/${a}`))!.lastCheckInAt).toBeNull();
     expect(await h.callError('update_outing', { outingId: o.outingId, removePersonIds: [b, c] })).toMatch(/delete_outing/);
     expect(await h.callError('update_outing', { outingId: o.outingId, removePersonIds: [a] })).toMatch(/Not in this outing/);
@@ -427,6 +438,15 @@ describe.skipIf(!EMULATOR)('tool MCP contro Firestore emulator', () => {
     expect(await h.call('raw_write', { op: 'delete', path: 'events/ev-1' })).toMatchObject({ tombstone: true });
     expect(await h.doc('events/ev-1')).toMatchObject({ title: 'Sostituito', deleted: true });
     expect((await h.call('list_events', {})).total).toBe(0);
+    // su un tombstone niente resurrezioni silenziose: merge e set senza deleted esplicito sono rifiutati
+    expect(await h.callError('raw_write', { op: 'merge', path: 'events/ev-1', data: { title: 'Rivive?' } })).toMatch(/tombstone/);
+    expect(await h.callError('raw_write', { op: 'set', path: 'events/ev-1', data: { title: 'Rivive?', at: NOW } })).toMatch(/tombstone/);
+    expect(await h.doc('events/ev-1')).toMatchObject({ title: 'Sostituito', deleted: true });
+    // deleted: true esplicito modifica il tombstone senza farlo rivivere
+    await h.call('raw_write', { op: 'merge', path: 'events/ev-1', data: { title: 'Ancora cancellato', deleted: true } });
+    expect(await h.doc('events/ev-1')).toMatchObject({ title: 'Ancora cancellato', deleted: true });
+    expect((await h.call('list_events', {})).total).toBe(0);
+    // ripristino voluto
     await h.call('raw_write', { op: 'merge', path: 'events/ev-1', data: { deleted: false } });
     expect((await h.call('list_events', {})).total).toBe(1);
 

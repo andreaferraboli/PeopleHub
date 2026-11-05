@@ -100,14 +100,21 @@ internal class ReminderRepositoryImpl
             observeCompletions().first()[reminderId]?.history.orEmpty()
 
         override suspend fun updateCompletion(completionId: String, at: Instant, day: LocalDate, note: String?) {
-            val doc = store.observe(Cloud.REMINDER_COMPLETIONS).first().firstOrNull { it.id == completionId } ?: return
+            val doc = liveCompletion(completionId) ?: return
             val reminderId = doc.data.string("reminderId") ?: return
             val fields = DocumentMapper.completionToDoc(reminderId, at, day, note, withNote = true)
             store.commit(listOf(CloudWrite.Put(Cloud.REMINDER_COMPLETIONS, completionId, fields)))
         }
 
-        override suspend fun deleteCompletion(completionId: String) =
+        override suspend fun deleteCompletion(completionId: String) {
+            // An unknown id would otherwise become a stub tombstone document.
+            if (liveCompletion(completionId) == null) return
             store.commit(listOf(CloudWrite.Tombstone(Cloud.REMINDER_COMPLETIONS, completionId)))
+        }
+
+        /** The live completion document [completionId], or `null` when it is missing or tombstoned. */
+        private suspend fun liveCompletion(completionId: String): CloudDoc? =
+            store.observe(Cloud.REMINDER_COMPLETIONS).first().firstOrNull { it.id == completionId }
 
         override suspend fun reschedule(id: String, nextFireAt: Instant, clearLastFired: Boolean) {
             val fields = mutableMapOf<String, Any?>("nextFireAt" to nextFireAt.toEpochMilli())
