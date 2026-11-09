@@ -3,6 +3,7 @@ package com.peoplehub.feature.people.groupmeetup
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.peoplehub.core.domain.model.OutingTimes
 import com.peoplehub.core.domain.model.PeopleFilter
 import com.peoplehub.core.domain.usecase.DeleteOutingUseCase
 import com.peoplehub.core.domain.usecase.GetOutingUseCase
@@ -26,6 +27,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 /** A person shown in the group-meetup picker, with whether they are currently selected. */
@@ -42,6 +45,9 @@ data class SelectablePerson(
  *
  * @property editing `true` when an existing outing is being rewritten rather than a new one recorded.
  * An edit always concerns a single day, so the multi-day range is only offered while recording.
+ * @property times the optional start/end time range, `null` when the outing has none.
+ * @property defaultStart where a freshly enabled range starts: the edited outing's own time of day, or
+ * noon (the time the app records outings at) for a new one.
  * @property error a validation or persistence failure to show inline, or `null`.
  */
 data class GroupMeetupForm(
@@ -51,6 +57,8 @@ data class GroupMeetupForm(
     val note: String,
     val selectedCount: Int,
     val editing: Boolean = false,
+    val times: OutingTimes? = null,
+    val defaultStart: LocalTime = LocalTime.NOON,
     val error: String? = null,
 )
 
@@ -64,7 +72,9 @@ data class GroupMeetupForm(
  * **Editing** (the route carries an `outingId`): the form is seeded from the stored outing and saving
  * rewrites it as a whole through [UpdateOutingUseCase] — the new day and description are applied to
  * every attendee, unticked people lose their check-in and newly ticked people gain one. That is what
- * makes an outing shared between several people editable without splitting it up.
+ * makes an outing shared between several people editable without splitting it up. An untouched time
+ * range is passed on as "keep" so the stored end survives the edit exactly (and keeps its duration if
+ * the day moves); turning the range off clears the end.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -80,6 +90,7 @@ class GroupMeetupViewModel
         clock: Clock,
     ) : ViewModel() {
         private val today = LocalDate.now(clock)
+        private val zone = clock.zone
 
         /** The outing being edited, or `null` while recording a new one. */
         private val outingId: String? = savedStateHandle.get<String>(OUTING_ID_KEY)?.takeIf { it.isNotEmpty() }
@@ -96,6 +107,11 @@ class GroupMeetupViewModel
         private val endDate = MutableStateFlow(today)
         private val multiDay = MutableStateFlow(false)
         private val note = MutableStateFlow("")
+        private val times = MutableStateFlow<OutingTimes?>(null)
+        private val defaultStart = MutableStateFlow(LocalTime.NOON)
+
+        /** The range the edited outing was loaded with, to tell an untouched range from a changed one. */
+        private var seededTimes: OutingTimes? = null
         private val error = MutableStateFlow<String?>(null)
         private val savedSignal = MutableStateFlow(false)
 
@@ -152,6 +168,8 @@ class GroupMeetupViewModel
                     editing = outingId != null,
                 )
             }.combine(error) { current, message -> current.copy(error = message) }
+                .combine(times) { current, range -> current.copy(times = range) }
+                .combine(defaultStart) { current, start -> current.copy(defaultStart = start) }
                 .stateIn(
                     viewModelScope,
                     SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -178,6 +196,9 @@ class GroupMeetupViewModel
                     startDate.value = outing.date
                     endDate.value = outing.date
                     note.value = outing.note.orEmpty()
+                    defaultStart.value = outing.timestamp.atZone(zone).toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                    seededTimes = OutingTimes.of(outing.timestamp, outing.endAt, zone)
+                    times.value = seededTimes
                     val attendees = outing.attendees.map { it.personId }.toSet()
                     attendeeIds.value = attendees
                     selectedIds.value = attendees
@@ -193,6 +214,11 @@ class GroupMeetupViewModel
             }
 
         fun onNoteChange(value: String) = note.update { value }
+
+        /** Sets, changes or (with `null`) removes the outing's start/end time range. */
+        fun onTimesChange(value: OutingTimes?) {
+            times.value = value
+        }
 
         fun onToggleMultiDay(enabled: Boolean) {
             multiDay.value = enabled
@@ -226,7 +252,7 @@ class GroupMeetupViewModel
             val hi = maxOf(start, end)
             val days = generateSequence(lo) { it.plusDays(1) }.takeWhile { !it.isAfter(hi) }.toList()
             viewModelScope.launch {
-                recordMeetup(ids, days, note.value.ifBlank { null })
+                recordMeetup(ids, days, note.value.ifBlank { null }, times.value)
                 savedSignal.value = true
             }
         }
@@ -241,12 +267,16 @@ class GroupMeetupViewModel
         }
 
         private fun saveEdit(editedId: String, personIds: List<String>) {
+            val range = times.value
             viewModelScope.launch {
                 updateOuting(
                     outingId = editedId,
                     day = startDate.value,
                     personIds = personIds,
                     note = note.value.ifBlank { null },
+                    // An untouched range is kept as stored; a changed one is rewritten; none clears the end.
+                    times = range?.takeIf { it != seededTimes },
+                    clearEnd = range == null,
                 ).fold(
                     onSuccess = { savedSignal.value = true },
                     onFailure = { throwable -> error.value = throwable.message ?: "Could not save the outing" },

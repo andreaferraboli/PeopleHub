@@ -382,7 +382,7 @@ private fun backupFields(): List<FieldDoc> =
     listOf(
         FieldDoc("schemaVersion", "number", true, "Always 1 for this app version."),
         FieldDoc("people", "object[]", true, "Person objects (fields above). Give each an id so check-ins/events can link to it."),
-        FieldDoc("checkIns", "object[]", false, "Visit history: personId, timestampEpochMillis, optional note."),
+        FieldDoc("checkIns", "object[]", false, "Visit history: personId, timestampEpochMillis, optional note, endEpochMillis."),
         FieldDoc("events", "object[]", false, "Events: title, dateTime (YYYY-MM-DDTHH:MM:SS), optional category/personId."),
     )
 

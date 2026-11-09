@@ -11,6 +11,7 @@ import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.Reminder
 import com.peoplehub.core.domain.model.ReminderCategory
 import com.peoplehub.core.domain.model.ReminderDoneEntry
+import com.peoplehub.core.domain.model.validEndAfter
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -95,17 +96,23 @@ internal object DocumentMapper {
 
     // --- check-ins --------------------------------------------------------------------------------
 
-    /** `null` when the document has no person: such a check-in belongs to nobody's history. */
+    /**
+     * `null` when the document has no person: such a check-in belongs to nobody's history. An `endAt`
+     * that is missing (documents written before outings had an end), null or not after `at` reads as
+     * "no end".
+     */
     fun checkInFromDoc(doc: CloudDoc): CheckIn? {
         val d = doc.data
         val personId = d.string("personId")?.takeIf { it.isNotEmpty() } ?: return null
+        val timestamp = Instant.ofEpochMilli(d.long("at") ?: d.long("updatedAt") ?: 0L)
         return CheckIn(
             id = doc.id,
             personId = personId,
-            timestamp = Instant.ofEpochMilli(d.long("at") ?: d.long("updatedAt") ?: 0L),
+            timestamp = timestamp,
             note = d.string("note"),
             // A check-in without an outing is an outing of its own.
             outingId = d.string("outingId")?.takeIf { it.isNotEmpty() } ?: doc.id,
+            endAt = d.long("endAt")?.let(Instant::ofEpochMilli).validEndAfter(timestamp),
         )
     }
 
@@ -115,6 +122,7 @@ internal object DocumentMapper {
             "at" to checkIn.timestamp.toEpochMilli(),
             "note" to checkIn.note,
             "outingId" to checkIn.outingId,
+            "endAt" to checkIn.endAt.validEndAfter(checkIn.timestamp)?.toEpochMilli(),
         )
 
     // --- events -----------------------------------------------------------------------------------

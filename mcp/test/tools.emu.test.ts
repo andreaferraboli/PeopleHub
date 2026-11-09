@@ -388,6 +388,57 @@ describe.skipIf(!EMULATOR)('tool MCP contro Firestore emulator', () => {
     expect((await h.doc(`checkIns/${exact.checkIns[0].id}`))!.at).toBe(Date.parse('2026-10-27T07:00:00Z'));
   });
 
+  it('uscite con fine: endTime oltre mezzanotte, endAt in lista, durata tenuta negli spostamenti, null la toglie', async () => {
+    const a = await person({ firstName: 'Elsa' });
+    const b = await person({ firstName: 'Fabio' });
+    // 18:00 -> 07:30 del giorno dopo (Roma, CET)
+    const night = await h.call('check_in', { personIds: [a, b], date: '2026-10-30', time: '18:00', endTime: '07:30', note: 'Festa' });
+    const start = Date.parse('2026-10-30T17:00:00Z');
+    const end = Date.parse('2026-10-31T06:30:00Z');
+    expect(night).toMatchObject({ at: '2026-10-30T18:00:00+01:00', endAt: '2026-10-31T07:30:00+01:00' });
+    for (const c of night.checkIns) expect(await h.doc(`checkIns/${c.id}`)).toMatchObject({ at: start, endAt: end });
+    const listed = (await h.call('list_outings', {})).items.find((o: { outingId: string }) => o.outingId === night.outingId);
+    expect(listed).toMatchObject({ at: '2026-10-30T18:00:00+01:00', endAt: '2026-10-31T07:30:00+01:00' });
+    expect((await h.call('list_check_ins', { outingId: night.outingId })).items[0].endAt).toBe('2026-10-31T07:30:00+01:00');
+
+    // senza fine: endAt null in scrittura e in lettura; un documento vecchio senza il campo resta senza fine
+    const plain = await h.call('check_in', { personIds: [a], date: '2026-10-20' });
+    expect((await h.doc(`checkIns/${plain.checkIns[0].id}`))!.endAt).toBeNull();
+    expect((await h.call('list_outings', { from: '2026-10-20', to: '2026-10-20' })).items[0].endAt).toBeNull();
+    await testDb().doc(`users/${h.uid}/checkIns/legacy-1`).set({ personId: a, at: Date.parse('2026-10-10T10:00:00Z'), note: null, outingId: 'legacy-o', updatedAt: NOW, deleted: false, updatedBy: 'android:x' });
+    const fresh = await makeHarness({ uid: h.uid }); // letture memorizzate per contesto: un contesto nuovo vede il documento
+    opened.push(fresh);
+    expect((await fresh.call('list_outings', { from: '2026-10-10', to: '2026-10-10' })).items[0]).toMatchObject({ outingId: 'legacy-o', endAt: null });
+
+    // validazione
+    expect(await h.callError('check_in', { personIds: [a], at: '2026-10-05T20:00:00+02:00', endAt: '2026-10-05T19:00:00+02:00' })).toMatch(/after the start/);
+    expect(await h.callError('check_in', { personIds: [a], date: '2026-10-05', endAt: '2026-10-05T19:00:00+02:00', endTime: '19:00' })).toMatch(/either endAt or endTime/);
+    expect(await h.callError('check_in', { personIds: [a], dates: ['2026-10-05', '2026-10-06'], endAt: '2026-10-05T19:00:00+02:00' })).toMatch(/endTime/);
+    const days = await h.call('check_in', { personIds: [a], dates: ['2026-10-05', '2026-10-06'], time: '09:00', endTime: '11:30' });
+    expect(days.outings.map((o: { endAt: string }) => o.endAt)).toEqual(['2026-10-05T11:30:00+02:00', '2026-10-06T11:30:00+02:00']);
+
+    // update_outing: spostare l'inizio tiene la durata (13h30), una fine nuova la sostituisce, null la toglie
+    const moved = await h.call('update_outing', { outingId: night.outingId, date: '2026-11-06', time: '20:00' });
+    expect(moved).toMatchObject({ at: '2026-11-06T20:00:00+01:00', endAt: '2026-11-07T09:30:00+01:00' });
+    for (const c of night.checkIns) expect((await h.doc(`checkIns/${c.id}`))!.endAt).toBe(Date.parse('2026-11-07T08:30:00Z'));
+    expect((await h.call('update_outing', { outingId: night.outingId, endTime: '23:00' })).endAt).toBe('2026-11-06T23:00:00+01:00');
+    expect(await h.callError('update_outing', { outingId: night.outingId, endAt: '2026-11-06T19:00:00+01:00' })).toMatch(/after the start/);
+    const added = await h.call('update_outing', { outingId: night.outingId, addPersonIds: [await person({ firstName: 'Gino' })] });
+    expect(added.endAt).toBe('2026-11-06T23:00:00+01:00');
+    const rows = (await h.call('list_check_ins', { outingId: night.outingId })).items;
+    expect(rows.map((r: { endAt: string }) => r.endAt)).toEqual(['2026-11-06T23:00:00+01:00', '2026-11-06T23:00:00+01:00', '2026-11-06T23:00:00+01:00']);
+    expect((await h.call('update_outing', { outingId: night.outingId, endAt: null })).endAt).toBeNull();
+    for (const c of night.checkIns) expect((await h.doc(`checkIns/${c.id}`))!.endAt).toBeNull();
+
+    // update_check_in: endTime da solo, poi lo spostamento dell'ora tiene la durata (staccata dall'uscita)
+    const solo = await h.call('update_check_in', { checkInId: night.checkIns[0].id, endTime: '22:15' });
+    expect(solo).toMatchObject({ detached: true, checkIn: { at: '2026-11-06T20:00:00+01:00', endAt: '2026-11-06T22:15:00+01:00' } });
+    const later = await h.call('update_check_in', { checkInId: night.checkIns[0].id, time: '21:00' });
+    expect(later.checkIn.endAt).toBe('2026-11-06T23:15:00+01:00');
+    expect(await h.callError('update_check_in', { checkInId: night.checkIns[0].id, endAt: '2026-11-06T20:00:00+01:00' })).toMatch(/after the start/);
+    expect((await h.call('update_check_in', { checkInId: night.checkIns[0].id, endTime: null })).checkIn.endAt).toBeNull();
+  });
+
   it('update_outing aggiunge e toglie persone senza riscrivere la lista intera', async () => {
     const a = await person({ firstName: 'Ugo' });
     const b = await person({ firstName: 'Vera' });

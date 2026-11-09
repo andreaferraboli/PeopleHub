@@ -45,7 +45,11 @@ Cosa si puo fare, per area:
   modifica la riga di una persona (momento, nota, persona, uscita) e, se l'uscita e' condivisa, la stacca come l'app
   (`keepOuting` per lasciarla dentro, `outingId` per spostarla); `delete_check_in` toglie una sola riga. In
   `update_outing` e `update_check_in` una `date` senza `time` tiene l'ora del giorno attuale (nel fuso delle
-  impostazioni) e un `time` senza `date` tiene il giorno, come l'app;
+  impostazioni) e un `time` senza `date` tiene il giorno, come l'app. Un'uscita puo' avere una fine: `check_in`,
+  `update_outing` e `update_check_in` accettano `endAt` (istante ISO) o `endTime` (HH:mm; alla stessa ora o prima
+  dell'inizio e' il giorno dopo, 18:00 -> 07:30), `null` la toglie, deve essere dopo l'inizio; spostare l'inizio senza
+  una fine nuova tiene la durata. `list_outings` e `list_check_ins` restituiscono `endAt` ISO con scarto (null se
+  manca);
 - **promemoria**: `update_reminder` imposta anche persona, preset, `lastFiredAt`, `createdAt` e la prossima data
   (esplicita con `nextFireAt` / `nextFireDate`+`nextFireTime`, o riestratta con `redraw`); lo storico dei "fatto" si
   legge con `list_reminder_completions` (per promemoria, per persona o tutto, con periodo) e si modifica con

@@ -44,7 +44,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.peoplehub.core.domain.model.OutingTimes
 import com.peoplehub.core.ui.components.GlassIconButton
+import com.peoplehub.core.ui.components.OutingTimeFields
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.SearchField
@@ -71,8 +73,9 @@ private val MeetupDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d
 
 /**
  * "Record an outing" in both of its modes: select everyone you saw and log one meetup for each of them
- * at once, optionally across several days — or, when the route carries an outing id, rewrite that
- * outing's day, description and attendee list for everyone involved. Navigates back automatically once
+ * at once, optionally across several days and with an optional start/end time — or, when the route
+ * carries an outing id, rewrite that outing's day, time range, description and attendee list for
+ * everyone involved. Navigates back automatically once
  * the outing has been saved or deleted.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -158,6 +161,7 @@ fun GroupMeetupScreen(
                     onToggleMultiDay = viewModel::onToggleMultiDay,
                     onStartDate = viewModel::onStartDate,
                     onEndDate = viewModel::onEndDate,
+                    onTimesChange = viewModel::onTimesChange,
                     onNoteChange = viewModel::onNoteChange,
                     modifier = Modifier.padding(top = spacing.xs).riseIn(0),
                 )
@@ -220,6 +224,7 @@ private fun MeetupDetailsCard(
     onToggleMultiDay: (Boolean) -> Unit,
     onStartDate: (LocalDate) -> Unit,
     onEndDate: (LocalDate) -> Unit,
+    onTimesChange: (OutingTimes?) -> Unit,
     onNoteChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -264,6 +269,12 @@ private fun MeetupDetailsCard(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        OutingTimeFields(
+            times = form.times,
+            onTimesChange = onTimesChange,
+            defaultStart = form.defaultStart,
+            modifier = Modifier.fillMaxWidth(),
+        )
         OutlinedTextField(
             value = form.note,
             onValueChange = onNoteChange,

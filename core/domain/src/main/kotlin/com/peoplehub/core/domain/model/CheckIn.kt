@@ -12,6 +12,8 @@ import java.time.Instant
  * friends on one evening writes four check-ins sharing one [outingId], so each person keeps their own
  * history while the outing can still be shown — and edited — as a single [Outing]. A UUID string, empty
  * when not yet assigned.
+ * @property endAt when the outing ended, or `null` when no end was recorded. Same value on every
+ * check-in of the outing, always after [timestamp] (it may fall on the next day).
  */
 data class CheckIn(
     val id: String = "",
@@ -19,6 +21,7 @@ data class CheckIn(
     val timestamp: Instant,
     val note: String? = null,
     val outingId: String = "",
+    val endAt: Instant? = null,
 )
 
 /**

@@ -29,4 +29,13 @@
     <string name="outing_edit">Edit outing</string>
     <string name="outing_no_description">No description</string>
     <string name="outing_more_people">+%1$d</string>
+    <!-- Outing time range (forms and cards) -->
+    <string name="outing_time_toggle">Start and end time</string>
+    <string name="outing_time_start">Starts: %1$s</string>
+    <string name="outing_time_end">Ends: %1$s</string>
+    <string name="outing_time_end_next_day">Ends: %1$s (next day)</string>
+    <string name="outing_time_range">%1$s - %2$s</string>
+    <string name="outing_time_range_next_day">%1$s - %2$s (+1)</string>
+    <string name="outing_time_confirm">OK</string>
+    <string name="outing_time_cancel">Cancel</string>
 </resources>

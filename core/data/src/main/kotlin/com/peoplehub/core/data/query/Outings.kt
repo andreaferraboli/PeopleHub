@@ -4,6 +4,7 @@ import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Outing
 import com.peoplehub.core.domain.model.OutingAttendee
 import com.peoplehub.core.domain.model.Person
+import com.peoplehub.core.domain.model.validEndAfter
 import java.time.ZoneId
 
 /**
@@ -11,7 +12,8 @@ import java.time.ZoneId
  *
  * Check-ins whose person no longer exists are left out (the same rows a join with the people would
  * drop). The day is resolved in [zone]; duplicate rows for the same person collapse into a single
- * attendee while every underlying row id is kept, so deletes and moves stay complete.
+ * attendee while every underlying row id is kept, so deletes and moves stay complete. The outing's end
+ * is the one its rows carry (the same on each), when it falls after the start.
  */
 internal object Outings {
     fun group(
@@ -32,6 +34,8 @@ internal object Outings {
         zone: ZoneId,
     ): Outing {
         val timestamp = rows.minOf { it.timestamp }
+        // Every row carries the same end by construction; the latest one wins should they ever differ.
+        val endAt = rows.mapNotNull { it.endAt }.maxOrNull().validEndAfter(timestamp)
         return Outing(
             id = outingId,
             date = timestamp.atZone(zone).toLocalDate(),
@@ -51,6 +55,7 @@ internal object Outings {
                         )
                     }.sortedBy { it.fullName.lowercase() },
             checkInIds = rows.map { it.id },
+            endAt = endAt,
         )
     }
 }

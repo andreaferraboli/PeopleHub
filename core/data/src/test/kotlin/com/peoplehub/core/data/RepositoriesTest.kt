@@ -162,6 +162,21 @@ class RepositoriesTest {
         }
 
     @Test
+    fun `an outing carries the end its check-ins share`() =
+        runTest {
+            seedPerson("a", "Ada")
+            seedPerson("b", "Bo")
+            store.seed(Cloud.CHECK_INS, "c1", mapOf("personId" to "a", "at" to 1_000L, "outingId" to "o1", "endAt" to 4_000L))
+            store.seed(Cloud.CHECK_INS, "c2", mapOf("personId" to "b", "at" to 1_000L, "outingId" to "o1", "endAt" to 4_000L))
+            seedCheckIn("c3", "a", 5_000L, outingId = "o2")
+
+            val outings = checkIns.observeOutings().first().associateBy { it.id }
+
+            assertEquals(Instant.ofEpochMilli(4_000L), outings.getValue("o1").endAt)
+            assertNull(outings.getValue("o2").endAt)
+        }
+
+    @Test
     fun `a recorded check-in gets ids and deleting it writes a tombstone`() =
         runTest {
             seedPerson("a", "Ada")

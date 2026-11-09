@@ -3,7 +3,9 @@ package com.peoplehub.core.domain.usecase
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInStatus
 import com.peoplehub.core.domain.model.CheckInUrgency
+import com.peoplehub.core.domain.model.OutingTimes
 import com.peoplehub.core.domain.model.PeopleFilter
+import com.peoplehub.core.domain.model.validEndAfter
 import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
 import com.peoplehub.core.domain.repository.SettingsRepository
@@ -18,8 +20,9 @@ import javax.inject.Inject
 /**
  * Records that a person was seen, creating a [CheckIn] and updating the person's denormalised
  * last-seen timestamp in a single logical action. The check-in defaults to "now" but a specific
- * [at] instant may be supplied to back-date a meeting that happened on an earlier day. A back-dated
- * check-in never regresses a more recent last-seen value.
+ * [at] instant may be supplied to back-date a meeting that happened on an earlier day, with an
+ * optional [endAt] when the meeting has a time range (ignored unless it falls after the start). A
+ * back-dated check-in never regresses a more recent last-seen value.
  */
 class CheckInPersonUseCase
     @Inject
@@ -28,7 +31,12 @@ class CheckInPersonUseCase
         private val peopleRepository: PeopleRepository,
         private val clock: Clock,
     ) {
-        suspend operator fun invoke(personId: String, note: String? = null, at: Instant? = null): String {
+        suspend operator fun invoke(
+            personId: String,
+            note: String? = null,
+            at: Instant? = null,
+            endAt: Instant? = null,
+        ): String {
             val timestamp = at ?: clock.instant()
             val id =
                 checkInRepository.recordCheckIn(
@@ -37,6 +45,7 @@ class CheckInPersonUseCase
                         timestamp = timestamp,
                         note = note?.takeIf(String::isNotBlank),
                         outingId = checkInRepository.newOutingId(),
+                        endAt = endAt.validEndAfter(timestamp),
                     ),
                 )
             val previous = peopleRepository.getPerson(personId)?.lastCheckInAt
@@ -58,6 +67,9 @@ class CheckInPersonUseCase
  * Every day gets its own [CheckIn.outingId], shared by all its attendees: that is what lets the
  * outings history show the meetup as one card and edit its date, description and attendees as a unit.
  * A multi-day meetup is therefore one outing per day, each editable on its own.
+ *
+ * With [times] every day starts at its start time instead of noon and ends at its end time (the next
+ * morning when the end is at or before the start), the same range on each day.
  */
 class RecordMeetupUseCase
     @Inject
@@ -66,7 +78,12 @@ class RecordMeetupUseCase
         private val peopleRepository: PeopleRepository,
         private val clock: Clock,
     ) {
-        suspend operator fun invoke(personIds: List<String>, days: List<LocalDate>, note: String? = null) {
+        suspend operator fun invoke(
+            personIds: List<String>,
+            days: List<LocalDate>,
+            note: String? = null,
+            times: OutingTimes? = null,
+        ) {
             if (personIds.isEmpty() || days.isEmpty()) return
             val cleanNote = note?.takeIf(String::isNotBlank)
             val people = personIds.distinct()
@@ -74,12 +91,15 @@ class RecordMeetupUseCase
                 days.distinct().sorted().flatMap { day ->
                     // One outing per day, shared by everyone who was there that day.
                     val outingId = checkInRepository.newOutingId()
+                    val start = times?.startOn(day, clock.zone) ?: day.atTime(NOON_HOUR, 0).atZone(clock.zone).toInstant()
+                    val end = times?.endOn(day, clock.zone)
                     people.map { personId ->
                         CheckIn(
                             personId = personId,
-                            timestamp = day.atTime(NOON_HOUR, 0).atZone(clock.zone).toInstant(),
+                            timestamp = start,
                             note = cleanNote,
                             outingId = outingId,
+                            endAt = end,
                         )
                     }
                 }
@@ -95,7 +115,7 @@ class RecordMeetupUseCase
     }
 
 /**
- * Edits **one person's** check-in (its day and/or note) and re-derives their denormalised last-seen
+ * Edits **one person's** check-in (its day, time range and/or note) and re-derives their denormalised last-seen
  * timestamp from the remaining history, so moving the latest check-in keeps the cadence tracker in
  * sync.
  *
@@ -116,7 +136,11 @@ class UpdateCheckInUseCase
             val outingId =
                 if (isShared || checkIn.outingId.isEmpty()) checkInRepository.newOutingId() else checkIn.outingId
             checkInRepository.updateCheckIn(
-                checkIn.copy(note = checkIn.note?.takeIf(String::isNotBlank), outingId = outingId),
+                checkIn.copy(
+                    note = checkIn.note?.takeIf(String::isNotBlank),
+                    outingId = outingId,
+                    endAt = checkIn.endAt.validEndAfter(checkIn.timestamp),
+                ),
             )
             refreshLastCheckIn(checkInRepository, peopleRepository, checkIn.personId)
         }

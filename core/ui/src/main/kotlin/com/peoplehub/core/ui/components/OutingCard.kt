@@ -35,7 +35,8 @@ private const val MAX_AVATARS = 3
 
 /**
  * One entry of the outings history ("Cronologia uscite"): a date column (weekday, day, month), the
- * description, and the overlapping faces of everyone who was there with their names.
+ * time range when the outing has an end ("18:00 - 07:30 (+1)"), the description, and the overlapping
+ * faces of everyone who was there with their names.
  *
  * The whole card opens the editor through [onEdit] (announced to accessibility services with the
  * "edit outing" label), because editing is the only thing there is to do with a past outing — the
@@ -83,6 +84,13 @@ fun OutingCard(
                 )
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                outing.endAt?.let { end ->
+                    Text(
+                        text = outingTimeRangeLabel(outing.timestamp, end),
+                        style = PeopleHubTheme.type.tileCaps,
+                        color = c.accentTextSurface,
+                    )
+                }
                 Text(
                     text = outing.note ?: stringResource(R.string.outing_no_description),
                     style = MaterialTheme.typography.bodyMedium,

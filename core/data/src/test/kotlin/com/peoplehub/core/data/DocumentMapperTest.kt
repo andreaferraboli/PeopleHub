@@ -116,6 +116,27 @@ class DocumentMapperTest {
         val checkIn = CheckIn(id = "c-3", personId = "p-1", timestamp = Instant.ofEpochMilli(77L), note = null, outingId = "o-1")
 
         assertEquals(checkIn, DocumentMapper.checkInFromDoc(CloudDoc("c-3", DocumentMapper.checkInToDoc(checkIn))))
+        assertNull(DocumentMapper.checkInToDoc(checkIn)["endAt"])
+    }
+
+    @Test
+    fun `a check-in end round trips and an end not after the start reads as none`() {
+        val ranged =
+            CheckIn(
+                id = "c-4",
+                personId = "p-1",
+                timestamp = Instant.ofEpochMilli(1_000L),
+                outingId = "o-1",
+                endAt = Instant.ofEpochMilli(9_000L),
+            )
+        val doc = DocumentMapper.checkInToDoc(ranged)
+
+        assertEquals(9_000L, doc["endAt"])
+        assertEquals(ranged, DocumentMapper.checkInFromDoc(CloudDoc("c-4", doc)))
+
+        val backwards = mapOf("personId" to "p-1", "at" to 5_000L, "outingId" to "o-2", "endAt" to 5_000L)
+        assertNull(DocumentMapper.checkInFromDoc(CloudDoc("c-5", backwards))?.endAt)
+        assertNull(DocumentMapper.checkInFromDoc(CloudDoc("c-6", mapOf("personId" to "p-1", "at" to 5_000L, "endAt" to null)))?.endAt)
     }
 
     @Test

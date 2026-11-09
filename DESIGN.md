@@ -181,7 +181,8 @@ honour `reduced`.
 | `SegmentBar`, `BarSegment` | Kpi.kt | stacked proportion bar with animated fill |
 | `DayCountDisplay` | DayCount.kt | TRA / 14 / GIORNI countdown, `onMedia` variant |
 | `EventCover` (+ `CoverCountdown`, `CoverPin`) | EventCover.kt | event as cover card: photo or scene, scrim, chip, pin toggle, countdown |
-| `OutingCard` | OutingCard.kt | outings history entry (date column, note, faces) |
+| `OutingCard` | OutingCard.kt | outings history entry (date column, time range when it has an end, note, faces) |
+| `OutingTimeFields`, `outingTimeRangeLabel` | OutingTimeFields.kt | optional start/end time of an outing in a form (check pill + 24h time picker), "09:00 - 11:30" label |
 | `SettingsCard`, `IconTile` | Settings.kt | Vault section card with icon tile and serif title |
 | `SettingsRow`, `SwitchRow`, `VellutoSwitch` | Settings.kt | navigation row, switch row, accent switch |
 | `StepperRow` | Settings.kt | − value + row |
