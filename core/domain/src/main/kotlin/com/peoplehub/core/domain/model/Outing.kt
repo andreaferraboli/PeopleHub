@@ -17,6 +17,8 @@ import java.time.LocalDate
  * @property note the shared free-text description, or `null` when none was written.
  * @property attendees everyone who took part, one entry per person, ordered by display name.
  * @property checkInIds every underlying check-in row, so the whole outing can be deleted or moved.
+ * @property endAt when the outing ended, or `null` when no end was recorded; always after [timestamp],
+ * possibly on the next day.
  */
 data class Outing(
     val id: String,
@@ -25,6 +27,7 @@ data class Outing(
     val note: String?,
     val attendees: List<OutingAttendee>,
     val checkInIds: List<String>,
+    val endAt: Instant? = null,
 )
 
 /**

@@ -94,6 +94,14 @@ Two edit paths, deliberately distinct:
   of a shared outing, **detaches** it into an outing of its own, so a personal edit never silently
   rewrites what everyone else sees.
 
+An outing may have an **end** (`CheckIn.endAt` / `Outing.endAt`, `endAt` in Firestore, the same on every
+row, always after the start, possibly the next morning). The forms set it through `OutingTimeFields`
+(`core:ui`): a "start and end time" pill with two 24h pickers, where an end at or before the start means
+the next day (`OutingTimes`). Without a range the app keeps its implicit noon and writes no end. Moving
+an outing to another day keeps the end's duration; the editor passes an untouched range on as "keep"
+and clears the end when the range is turned off. Cards and the person's history show "09:00 - 11:30"
+("(+1)" past midnight) only when there is an end.
+
 Imported backups carrying no outing id (or `0`, files from before outings existed) are regrouped by
 (local day, description) — `BackupRepositoryImpl` and `ImportPersonUseCase` apply the same rule. **Every** import path allocates fresh outing ids: the ids in
 a file were handed out by whichever install exported it (numbers, in older files), so reusing them

@@ -29,4 +29,13 @@
     <string name="outing_edit">Modifica uscita</string>
     <string name="outing_no_description">Nessuna descrizione</string>
     <string name="outing_more_people">+%1$d</string>
+    <!-- Orario delle uscite (moduli e card) -->
+    <string name="outing_time_toggle">Orario di inizio e fine</string>
+    <string name="outing_time_start">Inizio: %1$s</string>
+    <string name="outing_time_end">Fine: %1$s</string>
+    <string name="outing_time_end_next_day">Fine: %1$s (giorno dopo)</string>
+    <string name="outing_time_range">%1$s - %2$s</string>
+    <string name="outing_time_range_next_day">%1$s - %2$s (+1)</string>
+    <string name="outing_time_confirm">OK</string>
+    <string name="outing_time_cancel">Annulla</string>
 </resources>

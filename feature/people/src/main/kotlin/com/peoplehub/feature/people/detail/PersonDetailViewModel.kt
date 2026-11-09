@@ -8,6 +8,7 @@ import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInStatus
 import com.peoplehub.core.domain.model.CheckInThreshold
 import com.peoplehub.core.domain.model.EventFilter
+import com.peoplehub.core.domain.model.OutingTimes
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
 import com.peoplehub.core.domain.model.Reminder
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -127,33 +129,54 @@ class PersonDetailViewModel
          * Records a meetup for this person over the inclusive day range [startDate]..[endDate]. A
          * single day (start == end) is stamped with the current instant when it is today (otherwise
          * back-dated to the start of that day), preserving the original quick "I saw them" behaviour.
-         * A range (e.g. a weekend away) records one meetup per day in one action.
+         * A range (e.g. a weekend away) records one meetup per day in one action. With [times] each
+         * day starts and ends at those times instead (the end on the next day when it is at or before the
+         * start).
          */
-        fun onCheckIn(note: String?, startDate: LocalDate, endDate: LocalDate) {
+        fun onCheckIn(note: String?, startDate: LocalDate, endDate: LocalDate, times: OutingTimes? = null) {
             if (startDate == endDate) {
-                val at = startDate.takeIf { it != LocalDate.now(clock) }?.atStartOfDay(clock.zone)?.toInstant()
-                viewModelScope.launch { checkInPerson(personId, note, at) }
+                val at =
+                    times?.startOn(startDate, clock.zone)
+                        ?: startDate.takeIf { it != LocalDate.now(clock) }?.atStartOfDay(clock.zone)?.toInstant()
+                val endAt = times?.endOn(startDate, clock.zone)
+                viewModelScope.launch { checkInPerson(personId, note, at, endAt) }
                 return
             }
             val start = minOf(startDate, endDate)
             val end = maxOf(startDate, endDate)
             val days = generateSequence(start) { it.plusDays(1) }.takeWhile { !it.isAfter(end) }.toList()
-            viewModelScope.launch { recordMeetup(listOf(personId), days, note) }
+            viewModelScope.launch { recordMeetup(listOf(personId), days, note, times) }
         }
 
         /**
-         * Edits an existing [checkIn], replacing its note and day. The time-of-day is preserved when the
-         * day is unchanged; moving it to another day stamps the start of that day in the device zone.
+         * Edits an existing [checkIn], replacing its note, day and time range.
+         *
+         * A changed range rewrites the start and end on [date]. An untouched range keeps the stored
+         * moments, moved to [date] with the same time of day and duration. Without a range the end is
+         * cleared and, as before, the time-of-day is preserved when the day is unchanged while moving to
+         * another day stamps the start of that day in the device zone.
          */
-        fun onEditCheckIn(checkIn: CheckIn, note: String?, date: LocalDate) {
-            val timestamp =
-                if (date == checkIn.timestamp.atZone(clock.zone).toLocalDate()) {
-                    checkIn.timestamp
-                } else {
-                    date.atStartOfDay(clock.zone).toInstant()
+        fun onEditCheckIn(checkIn: CheckIn, note: String?, date: LocalDate, times: OutingTimes? = null) {
+            val zone = clock.zone
+            val sameDay = date == checkIn.timestamp.atZone(zone).toLocalDate()
+            val stored = OutingTimes.of(checkIn.timestamp, checkIn.endAt, zone)
+            val (timestamp, endAt) =
+                when {
+                    times != null && times != stored -> times.startOn(date, zone) to times.endOn(date, zone)
+                    times != null -> {
+                        val moved =
+                            if (sameDay) {
+                                checkIn.timestamp
+                            } else {
+                                date.atTime(checkIn.timestamp.atZone(zone).toLocalTime()).atZone(zone).toInstant()
+                            }
+                        moved to checkIn.endAt?.let { moved.plus(Duration.between(checkIn.timestamp, it)) }
+                    }
+                    sameDay -> checkIn.timestamp to null
+                    else -> date.atStartOfDay(zone).toInstant() to null
                 }
             viewModelScope.launch {
-                updateCheckIn(checkIn.copy(timestamp = timestamp, note = note))
+                updateCheckIn(checkIn.copy(timestamp = timestamp, note = note, endAt = endAt))
             }
         }
 

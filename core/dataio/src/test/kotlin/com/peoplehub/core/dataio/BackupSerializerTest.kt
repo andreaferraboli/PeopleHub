@@ -54,6 +54,7 @@ class BackupSerializerTest {
                             personId = "1",
                             timestamp = Instant.ofEpochMilli(1_700_000_500_000L),
                             note = "Coffee",
+                            endAt = Instant.ofEpochMilli(1_700_007_700_000L),
                         ),
                     ),
                 events =

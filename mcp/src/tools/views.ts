@@ -174,12 +174,27 @@ export async function requirePerson(ctx: ToolContext, id: string): Promise<Doc> 
 
 /* -------------------------------------------------------------- check-in e uscite */
 
-export function checkInView(c: Doc, tz: string) {
-  const at = num(c.at) ?? 0;
-  return { id: c.id, personId: str(c.personId), date: formatLocalDate(localDateOf(at, tz)), at: formatInstant(at, tz), note: strOrNull(c.note), outingId: str(c.outingId) };
+/** Fine dell'uscita in millis: solo se e' un numero dopo `at` (assente, null o non successiva = nessuna fine). */
+export function endAtMs(c: Doc, at: number): number | null {
+  const end = num(c.endAt);
+  return end !== null && end > at ? end : null;
 }
 
-/** Uscita = check-in che condividono outingId. Data, ora e nota dal primo check-in (sono uguali per costruzione). */
+export function checkInView(c: Doc, tz: string) {
+  const at = num(c.at) ?? 0;
+  const end = endAtMs(c, at);
+  return {
+    id: c.id,
+    personId: str(c.personId),
+    date: formatLocalDate(localDateOf(at, tz)),
+    at: formatInstant(at, tz),
+    endAt: end === null ? null : formatInstant(end, tz),
+    note: strOrNull(c.note),
+    outingId: str(c.outingId),
+  };
+}
+
+/** Uscita = check-in che condividono outingId. Data, ora, fine e nota dalle righe (sono uguali per costruzione). */
 export function groupOutings(checkIns: Doc[], people: Map<string, Doc>, tz: string) {
   const groups = new Map<string, Doc[]>();
   for (const c of checkIns) {
@@ -191,10 +206,13 @@ export function groupOutings(checkIns: Doc[], people: Map<string, Doc>, tz: stri
   return [...groups.entries()]
     .map(([outingId, rows]) => {
       const at = Math.max(...rows.map((r) => num(r.at) ?? 0));
+      const ends = rows.map((r) => endAtMs(r, at)).filter((e): e is number => e !== null);
+      const end = ends.length ? Math.max(...ends) : null;
       return {
         outingId: outingId.startsWith('single:') ? null : outingId,
         date: formatLocalDate(localDateOf(at, tz)),
         at: formatInstant(at, tz),
+        endAt: end === null ? null : formatInstant(end, tz),
         atMs: at,
         note: rows.map((r) => strOrNull(r.note)).find((n) => n !== null) ?? null,
         attendees: rows

@@ -58,6 +58,7 @@ and any other reader rely on them, and because a deleted id is never reused.
 | `at` | number (epoch millis) | |
 | `note` | string or null | |
 | `outingId` | string (UUID) | check-ins of the same outing share it; a check-in without it is an outing of its own |
+| `endAt` | number (epoch millis) or null | when the outing ended; same value on every check-in of the outing, like `at`. Must be after `at` and may fall on the next day (18:00 -> 07:30). Missing (documents written before it existed), null, or not after `at` = no end. Both writers keep the duration when they move `at` without a new end |
 
 ### `events/{id}`
 | Field | Type | Meaning |

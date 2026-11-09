@@ -3,6 +3,7 @@ package com.peoplehub.core.domain.usecase
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Outing
 import com.peoplehub.core.domain.model.OutingAttendee
+import com.peoplehub.core.domain.model.OutingTimes
 import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
 import io.mockk.coEvery
@@ -16,8 +17,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneOffset
 
 class OutingUseCasesTest {
@@ -64,6 +67,102 @@ class OutingUseCasesTest {
             assertEquals(setOf("1", "2"), byOuting.getValue("50").map { it.personId }.toSet())
             assertEquals(setOf("1", "2"), byOuting.getValue("51").map { it.personId }.toSet())
         }
+
+    @Test
+    fun `a meetup with a time range starts and ends each day at those times, past midnight on the next day`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            every { checkInRepository.newOutingId() } returns "60"
+            val recorded = slot<List<CheckIn>>()
+            coEvery { checkInRepository.recordCheckIns(capture(recorded)) } returns Unit
+            val useCase = RecordMeetupUseCase(checkInRepository, peopleRepository, clock)
+
+            useCase(
+                personIds = listOf("1", "2"),
+                days = listOf(day),
+                times = OutingTimes(start = LocalTime.of(18, 0), end = LocalTime.of(7, 30)),
+            )
+
+            val start = day.atTime(18, 0).toInstant(ZoneOffset.UTC)
+            val end = day.plusDays(1).atTime(7, 30).toInstant(ZoneOffset.UTC)
+            assertEquals(2, recorded.captured.size)
+            assertTrue(recorded.captured.all { it.timestamp == start && it.endAt == end && it.outingId == "60" })
+        }
+
+    @Test
+    fun `moving an outing keeps the duration of its end`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            val evening = day.atTime(21, 0).toInstant(ZoneOffset.UTC)
+            coEvery { checkInRepository.getOuting(OUTING_ID) } returns
+                outing(attendee(personId = "1", checkInId = "10"))
+                    .copy(timestamp = evening, endAt = evening.plus(Duration.ofHours(3)))
+            val moved = day.plusDays(1)
+            val useCase = UpdateOutingUseCase(checkInRepository, peopleRepository, clock)
+
+            val result = useCase(outingId = OUTING_ID, day = moved, personIds = listOf("1"))
+
+            assertTrue(result.isSuccess)
+            val start = moved.atTime(21, 0).toInstant(ZoneOffset.UTC)
+            coVerify {
+                checkInRepository.updateCheckIn(match { it.timestamp == start && it.endAt == start.plus(Duration.ofHours(3)) })
+            }
+        }
+
+    @Test
+    fun `an outing's time range can be rewritten or cleared`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            coEvery { checkInRepository.getOuting(OUTING_ID) } returns
+                outing(attendee(personId = "1", checkInId = "10")).copy(endAt = noon.plus(Duration.ofHours(2)))
+            val useCase = UpdateOutingUseCase(checkInRepository, peopleRepository, clock)
+
+            useCase(
+                outingId = OUTING_ID,
+                day = day,
+                personIds = listOf("1"),
+                times = OutingTimes(start = LocalTime.of(9, 0), end = LocalTime.of(11, 30)),
+            )
+            coVerify {
+                checkInRepository.updateCheckIn(
+                    match {
+                        it.timestamp == day.atTime(9, 0).toInstant(ZoneOffset.UTC) &&
+                            it.endAt == day.atTime(11, 30).toInstant(ZoneOffset.UTC)
+                    },
+                )
+            }
+
+            useCase(outingId = OUTING_ID, day = day, personIds = listOf("1"), clearEnd = true)
+            coVerify { checkInRepository.updateCheckIn(match { it.timestamp == noon && it.endAt == null }) }
+        }
+
+    @Test
+    fun `editing one person's row drops an end that is not after its start`() =
+        runTest {
+            val checkInRepository = mockk<CheckInRepository>(relaxed = true)
+            val peopleRepository = mockk<PeopleRepository>(relaxed = true)
+            coEvery { checkInRepository.getOuting(OUTING_ID) } returns outing(attendee(personId = "1", checkInId = "10"))
+            val useCase = UpdateCheckInUseCase(checkInRepository, peopleRepository)
+
+            useCase(CheckIn(id = "10", personId = "1", timestamp = noon, outingId = OUTING_ID, endAt = noon))
+
+            coVerify { checkInRepository.updateCheckIn(match { it.id == "10" && it.endAt == null }) }
+        }
+
+    @Test
+    fun `a time range ending at or before its start ends the next day`() {
+        val night = OutingTimes(start = LocalTime.of(18, 0), end = LocalTime.of(7, 30))
+        val morning = OutingTimes(start = LocalTime.of(9, 0), end = LocalTime.of(11, 30))
+
+        assertTrue(night.endsNextDay)
+        assertEquals(day.plusDays(1).atTime(7, 30).toInstant(ZoneOffset.UTC), night.endOn(day, ZoneOffset.UTC))
+        assertEquals(day.atTime(11, 30).toInstant(ZoneOffset.UTC), morning.endOn(day, ZoneOffset.UTC))
+        assertEquals(night, OutingTimes.of(night.startOn(day, ZoneOffset.UTC), night.endOn(day, ZoneOffset.UTC), ZoneOffset.UTC))
+        assertEquals(null, OutingTimes.of(noon, noon, ZoneOffset.UTC))
+    }
 
     @Test
     fun `updating an outing moves the people who stayed, drops the ones removed and adds the new ones`() =

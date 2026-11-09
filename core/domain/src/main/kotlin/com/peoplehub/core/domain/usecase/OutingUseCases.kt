@@ -2,10 +2,13 @@ package com.peoplehub.core.domain.usecase
 
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.Outing
+import com.peoplehub.core.domain.model.OutingTimes
+import com.peoplehub.core.domain.model.validEndAfter
 import com.peoplehub.core.domain.repository.CheckInRepository
 import com.peoplehub.core.domain.repository.PeopleRepository
 import kotlinx.coroutines.flow.Flow
 import java.time.Clock
+import java.time.Duration
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -35,7 +38,12 @@ class GetOutingUseCase
  * removed are deleted, and freshly added people get a new row under the same outing id. Everyone
  * touched on either side (before or after) then has their denormalised last-seen timestamp
  * re-derived, so removing the person you saw most recently rolls the cadence tracker back correctly.
- * The outing keeps its time of day when it moves to another day.
+ * The outing keeps its time of day when it moves to another day, and an end it already had keeps the
+ * same duration (so 18:00 -> 07:30 the next morning stays a night out).
+ *
+ * [times] replaces the outing's time range: it starts at `times.start` on [day] and ends at `times.end`
+ * (the next day when that is at or before the start). Without it the time of day and the end are kept
+ * as just described, unless [clearEnd] drops the end.
  *
  * Fails when [personIds] is empty (an outing without attendees is not an outing — delete it instead
  * via [DeleteOutingUseCase]) or when the outing no longer exists.
@@ -52,6 +60,8 @@ class UpdateOutingUseCase
             day: LocalDate,
             personIds: List<String>,
             note: String? = null,
+            times: OutingTimes? = null,
+            clearEnd: Boolean = false,
         ): Result<Unit> =
             runCatching {
                 val wanted = personIds.distinct()
@@ -62,7 +72,14 @@ class UpdateOutingUseCase
                 // Keep the outing's own time of day (noon for outings recorded in the app, the exact
                 // moment for check-ins written by the MCP), so moving it to another day loses nothing.
                 val timeOfDay = outing.timestamp.atZone(clock.zone).toLocalTime()
-                val timestamp = day.atTime(timeOfDay).atZone(clock.zone).toInstant()
+                val timestamp = times?.startOn(day, clock.zone) ?: day.atTime(timeOfDay).atZone(clock.zone).toInstant()
+                val oldEnd = outing.endAt.validEndAfter(outing.timestamp)
+                val endAt =
+                    when {
+                        times != null -> times.endOn(day, clock.zone)
+                        clearEnd || oldEnd == null -> null
+                        else -> timestamp.plus(Duration.between(outing.timestamp, oldEnd))
+                    }
                 val cleanNote = note?.trim()?.takeIf(String::isNotBlank)
                 val existingByPerson = outing.attendees.associateBy { it.personId }
 
@@ -79,6 +96,7 @@ class UpdateOutingUseCase
                                 timestamp = timestamp,
                                 note = cleanNote,
                                 outingId = outingId,
+                                endAt = endAt,
                             ),
                         )
                     } else {
@@ -89,6 +107,7 @@ class UpdateOutingUseCase
                                 timestamp = timestamp,
                                 note = cleanNote,
                                 outingId = outingId,
+                                endAt = endAt,
                             ),
                         )
                     }

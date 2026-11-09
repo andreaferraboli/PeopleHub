@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.peoplehub.core.domain.model.CheckIn
 import com.peoplehub.core.domain.model.CheckInStatus
 import com.peoplehub.core.domain.model.CheckInThreshold
+import com.peoplehub.core.domain.model.OutingTimes
 import com.peoplehub.core.domain.model.Interest
 import com.peoplehub.core.domain.model.Person
 import com.peoplehub.core.domain.model.PersonEvent
@@ -74,6 +75,8 @@ import com.peoplehub.core.ui.components.EmptyView
 import com.peoplehub.core.ui.components.GlassIconButton
 import com.peoplehub.core.ui.components.GlassPanel
 import com.peoplehub.core.ui.components.Hairline
+import com.peoplehub.core.ui.components.OutingTimeFields
+import com.peoplehub.core.ui.components.outingTimeRangeLabel
 import com.peoplehub.core.ui.components.PeopleHubTopBar
 import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.SegmentedPill
@@ -97,13 +100,16 @@ import com.peoplehub.feature.people.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 private val BirthdayFormatter = DateTimeFormatter.ofPattern("MMMM d")
 private val MonthFormatter = DateTimeFormatter.ofPattern("MMM")
 private val HistoryCaptionFormatter = DateTimeFormatter.ofPattern("EEEE • yyyy • HH:mm")
+private val HistoryDayFormatter = DateTimeFormatter.ofPattern("EEEE • yyyy")
 
 /** Names up to this length get the big display serif; longer ones drop to the cover size. */
 private const val DISPLAY_NAME_MAX_LENGTH = 14
@@ -114,6 +120,8 @@ private const val MAX_RISE_INDEX = 6
 private fun Instant.localDate(): LocalDate = atZone(ZoneId.systemDefault()).toLocalDate()
 
 private fun Instant.formatHistoryCaption(): String = atZone(ZoneId.systemDefault()).format(HistoryCaptionFormatter)
+
+private fun Instant.formatHistoryDay(): String = atZone(ZoneId.systemDefault()).format(HistoryDayFormatter)
 
 private fun LocalDate.monthLabel(): String = format(MonthFormatter).trimEnd('.')
 
@@ -307,8 +315,8 @@ fun PersonDetailScreen(
 @Composable
 internal fun PersonDetailContent(
     data: PersonDetailData,
-    onCheckIn: (String?, LocalDate, LocalDate) -> Unit,
-    onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
+    onCheckIn: (String?, LocalDate, LocalDate, OutingTimes?) -> Unit,
+    onEditCheckIn: (CheckIn, String?, LocalDate, OutingTimes?) -> Unit,
     onDeleteCheckIns: (List<String>) -> Unit,
     onAppendNote: (String) -> Unit,
     onEventClick: (String) -> Unit,
@@ -361,9 +369,9 @@ internal fun PersonDetailContent(
     if (showCheckInDialog) {
         CheckInDialog(
             personName = data.person.firstName,
-            onConfirm = { note, start, end ->
+            onConfirm = { note, start, end, times ->
                 showCheckInDialog = false
-                onCheckIn(note, start, end)
+                onCheckIn(note, start, end, times)
             },
             onDismiss = { showCheckInDialog = false },
         )
@@ -576,7 +584,7 @@ private fun InterestRow(interest: Interest) {
 @Composable
 private fun CheckInTab(
     data: PersonDetailData,
-    onEditCheckIn: (CheckIn, String?, LocalDate) -> Unit,
+    onEditCheckIn: (CheckIn, String?, LocalDate, OutingTimes?) -> Unit,
     onDeleteCheckIns: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -650,9 +658,9 @@ private fun CheckInTab(
     editing?.let { checkIn ->
         CheckInEditDialog(
             checkIn = checkIn,
-            onSave = { note, date ->
+            onSave = { note, date, times ->
                 editing = null
-                onEditCheckIn(checkIn, note, date)
+                onEditCheckIn(checkIn, note, date, times)
             },
             onDelete = {
                 editing = null
@@ -792,7 +800,15 @@ private fun CheckInRow(
             }
             DateTile(month = day.monthLabel(), day = day.dayOfMonth.toString())
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
-                CapsLabel(text = checkIn.timestamp.formatHistoryCaption())
+                val end = checkIn.endAt
+                CapsLabel(
+                    text =
+                        if (end == null) {
+                            checkIn.timestamp.formatHistoryCaption()
+                        } else {
+                            "${checkIn.timestamp.formatHistoryDay()} • ${outingTimeRangeLabel(checkIn.timestamp, end)}"
+                        },
+                )
                 val note = checkIn.note
                 if (!note.isNullOrBlank()) {
                     Text(
@@ -973,11 +989,12 @@ private fun ReminderRow(
 @Composable
 private fun CheckInDialog(
     personName: String,
-    onConfirm: (String?, LocalDate, LocalDate) -> Unit,
+    onConfirm: (String?, LocalDate, LocalDate, OutingTimes?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val today = remember { LocalDate.now() }
     var note by remember { mutableStateOf("") }
+    var times by remember { mutableStateOf<OutingTimes?>(null) }
     var startDate by remember { mutableStateOf(today) }
     var endDate by remember { mutableStateOf(today) }
     var multiDay by remember { mutableStateOf(false) }
@@ -1028,12 +1045,18 @@ private fun CheckInDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                OutingTimeFields(
+                    times = times,
+                    onTimesChange = { times = it },
+                    defaultStart = LocalTime.NOON,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         },
         confirmButton = {
             TextButton(onClick = {
                 val end = if (multiDay) endDate else startDate
-                onConfirm(note.ifBlank { null }, startDate, end)
+                onConfirm(note.ifBlank { null }, startDate, end, times)
             }) {
                 Text(stringResource(R.string.checkin_confirm))
             }
@@ -1106,18 +1129,20 @@ private fun MeetupDatePickerDialog(
 
 private val CHECK_IN_DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
 
-/** Edits an existing check-in's note and day, or deletes it outright. */
+/** Edits an existing check-in's note, day and time range, or deletes it outright. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CheckInEditDialog(
     checkIn: CheckIn,
-    onSave: (String?, LocalDate) -> Unit,
+    onSave: (String?, LocalDate, OutingTimes?) -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val today = remember { LocalDate.now() }
-    val initialDate = remember(checkIn.id) { checkIn.timestamp.atZone(ZoneId.systemDefault()).toLocalDate() }
+    val zone = remember { ZoneId.systemDefault() }
+    val initialDate = remember(checkIn.id) { checkIn.timestamp.atZone(zone).toLocalDate() }
     var note by remember(checkIn.id) { mutableStateOf(checkIn.note.orEmpty()) }
+    var times by remember(checkIn.id) { mutableStateOf(OutingTimes.of(checkIn.timestamp, checkIn.endAt, zone)) }
     var selectedDate by remember(checkIn.id) { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(false) }
     val spacing = PeopleHubTheme.spacing
@@ -1145,6 +1170,12 @@ private fun CheckInEditDialog(
                     icon = VellutoIcons.Calendar,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                OutingTimeFields(
+                    times = times,
+                    onTimesChange = { times = it },
+                    defaultStart = checkIn.timestamp.atZone(zone).toLocalTime().truncatedTo(ChronoUnit.MINUTES),
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 VellutoButton(
                     text = stringResource(R.string.checkin_delete_action),
                     onClick = onDelete,
@@ -1155,7 +1186,7 @@ private fun CheckInEditDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(note.ifBlank { null }, selectedDate) }) {
+            TextButton(onClick = { onSave(note.ifBlank { null }, selectedDate, times) }) {
                 Text(stringResource(R.string.action_save))
             }
         },
@@ -1289,8 +1320,8 @@ private fun PersonDetailPreview(dark: Boolean) {
         VellutoBackground {
             PersonDetailContent(
                 data = previewDetailData(),
-                onCheckIn = { _, _, _ -> },
-                onEditCheckIn = { _, _, _ -> },
+                onCheckIn = { _, _, _, _ -> },
+                onEditCheckIn = { _, _, _, _ -> },
                 onDeleteCheckIns = {},
                 onAppendNote = {},
                 onEventClick = {},

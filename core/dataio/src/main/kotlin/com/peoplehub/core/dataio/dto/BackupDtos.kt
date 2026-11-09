@@ -50,6 +50,7 @@ data class InterestDto(
  *
  * [outingId] groups the check-ins recorded for one shared outing. It is missing (or `0`) in files
  * written before outings existed; the import then rebuilds the groups from the day and the note.
+ * [endEpochMillis] is when the outing ended, `null` when it has no end (and in older files).
  */
 @Serializable
 data class CheckInDto(
@@ -61,6 +62,7 @@ data class CheckInDto(
     val note: String? = null,
     @Serializable(with = FlexibleIdSerializer::class)
     val outingId: String = "",
+    val endEpochMillis: Long? = null,
 )
 
 /** Serialization-friendly mirror of the domain `PersonEvent`; [dateTime] is an ISO local date-time string. */
