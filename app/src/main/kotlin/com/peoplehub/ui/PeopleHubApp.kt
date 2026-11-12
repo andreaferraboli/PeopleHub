@@ -29,6 +29,7 @@ import com.peoplehub.core.ui.components.LocalNavHazeState
 import com.peoplehub.core.ui.components.NavBarItem
 import com.peoplehub.core.ui.components.VellutoNavBar
 import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.navigation.DashboardRoute
 import com.peoplehub.navigation.PeopleHubNavHost
 import com.peoplehub.navigation.TopLevelDestination
 import com.peoplehub.update.UpdatePrompt
@@ -99,6 +100,15 @@ private fun NavDestination?.isOn(destination: TopLevelDestination): Boolean =
     this?.hierarchy?.any { it.hasRoute(destination.route::class) } == true
 
 private fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
+    val startId = graph.findStartDestination().id
+    // The dashboard is the start destination: a non-inclusive popUpTo(start, saveState) maps the
+    // state of the tab being left onto the start destination's id too, so navigate(start,
+    // restoreState) would restore that tab and the tap would look ignored. Going home is just
+    // popping back to it, still saving the left tab's state so tapping it again restores it.
+    if (destination.route == DashboardRoute) {
+        popBackStack(startId, inclusive = false, saveState = true)
+        return
+    }
     navigate(destination.route) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
