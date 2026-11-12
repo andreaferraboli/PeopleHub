@@ -82,3 +82,8 @@
 - Test: nuovi in core:domain (OutingUseCasesTest), core:data (DocumentMapperTest, RepositoriesTest), core:dataio (BackupSerializerTest); MCP un test emulatore nuovo. Verifica locale: `npm test` 71/71 (20 saltati senza emulatore), `npm run test:emu` 91/91, typecheck, lint e build:node exit 0. Gradle non lanciato sul server: compilazione e test Android affidati alla CI della PR.
 - Non provato: l'app non e' stata provata su dispositivo (time picker, layout delle card, dialog piu alti sui telefoni piccoli).
 - La release automatica del merge usa la patch successiva all'ultima release (v1.7.5), non il fallback 1.9.0: per 1.9.0 serve il workflow manuale con l'input version.
+
+## 2026-11-12 - Tab Reflect della navbar che a volte non risponde
+- Il tap sulla prima voce della navbar (Reflect, la dashboard) a volte non portava alla home: navigateToTopLevel faceva popUpTo(start, saveState) e poi navigate(start, restoreState). Con un popUpTo non inclusivo Navigation mappa lo stato salvato della tab lasciata anche sull'id della destinazione di partenza, quindi il navigate ripristinava la tab appena lasciata (o, con una mappatura vuota rimasta da prima, non faceva nulla). Dipende dalla storia delle tab, da qui il 'a volte'. Verificato sul sorgente di NavControllerImpl (popBackStackInternal e navigate).
+- Fix in app/src/main/kotlin/com/peoplehub/ui/PeopleHubApp.kt: per la dashboard si fa solo popBackStack(start, inclusive=false, saveState=true), le altre tab restano invariate e lo stato della tab lasciata resta salvato.
+- Verifica: compilazione e test nella CI della PR (sul server non c'e l'SDK Android). Mai provato su device.
