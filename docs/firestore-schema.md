@@ -108,6 +108,11 @@ deleted (tombstone). Both writers recompute the reminder the same way:
   freshly jittered interval.
 - Otherwise `lastFiredAt` is not touched by history edits. A completion in the future is refused.
 
+A third copy of these rules runs in the Finance Hub connector: `finance-hub/mcp/src/people` is a
+verbatim copy of `mcp/src` (tools prefixed `people_`, same documents, same sync fields). After
+changing the rules here, in `ReminderScheduling.kt` and in `mcp/src/domain/reminders.ts`, refresh it
+with `bash finance-hub/mcp/scripts/sync-people.sh` and redeploy Finance Hub's MCP server.
+
 On `reminders`, the app lets the user set `nextFireAt` by hand (start of the chosen local day); a date
 set that way wins over the cadence recompute on that save.
 

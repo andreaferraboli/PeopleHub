@@ -87,3 +87,8 @@
 - Il tap sulla prima voce della navbar (Reflect, la dashboard) a volte non portava alla home: navigateToTopLevel faceva popUpTo(start, saveState) e poi navigate(start, restoreState). Con un popUpTo non inclusivo Navigation mappa lo stato salvato della tab lasciata anche sull'id della destinazione di partenza, quindi il navigate ripristinava la tab appena lasciata (o, con una mappatura vuota rimasta da prima, non faceva nulla). Dipende dalla storia delle tab, da qui il 'a volte'. Verificato sul sorgente di NavControllerImpl (popBackStackInternal e navigate).
 - Fix in app/src/main/kotlin/com/peoplehub/ui/PeopleHubApp.kt: per la dashboard si fa solo popBackStack(start, inclusive=false, saveState=true), le altre tab restano invariate e lo stato della tab lasciata resta salvato.
 - Verifica: compilazione e test nella CI della PR (sul server non c'e l'SDK Android). Mai provato su device.
+
+## 2026-11-13 - Terza copia della logica MCP nel connettore di Finance Hub
+- docs/firestore-schema.md: nota che finance-hub/mcp/src/people e una copia identica di mcp/src (tool people_ sul connettore Finance Hub) e che dopo ogni modifica alle regole dei promemoria va risincronizzata con finance-hub/mcp/scripts/sync-people.sh.
+- Solo documentazione, commit con [skip ci] per non pubblicare un APK. Il lavoro vero e nella PR #52 di finance-hub (mcp 2.1.0, deploy fatto, verify.sh --read verde).
+- Il servizio peoplehub-mcp standalone resta acceso e intatto.
