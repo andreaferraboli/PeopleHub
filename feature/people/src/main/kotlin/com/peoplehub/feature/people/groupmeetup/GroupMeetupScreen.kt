@@ -3,11 +3,11 @@ package com.peoplehub.feature.people.groupmeetup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -52,7 +52,8 @@ import com.peoplehub.core.ui.components.PersonAvatar
 import com.peoplehub.core.ui.components.SearchField
 import com.peoplehub.core.ui.components.SettingsCard
 import com.peoplehub.core.ui.components.ToggleChip
-import com.peoplehub.core.ui.components.UiStateContent
+import com.peoplehub.core.ui.components.ErrorView
+import com.peoplehub.core.ui.components.LoadingView
 import com.peoplehub.core.ui.components.VellutoBackground
 import com.peoplehub.core.ui.components.VellutoButton
 import com.peoplehub.core.ui.components.VellutoButtonStyle
@@ -62,6 +63,7 @@ import com.peoplehub.core.ui.modifier.lightEdge
 import com.peoplehub.core.ui.modifier.riseIn
 import com.peoplehub.core.ui.modifier.safeBottomBarPadding
 import com.peoplehub.core.ui.theme.PeopleHubTheme
+import com.peoplehub.core.ui.state.UiState
 import com.peoplehub.core.ui.theme.VellutoShapes
 import com.peoplehub.feature.people.R
 import java.time.Instant
@@ -70,6 +72,9 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 private val MeetupDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy")
+
+/** Room given to the loading spinner under the form, now that the list no longer fills the rest of the screen. */
+private val StateBlockHeight = 200.dp
 
 /**
  * "Record an outing" in both of its modes: select everyone you saw and log one meetup for each of them
@@ -147,53 +152,58 @@ fun GroupMeetupScreen(
                 )
             },
         ) { innerPadding ->
-            Column(
-                modifier =
-                    Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize()
-                        .padding(horizontal = spacing.gutter),
-                verticalArrangement = Arrangement.spacedBy(spacing.m),
+            // One list for the whole page: the details card and the search scroll away with the
+            // people, instead of the people scrolling inside the little space left under them.
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding =
+                    PaddingValues(
+                        top = innerPadding.calculateTopPadding() + spacing.xs,
+                        bottom = innerPadding.calculateBottomPadding() + spacing.l,
+                        start = spacing.gutter,
+                        end = spacing.gutter,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(spacing.s),
             ) {
-                MeetupDetailsCard(
-                    form = form,
-                    attendeeNames = selectedNames,
-                    onToggleMultiDay = viewModel::onToggleMultiDay,
-                    onStartDate = viewModel::onStartDate,
-                    onEndDate = viewModel::onEndDate,
-                    onTimesChange = viewModel::onTimesChange,
-                    onNoteChange = viewModel::onNoteChange,
-                    modifier = Modifier.padding(top = spacing.xs).riseIn(0),
-                )
-                SearchField(
-                    value = query,
-                    onValueChange = {
-                        query = it
-                        viewModel.onQueryChange(it)
-                    },
-                    placeholder = stringResource(R.string.group_meetup_search),
-                    modifier = Modifier.riseIn(1),
-                )
-                UiStateContent(
-                    state = peopleState,
-                    emptyContent = {
-                        Text(
-                            text = stringResource(R.string.group_meetup_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = c.text2,
-                            modifier = Modifier.padding(horizontal = spacing.xxs),
-                        )
-                    },
-                ) { people ->
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = spacing.xxs, bottom = spacing.l),
-                        verticalArrangement = Arrangement.spacedBy(spacing.s),
-                    ) {
-                        items(people, key = { it.id }) { person ->
+                item(key = "details") {
+                    MeetupDetailsCard(
+                        form = form,
+                        attendeeNames = selectedNames,
+                        onToggleMultiDay = viewModel::onToggleMultiDay,
+                        onStartDate = viewModel::onStartDate,
+                        onEndDate = viewModel::onEndDate,
+                        onTimesChange = viewModel::onTimesChange,
+                        onNoteChange = viewModel::onNoteChange,
+                        modifier = Modifier.padding(bottom = spacing.xs).riseIn(0),
+                    )
+                }
+                item(key = "search") {
+                    SearchField(
+                        value = query,
+                        onValueChange = {
+                            query = it
+                            viewModel.onQueryChange(it)
+                        },
+                        placeholder = stringResource(R.string.group_meetup_search),
+                        modifier = Modifier.padding(bottom = spacing.xxs).riseIn(1),
+                    )
+                }
+                when (val state = peopleState) {
+                    is UiState.Success ->
+                        items(state.data, key = { it.id }) { person ->
                             PersonPickRow(person = person, onToggle = { viewModel.onToggle(person.id) })
                         }
-                    }
+                    UiState.Loading -> item(key = "loading") { LoadingView(Modifier.height(StateBlockHeight)) }
+                    is UiState.Error -> item(key = "error") { ErrorView(message = state.message) }
+                    UiState.Empty ->
+                        item(key = "empty") {
+                            Text(
+                                text = stringResource(R.string.group_meetup_empty),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = c.text2,
+                                modifier = Modifier.padding(horizontal = spacing.xxs),
+                            )
+                        }
                 }
             }
         }

@@ -92,3 +92,9 @@
 - docs/firestore-schema.md: nota che finance-hub/mcp/src/people e una copia identica di mcp/src (tool people_ sul connettore Finance Hub) e che dopo ogni modifica alle regole dei promemoria va risincronizzata con finance-hub/mcp/scripts/sync-people.sh.
 - Solo documentazione, commit con [skip ci] per non pubblicare un APK. Il lavoro vero e nella PR #52 di finance-hub (mcp 2.1.0, deploy fatto, verify.sh --read verde).
 - Il servizio peoplehub-mcp standalone resta acceso e intatto.
+
+## 2026-11-15 - Uscite e dettaglio persona: scorre tutta la pagina
+- Modifica/Registra uscita (GroupMeetupScreen): la lista delle persone scorreva dentro lo spazio rimasto sotto la scheda della data e la ricerca. Ora scheda, ricerca e persone sono un'unica LazyColumn che scorre con la pagina; il bottone Salva resta fisso in basso.
+- Dettaglio persona (PersonDetailScreen): stesso difetto, le tab (Info, Check-in, Correlati, Promemoria) scorrevano sotto hero, bottone e selettore fissi. Ora tutto e una LazyColumn; le tab sono estensioni di LazyListScope, lo stato della selezione multipla dei check-in sta in CheckInHistoryState a livello di pagina e la barra di selezione resta fissa in alto quando attiva.
+- Controllate le altre schermate con liste (Dashboard, Persone, Compleanni, Eventi, Promemoria, Calendario uscite, Solo compleanni, Aggiungi compleanni): sono gia liste a pagina intera.
+- Verifica: niente SDK Android sul server, compilazione e test affidati alla CI della PR. Mai provata su device.

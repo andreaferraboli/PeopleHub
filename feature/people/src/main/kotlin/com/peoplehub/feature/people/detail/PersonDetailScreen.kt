@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -38,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -327,42 +329,66 @@ internal fun PersonDetailContent(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showCheckInDialog by remember { mutableStateOf(false) }
     var showAppendNoteDialog by remember { mutableStateOf(false) }
+    val history = remember { CheckInHistoryState() }
+    history.prune(data.history.map { it.id }.toSet())
     val spacing = PeopleHubTheme.spacing
 
     Column(modifier = modifier.fillMaxSize()) {
-        DetailHero(data = data, modifier = Modifier.riseIn(0))
-        VellutoButton(
-            text = stringResource(R.string.detail_seen_today_button, data.person.firstName),
-            onClick = { showCheckInDialog = true },
-            icon = VellutoIcons.Check,
-            breathing = data.status == CheckInStatus.OVERDUE,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.gutter, vertical = spacing.m)
-                    .riseIn(1),
-        )
-        SegmentedPill(
-            options = detailTabs().map { stringResource(it) },
-            selectedIndex = selectedTab,
-            onSelect = { selectedTab = it },
-            modifier =
-                Modifier
-                    .padding(horizontal = spacing.gutter)
-                    .padding(bottom = spacing.xs)
-                    .riseIn(2),
-        )
-        when (selectedTab) {
-            0 -> InfoTab(data, onAddNote = { showAppendNoteDialog = true }, Modifier.weight(1f))
-            1 -> CheckInTab(data, onEditCheckIn, onDeleteCheckIns, Modifier.weight(1f))
-            2 -> RelatedTab(data, onEventClick, Modifier.weight(1f))
-            else ->
-                RemindersTab(
-                    data = data,
-                    onAddReminder = { onAddReminder(data.person.id) },
-                    onEditReminder = onEditReminder,
-                    modifier = Modifier.weight(1f),
+        // Pinned above the page while picking check-ins, so the count and the delete action stay
+        // reachable however far down the history the user has scrolled.
+        if (history.selectionMode) {
+            SelectionBar(
+                count = history.selectedIds.size,
+                onDelete = { if (history.selectedIds.isNotEmpty()) history.pendingDelete = history.selectedIds.toList() },
+                onCancel = history::clearSelection,
+            )
+        }
+        // One list for the whole page: the hero, the action and the tab switch scroll away with the
+        // tab's content, instead of the content scrolling inside the space left under them.
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentPadding = PaddingValues(bottom = spacing.section),
+        ) {
+            item(key = "hero") { DetailHero(data = data, modifier = Modifier.riseIn(0)) }
+            item(key = "seen-today") {
+                VellutoButton(
+                    text = stringResource(R.string.detail_seen_today_button, data.person.firstName),
+                    onClick = { showCheckInDialog = true },
+                    icon = VellutoIcons.Check,
+                    breathing = data.status == CheckInStatus.OVERDUE,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.gutter, vertical = spacing.m)
+                            .riseIn(1),
                 )
+            }
+            item(key = "tabs") {
+                SegmentedPill(
+                    options = detailTabs().map { stringResource(it) },
+                    selectedIndex = selectedTab,
+                    onSelect = {
+                        selectedTab = it
+                        history.clearSelection()
+                    },
+                    modifier =
+                        Modifier
+                            .padding(horizontal = spacing.gutter)
+                            .padding(bottom = spacing.xs)
+                            .riseIn(2),
+                )
+            }
+            when (selectedTab) {
+                0 -> infoTabItems(data, onAddNote = { showAppendNoteDialog = true })
+                1 -> checkInTabItems(data, history)
+                2 -> relatedTabItems(data, onEventClick)
+                else ->
+                    remindersTabItems(
+                        data = data,
+                        onAddReminder = { onAddReminder(data.person.id) },
+                        onEditReminder = onEditReminder,
+                    )
+            }
         }
     }
 
@@ -386,13 +412,84 @@ internal fun PersonDetailContent(
             onDismiss = { showAppendNoteDialog = false },
         )
     }
+
+    history.editing?.let { checkIn ->
+        CheckInEditDialog(
+            checkIn = checkIn,
+            onSave = { note, date, times ->
+                history.editing = null
+                onEditCheckIn(checkIn, note, date, times)
+            },
+            onDelete = {
+                history.editing = null
+                history.pendingDelete = listOf(checkIn.id)
+            },
+            onDismiss = { history.editing = null },
+        )
+    }
+
+    history.pendingDelete?.let { ids ->
+        AlertDialog(
+            onDismissRequest = { history.pendingDelete = null },
+            title = { Text(stringResource(R.string.checkin_delete_title)) },
+            text = { Text(stringResource(R.string.checkin_delete_message, ids.size)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    history.pendingDelete = null
+                    history.clearSelection()
+                    onDeleteCheckIns(ids)
+                }) { Text(stringResource(R.string.checkin_delete_confirm), color = PeopleHubTheme.colors.err) }
+            },
+            dismissButton = {
+                TextButton(onClick = { history.pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
 }
 
-/** Padding shared by the scrolling tab bodies: gutter at the sides, room to breathe at the bottom. */
+/**
+ * The check-in tab's local UI state: the multi-select (ids, so it survives a reload of the history),
+ * the row being edited and the ids awaiting the delete confirmation. It lives with the page, not with
+ * the tab, because the tab is now a run of items in the page's list and its dialogs sit beside it.
+ */
+@Stable
+private class CheckInHistoryState {
+    var selectionMode by mutableStateOf(false)
+    var selectedIds by mutableStateOf(emptySet<String>())
+    var editing by mutableStateOf<CheckIn?>(null)
+    var pendingDelete by mutableStateOf<List<String>?>(null)
+
+    fun clearSelection() {
+        selectionMode = false
+        selectedIds = emptySet()
+    }
+
+    fun toggle(id: String) {
+        selectedIds = if (id in selectedIds) selectedIds - id else selectedIds + id
+    }
+
+    /** Drops ids that no longer exist (e.g. after a deletion) and leaves selection mode once empty. */
+    fun prune(existing: Set<String>) {
+        if (selectedIds.any { it !in existing }) {
+            selectedIds = selectedIds intersect existing
+        }
+        if (selectionMode && selectedIds.isEmpty()) {
+            selectionMode = false
+        }
+    }
+}
+
+/**
+ * Spacing of one item of a tab inside the page's list: gutter at the sides and a gap above it, wide
+ * for the first item under the tab switch and for the Info tab's cards ([wide]), tight between rows.
+ */
 @Composable
-private fun tabContentPadding(): PaddingValues {
+private fun Modifier.tabItem(
+    first: Boolean = false,
+    wide: Boolean = false,
+): Modifier {
     val spacing = PeopleHubTheme.spacing
-    return PaddingValues(start = spacing.gutter, end = spacing.gutter, top = spacing.ml, bottom = spacing.section)
+    return padding(horizontal = spacing.gutter).padding(top = if (first || wide) spacing.ml else spacing.sm)
 }
 
 /**
@@ -469,91 +566,85 @@ private fun DetailHero(
     }
 }
 
-@Composable
-private fun InfoTab(
+/** The Info tab: next birthday, interests and notes, as items of the page's list. */
+private fun LazyListScope.infoTabItems(
     data: PersonDetailData,
     onAddNote: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    val c = PeopleHubTheme.colors
-    val spacing = PeopleHubTheme.spacing
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = tabContentPadding(),
-        verticalArrangement = Arrangement.spacedBy(spacing.ml),
-    ) {
-        data.nextBirthday?.let { birthday ->
-            item(key = "birthday") {
-                SettingsCard(
-                    title = stringResource(R.string.detail_birthday),
-                    icon = VellutoIcons.Cake,
-                    modifier = Modifier.riseIn(3),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(spacing.ml),
-                    ) {
-                        DateTile(
-                            month = birthday.birthday.monthLabel(),
-                            day = birthday.birthday.dayOfMonth.toString(),
-                        )
-                        Column(verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
-                            Text(
-                                text = birthday.birthday.format(BirthdayFormatter),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = c.text,
-                            )
-                            birthday.turningAge?.let { age ->
-                                Text(
-                                    text = stringResource(R.string.detail_turns, age),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = c.text2,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (data.person.interests.isNotEmpty()) {
-            item(key = "interests") {
-                SettingsCard(
-                    title = stringResource(R.string.detail_interests),
-                    icon = VellutoIcons.Sparkles,
-                    modifier = Modifier.riseIn(4),
-                ) {
-                    Column {
-                        data.person.interests.forEachIndexed { index, interest ->
-                            if (index > 0) Hairline()
-                            InterestRow(interest)
-                        }
-                    }
-                }
-            }
-        }
-        item(key = "notes") {
+    data.nextBirthday?.let { birthday ->
+        item(key = "birthday") {
+            val c = PeopleHubTheme.colors
+            val spacing = PeopleHubTheme.spacing
             SettingsCard(
-                title = stringResource(R.string.detail_notes),
-                icon = VellutoIcons.Pencil,
-                modifier = Modifier.riseIn(5),
+                title = stringResource(R.string.detail_birthday),
+                icon = VellutoIcons.Cake,
+                modifier = Modifier.tabItem(wide = true).riseIn(3),
             ) {
-                if (data.person.notes.isNotBlank()) {
-                    Text(data.person.notes, style = MaterialTheme.typography.bodyLarge, color = c.text)
-                } else {
-                    Text(
-                        text = stringResource(R.string.detail_notes_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = c.text2,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing.ml),
+                ) {
+                    DateTile(
+                        month = birthday.birthday.monthLabel(),
+                        day = birthday.birthday.dayOfMonth.toString(),
                     )
+                    Column(verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+                        Text(
+                            text = birthday.birthday.format(BirthdayFormatter),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = c.text,
+                        )
+                        birthday.turningAge?.let { age ->
+                            Text(
+                                text = stringResource(R.string.detail_turns, age),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = c.text2,
+                            )
+                        }
+                    }
                 }
-                VellutoButton(
-                    text = stringResource(R.string.detail_add_note),
-                    onClick = onAddNote,
-                    style = VellutoButtonStyle.Soft,
-                    icon = VellutoIcons.Plus,
-                    modifier = Modifier.fillMaxWidth(),
+            }
+        }
+    }
+    if (data.person.interests.isNotEmpty()) {
+        item(key = "interests") {
+            SettingsCard(
+                title = stringResource(R.string.detail_interests),
+                icon = VellutoIcons.Sparkles,
+                modifier = Modifier.tabItem(wide = true).riseIn(4),
+            ) {
+                Column {
+                    data.person.interests.forEachIndexed { index, interest ->
+                        if (index > 0) Hairline()
+                        InterestRow(interest)
+                    }
+                }
+            }
+        }
+    }
+    item(key = "notes") {
+        val c = PeopleHubTheme.colors
+        SettingsCard(
+            title = stringResource(R.string.detail_notes),
+            icon = VellutoIcons.Pencil,
+            modifier = Modifier.tabItem(wide = true).riseIn(5),
+        ) {
+            if (data.person.notes.isNotBlank()) {
+                Text(data.person.notes, style = MaterialTheme.typography.bodyLarge, color = c.text)
+            } else {
+                Text(
+                    text = stringResource(R.string.detail_notes_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = c.text2,
                 )
             }
+            VellutoButton(
+                text = stringResource(R.string.detail_add_note),
+                onClick = onAddNote,
+                style = VellutoButtonStyle.Soft,
+                icon = VellutoIcons.Plus,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -581,111 +672,41 @@ private fun InterestRow(interest: Interest) {
     }
 }
 
-@Composable
-private fun CheckInTab(
+/** The Check-in tab: the cadence panel, then the history, one row per check-in (tap to edit, long press to select). */
+private fun LazyListScope.checkInTabItems(
     data: PersonDetailData,
-    onEditCheckIn: (CheckIn, String?, LocalDate, OutingTimes?) -> Unit,
-    onDeleteCheckIns: (List<String>) -> Unit,
-    modifier: Modifier = Modifier,
+    history: CheckInHistoryState,
 ) {
-    var selectionMode by remember { mutableStateOf(false) }
-    var selectedIds by remember { mutableStateOf(emptySet<String>()) }
-    var editing by remember { mutableStateOf<CheckIn?>(null) }
-    var pendingDelete by remember { mutableStateOf<List<String>?>(null) }
-    val spacing = PeopleHubTheme.spacing
-
-    // Selection is keyed by id; drop any ids that no longer exist (e.g. after a deletion).
-    val historyIds = data.history.map { it.id }.toSet()
-    if (selectedIds.any { it !in historyIds }) {
-        selectedIds = selectedIds intersect historyIds
-    }
-    if (selectionMode && selectedIds.isEmpty()) {
-        selectionMode = false
-    }
-
-    fun clearSelection() {
-        selectionMode = false
-        selectedIds = emptySet()
-    }
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        if (selectionMode) {
-            SelectionBar(
-                count = selectedIds.size,
-                onDelete = { if (selectedIds.isNotEmpty()) pendingDelete = selectedIds.toList() },
-                onCancel = ::clearSelection,
+    item(key = "cadence") { CadencePanel(data, Modifier.tabItem(first = true).riseIn(3)) }
+    if (data.history.isEmpty()) {
+        item(key = "history-empty") {
+            EmptyView(
+                title = stringResource(R.string.detail_history_empty_title),
+                description = stringResource(R.string.detail_history_empty_desc),
+                icon = VellutoIcons.CalendarX,
+                modifier = Modifier.tabItem(),
             )
         }
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = tabContentPadding(),
-            verticalArrangement = Arrangement.spacedBy(spacing.sm),
-        ) {
-            item(key = "cadence") { CadencePanel(data, Modifier.riseIn(3)) }
-            if (data.history.isEmpty()) {
-                item(key = "history-empty") {
-                    EmptyView(
-                        title = stringResource(R.string.detail_history_empty_title),
-                        description = stringResource(R.string.detail_history_empty_desc),
-                        icon = VellutoIcons.CalendarX,
-                    )
-                }
-            } else {
-                itemsIndexed(data.history, key = { _, checkIn -> checkIn.id }) { index, checkIn ->
-                    CheckInRow(
-                        checkIn = checkIn,
-                        selectionMode = selectionMode,
-                        selected = checkIn.id in selectedIds,
-                        onClick = {
-                            if (selectionMode) {
-                                selectedIds =
-                                    if (checkIn.id in selectedIds) selectedIds - checkIn.id else selectedIds + checkIn.id
-                            } else {
-                                editing = checkIn
-                            }
-                        },
-                        onLongClick = {
-                            selectionMode = true
-                            selectedIds = selectedIds + checkIn.id
-                        },
-                        modifier = Modifier.riseIn((index + 4).coerceAtMost(MAX_RISE_INDEX + 2)),
-                    )
-                }
-            }
+    } else {
+        itemsIndexed(data.history, key = { _, checkIn -> checkIn.id }) { index, checkIn ->
+            CheckInRow(
+                checkIn = checkIn,
+                selectionMode = history.selectionMode,
+                selected = checkIn.id in history.selectedIds,
+                onClick = {
+                    if (history.selectionMode) {
+                        history.toggle(checkIn.id)
+                    } else {
+                        history.editing = checkIn
+                    }
+                },
+                onLongClick = {
+                    history.selectionMode = true
+                    history.selectedIds = history.selectedIds + checkIn.id
+                },
+                modifier = Modifier.tabItem().riseIn((index + 4).coerceAtMost(MAX_RISE_INDEX + 2)),
+            )
         }
-    }
-
-    editing?.let { checkIn ->
-        CheckInEditDialog(
-            checkIn = checkIn,
-            onSave = { note, date, times ->
-                editing = null
-                onEditCheckIn(checkIn, note, date, times)
-            },
-            onDelete = {
-                editing = null
-                pendingDelete = listOf(checkIn.id)
-            },
-            onDismiss = { editing = null },
-        )
-    }
-
-    pendingDelete?.let { ids ->
-        AlertDialog(
-            onDismissRequest = { pendingDelete = null },
-            title = { Text(stringResource(R.string.checkin_delete_title)) },
-            text = { Text(stringResource(R.string.checkin_delete_message, ids.size)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    pendingDelete = null
-                    clearSelection()
-                    onDeleteCheckIns(ids)
-                }) { Text(stringResource(R.string.checkin_delete_confirm), color = PeopleHubTheme.colors.err) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.action_cancel)) }
-            },
-        )
     }
 }
 
@@ -824,29 +845,28 @@ private fun CheckInRow(
     }
 }
 
-@Composable
-private fun RelatedTab(
+/** The Related tab: the events linked to this person, or an empty state. */
+private fun LazyListScope.relatedTabItems(
     data: PersonDetailData,
     onEventClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     if (data.relatedEvents.isEmpty()) {
-        EmptyView(
-            title = stringResource(R.string.detail_related_empty_title),
-            description = stringResource(R.string.detail_related_empty_desc),
-            icon = VellutoIcons.CalendarDays,
-            modifier = modifier,
-        )
+        item(key = "related-empty") {
+            EmptyView(
+                title = stringResource(R.string.detail_related_empty_title),
+                description = stringResource(R.string.detail_related_empty_desc),
+                icon = VellutoIcons.CalendarDays,
+                modifier = Modifier.tabItem(first = true),
+            )
+        }
         return
     }
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = tabContentPadding(),
-        verticalArrangement = Arrangement.spacedBy(PeopleHubTheme.spacing.sm),
-    ) {
-        itemsIndexed(data.relatedEvents, key = { _, event -> event.id }) { index, event ->
-            RelatedEventRow(event, onEventClick, Modifier.riseIn((index + 3).coerceAtMost(MAX_RISE_INDEX + 2)))
-        }
+    itemsIndexed(data.relatedEvents, key = { _, event -> event.id }) { index, event ->
+        RelatedEventRow(
+            event,
+            onEventClick,
+            Modifier.tabItem(first = index == 0).riseIn((index + 3).coerceAtMost(MAX_RISE_INDEX + 2)),
+        )
     }
 }
 
@@ -884,43 +904,35 @@ private fun RelatedEventRow(
     }
 }
 
-@Composable
-private fun RemindersTab(
+/** The Reminders tab: the "add" action, then this person's reminders or a short empty line. */
+private fun LazyListScope.remindersTabItems(
     data: PersonDetailData,
     onAddReminder: () -> Unit,
     onEditReminder: (String) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    val c = PeopleHubTheme.colors
-    val spacing = PeopleHubTheme.spacing
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = tabContentPadding(),
-        verticalArrangement = Arrangement.spacedBy(spacing.sm),
-    ) {
-        item(key = "add-reminder") {
-            VellutoButton(
-                text = stringResource(R.string.detail_reminders_add),
-                onClick = onAddReminder,
-                style = VellutoButtonStyle.Soft,
-                icon = VellutoIcons.Plus,
-                modifier = Modifier.fillMaxWidth().padding(bottom = spacing.xs).riseIn(3),
+    item(key = "add-reminder") {
+        VellutoButton(
+            text = stringResource(R.string.detail_reminders_add),
+            onClick = onAddReminder,
+            style = VellutoButtonStyle.Soft,
+            icon = VellutoIcons.Plus,
+            modifier = Modifier.tabItem(first = true).fillMaxWidth().padding(bottom = PeopleHubTheme.spacing.xs).riseIn(3),
+        )
+    }
+    if (data.reminders.isEmpty()) {
+        item(key = "reminders-empty") {
+            val spacing = PeopleHubTheme.spacing
+            Text(
+                text = stringResource(R.string.detail_reminders_empty_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = PeopleHubTheme.colors.text2,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.tabItem().fillMaxWidth().padding(horizontal = spacing.xl, vertical = spacing.s),
             )
         }
-        if (data.reminders.isEmpty()) {
-            item(key = "reminders-empty") {
-                Text(
-                    text = stringResource(R.string.detail_reminders_empty_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = c.text2,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.xl, vertical = spacing.s),
-                )
-            }
-        } else {
-            itemsIndexed(data.reminders, key = { _, reminder -> reminder.id }) { index, reminder ->
-                ReminderRow(reminder, onEditReminder, Modifier.riseIn((index + 4).coerceAtMost(MAX_RISE_INDEX + 2)))
-            }
+    } else {
+        itemsIndexed(data.reminders, key = { _, reminder -> reminder.id }) { index, reminder ->
+            ReminderRow(reminder, onEditReminder, Modifier.tabItem().riseIn((index + 4).coerceAtMost(MAX_RISE_INDEX + 2)))
         }
     }
 }
