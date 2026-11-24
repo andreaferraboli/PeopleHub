@@ -23,3 +23,4 @@ app/release.keystore
 # Built / staged release artifacts
 *.apk
 *.aab
+journaling.md
